@@ -3,7 +3,9 @@ import { Phone } from 'lucide-react'
 
 export default function Footer() {
   return (
-    <footer className="bg-gray-900 text-white print:hidden">
+    <footer className="bg-gray-900 text-white" style={{ '@media print': { display: 'none' } }}>
+      {/* Add a style tag for print */}
+      <style>{`@media print { footer { display: none !important; } }`}</style>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <div>
