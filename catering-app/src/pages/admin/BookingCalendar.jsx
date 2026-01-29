@@ -2,20 +2,22 @@ import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import { menuPackages } from '../../lib/menuData'
-import { ArrowLeft, ChevronLeft, ChevronRight, Calendar, MapPin, Users, Phone, Clock, X, Printer } from 'lucide-react'
+import { ArrowLeft, ChevronLeft, ChevronRight, Calendar, MapPin, Users, Phone, Clock, X, Printer, ShoppingBag, UtensilsCrossed } from 'lucide-react'
 
 export default function BookingCalendar() {
   const [bookings, setBookings] = useState([])
+  const [foodOrders, setFoodOrders] = useState([])
   const [loading, setLoading] = useState(true)
   const [currentDate, setCurrentDate] = useState(new Date())
   const [selectedDay, setSelectedDay] = useState(null)
   const [dayBookings, setDayBookings] = useState([])
+  const [dayFoodOrders, setDayFoodOrders] = useState([])
 
   useEffect(() => {
-    fetchMonthBookings()
+    fetchMonthData()
   }, [currentDate])
 
-  const fetchMonthBookings = async () => {
+  const fetchMonthData = async () => {
     setLoading(true)
     const year = currentDate.getFullYear()
     const month = currentDate.getMonth()
@@ -23,14 +25,24 @@ export default function BookingCalendar() {
     const lastDay = new Date(year, month + 1, 0).toISOString().split('T')[0]
 
     try {
-      const { data } = await supabase
-        .from('bookings')
-        .select('*')
-        .gte('event_date', firstDay)
-        .lte('event_date', lastDay)
-        .neq('status', 'cancelled')
-        .order('event_time', { ascending: true })
-      setBookings(data || [])
+      const [bookingsRes, foodOrdersRes] = await Promise.all([
+        supabase
+          .from('bookings')
+          .select('*')
+          .gte('event_date', firstDay)
+          .lte('event_date', lastDay)
+          .neq('status', 'cancelled')
+          .order('event_time', { ascending: true }),
+        supabase
+          .from('food_orders')
+          .select('*')
+          .gte('delivery_date', firstDay)
+          .lte('delivery_date', lastDay)
+          .neq('status', 'cancelled')
+          .order('delivery_time', { ascending: true })
+      ])
+      setBookings(bookingsRes.data || [])
+      setFoodOrders(foodOrdersRes.data || [])
     } catch (error) {
       console.error('Error:', error)
     } finally {
@@ -43,11 +55,16 @@ export default function BookingCalendar() {
     return bookings.filter(b => b.event_date === dateStr)
   }
 
+  const getFoodOrdersForDay = (day) => {
+    const dateStr = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+    return foodOrders.filter(o => o.delivery_date === dateStr)
+  }
+
   const handleDayClick = (day) => {
     const dateStr = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
-    const dayBooks = getBookingsForDay(day)
     setSelectedDay(dateStr)
-    setDayBookings(dayBooks)
+    setDayBookings(getBookingsForDay(day))
+    setDayFoodOrders(getFoodOrdersForDay(day))
   }
 
   const changeMonth = (delta) => {
@@ -91,13 +108,17 @@ export default function BookingCalendar() {
   const getStatusColor = (status) => ({
     pending: 'bg-amber-100 text-amber-700',
     confirmed: 'bg-green-100 text-green-700',
-    completed: 'bg-blue-100 text-blue-700'
+    completed: 'bg-blue-100 text-blue-700',
+    preparing: 'bg-purple-100 text-purple-700',
+    ready: 'bg-teal-100 text-teal-700',
+    delivered: 'bg-gray-100 text-gray-700'
   }[status] || 'bg-gray-100 text-gray-700')
 
   // Calculate monthly stats
   const totalBookings = bookings.length
-  const totalPax = bookings.reduce((sum, b) => sum + (b.number_of_pax || 0), 0)
-  const totalRevenue = bookings.reduce((sum, b) => sum + (b.total_amount || 0), 0)
+  const totalFoodOrders = foodOrders.length
+  const totalCateringRevenue = bookings.reduce((sum, b) => sum + (b.total_amount || 0), 0)
+  const totalFoodRevenue = foodOrders.reduce((sum, o) => sum + (o.total_amount || 0), 0)
 
   return (
     <div className="py-8 px-4">
@@ -109,8 +130,8 @@ export default function BookingCalendar() {
               <ArrowLeft size={24} />
             </Link>
             <div>
-              <h1 className="text-3xl font-bold text-gray-800">Booking Calendar</h1>
-              <p className="text-gray-500">View bookings by month</p>
+              <h1 className="text-3xl font-bold text-gray-800">Calendar</h1>
+              <p className="text-gray-500">View catering & food orders by month</p>
             </div>
           </div>
           <Link
@@ -123,18 +144,22 @@ export default function BookingCalendar() {
         </div>
 
         {/* Monthly Stats */}
-        <div className="grid grid-cols-3 gap-4 mb-6">
-          <div className="bg-white rounded-xl shadow p-4 text-center">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+          <div className="bg-white rounded-xl shadow p-4 text-center border-l-4 border-red-500">
             <p className="text-3xl font-bold text-red-700">{totalBookings}</p>
-            <p className="text-gray-500 text-sm">Bookings this month</p>
+            <p className="text-gray-500 text-sm">Catering Bookings</p>
+          </div>
+          <div className="bg-white rounded-xl shadow p-4 text-center border-l-4 border-orange-500">
+            <p className="text-3xl font-bold text-orange-600">{totalFoodOrders}</p>
+            <p className="text-gray-500 text-sm">Food Orders</p>
           </div>
           <div className="bg-white rounded-xl shadow p-4 text-center">
-            <p className="text-3xl font-bold text-red-700">{totalPax.toLocaleString()}</p>
-            <p className="text-gray-500 text-sm">Total Guests</p>
+            <p className="text-3xl font-bold text-red-700">₱{totalCateringRevenue.toLocaleString()}</p>
+            <p className="text-gray-500 text-sm">Catering Revenue</p>
           </div>
           <div className="bg-white rounded-xl shadow p-4 text-center">
-            <p className="text-3xl font-bold text-red-700">₱{totalRevenue.toLocaleString()}</p>
-            <p className="text-gray-500 text-sm">Total Revenue</p>
+            <p className="text-3xl font-bold text-orange-600">₱{totalFoodRevenue.toLocaleString()}</p>
+            <p className="text-gray-500 text-sm">Food Revenue</p>
           </div>
         </div>
 
@@ -180,7 +205,9 @@ export default function BookingCalendar() {
                   {Array.from({ length: daysInMonth }).map((_, i) => {
                     const day = i + 1
                     const dayBookingsList = getBookingsForDay(day)
+                    const dayFoodOrdersList = getFoodOrdersForDay(day)
                     const hasBookings = dayBookingsList.length > 0
+                    const hasFoodOrders = dayFoodOrdersList.length > 0
                     const dateStr = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
                     const isSelected = selectedDay === dateStr
 
@@ -196,23 +223,40 @@ export default function BookingCalendar() {
                           {day}
                           {isToday(day) && <span className="ml-1 text-xs">(Today)</span>}
                         </div>
+                        
+                        {/* Catering Bookings - Red */}
                         {hasBookings && (
-                          <div className="space-y-1">
+                          <div className="space-y-1 mb-1">
                             {dayBookingsList.slice(0, 2).map((b, idx) => (
                               <div
-                                key={idx}
-                                className={`text-xs px-1.5 py-0.5 rounded truncate ${
-                                  b.status === 'confirmed' ? 'bg-green-100 text-green-700' :
-                                  b.status === 'pending' ? 'bg-amber-100 text-amber-700' :
-                                  'bg-blue-100 text-blue-700'
-                                }`}
+                                key={`b-${idx}`}
+                                className="text-xs px-1.5 py-0.5 rounded truncate bg-red-100 text-red-700 border-l-2 border-red-500"
                               >
-                                {b.customer_name?.split(' ')[0]}
+                                🍽️ {b.customer_name?.split(' ')[0]}
                               </div>
                             ))}
                             {dayBookingsList.length > 2 && (
-                              <div className="text-xs text-gray-500 pl-1">
-                                +{dayBookingsList.length - 2} more
+                              <div className="text-xs text-red-500 pl-1">
+                                +{dayBookingsList.length - 2} catering
+                              </div>
+                            )}
+                          </div>
+                        )}
+
+                        {/* Food Orders - Orange */}
+                        {hasFoodOrders && (
+                          <div className="space-y-1">
+                            {dayFoodOrdersList.slice(0, hasBookings ? 1 : 2).map((o, idx) => (
+                              <div
+                                key={`o-${idx}`}
+                                className="text-xs px-1.5 py-0.5 rounded truncate bg-orange-100 text-orange-700 border-l-2 border-orange-500"
+                              >
+                                🛒 {o.customer_name?.split(' ')[0]}
+                              </div>
+                            ))}
+                            {dayFoodOrdersList.length > (hasBookings ? 1 : 2) && (
+                              <div className="text-xs text-orange-500 pl-1">
+                                +{dayFoodOrdersList.length - (hasBookings ? 1 : 2)} orders
                               </div>
                             )}
                           </div>
@@ -233,7 +277,9 @@ export default function BookingCalendar() {
                   <div className="bg-gradient-to-r from-red-700 to-red-800 text-white p-4 flex items-center justify-between">
                     <div>
                       <h3 className="font-bold">{formatDate(selectedDay)}</h3>
-                      <p className="text-red-200 text-sm">{dayBookings.length} booking(s)</p>
+                      <p className="text-red-200 text-sm">
+                        {dayBookings.length} catering • {dayFoodOrders.length} food orders
+                      </p>
                     </div>
                     <button onClick={() => setSelectedDay(null)} className="p-1 hover:bg-red-600 rounded-full">
                       <X size={20} />
@@ -241,58 +287,113 @@ export default function BookingCalendar() {
                   </div>
 
                   <div className="max-h-[60vh] overflow-y-auto">
-                    {dayBookings.length === 0 ? (
+                    {dayBookings.length === 0 && dayFoodOrders.length === 0 ? (
                       <div className="p-8 text-center">
                         <Calendar size={40} className="text-gray-300 mx-auto mb-2" />
-                        <p className="text-gray-500">No bookings for this day</p>
+                        <p className="text-gray-500">No orders for this day</p>
                       </div>
                     ) : (
-                      <div className="divide-y">
-                        {dayBookings.map(booking => (
-                          <div key={booking.id} className="p-4">
-                            <div className="flex items-start justify-between mb-2">
-                              <div>
-                                <h4 className="font-bold text-gray-800">{booking.customer_name}</h4>
-                                <p className="text-sm text-red-700">
-                                  {menuPackages[booking.menu_package]?.name || booking.menu_package}
-                                </p>
-                              </div>
-                              <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${getStatusColor(booking.status)}`}>
-                                {booking.status}
-                              </span>
+                      <>
+                        {/* Catering Bookings Section */}
+                        {dayBookings.length > 0 && (
+                          <div>
+                            <div className="px-4 py-2 bg-red-50 border-b border-red-100 flex items-center gap-2">
+                              <UtensilsCrossed size={16} className="text-red-700" />
+                              <span className="font-semibold text-red-700">Catering ({dayBookings.length})</span>
                             </div>
+                            <div className="divide-y">
+                              {dayBookings.map(booking => (
+                                <div key={booking.id} className="p-4 border-l-4 border-red-500">
+                                  <div className="flex items-start justify-between mb-2">
+                                    <div>
+                                      <h4 className="font-bold text-gray-800">{booking.customer_name}</h4>
+                                      <p className="text-sm text-red-700">
+                                        {menuPackages[booking.menu_package]?.name || booking.menu_package}
+                                      </p>
+                                    </div>
+                                    <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${getStatusColor(booking.status)}`}>
+                                      {booking.status}
+                                    </span>
+                                  </div>
 
-                            <div className="space-y-1 text-sm text-gray-600">
-                              <p className="flex items-center gap-2">
-                                <Clock size={14} className="text-gray-400" />
-                                {formatTime(booking.event_time)}
-                              </p>
-                              <p className="flex items-center gap-2">
-                                <MapPin size={14} className="text-gray-400" />
-                                {booking.venue}
-                              </p>
-                              <p className="flex items-center gap-2">
-                                <Users size={14} className="text-gray-400" />
-                                {booking.number_of_pax} guests
-                              </p>
-                              <p className="flex items-center gap-2">
-                                <Phone size={14} className="text-gray-400" />
-                                {booking.customer_phone}
-                              </p>
-                            </div>
+                                  <div className="space-y-1 text-sm text-gray-600">
+                                    <p className="flex items-center gap-2">
+                                      <Clock size={14} className="text-gray-400" />
+                                      {formatTime(booking.event_time)}
+                                    </p>
+                                    <p className="flex items-center gap-2">
+                                      <MapPin size={14} className="text-gray-400" />
+                                      {booking.venue}
+                                    </p>
+                                    <p className="flex items-center gap-2">
+                                      <Users size={14} className="text-gray-400" />
+                                      {booking.number_of_pax} guests
+                                    </p>
+                                  </div>
 
-                            <div className="mt-3 pt-3 border-t flex justify-between items-center">
-                              <span className="font-bold text-red-700">₱{booking.total_amount?.toLocaleString()}</span>
-                              <Link
-                                to="/admin/bookings"
-                                className="text-sm text-red-700 hover:underline"
-                              >
-                                View Details →
-                              </Link>
+                                  <div className="mt-3 pt-3 border-t flex justify-between items-center">
+                                    <span className="font-bold text-red-700">₱{booking.total_amount?.toLocaleString()}</span>
+                                    <Link to="/admin/bookings" className="text-sm text-red-700 hover:underline">
+                                      View →
+                                    </Link>
+                                  </div>
+                                </div>
+                              ))}
                             </div>
                           </div>
-                        ))}
-                      </div>
+                        )}
+
+                        {/* Food Orders Section */}
+                        {dayFoodOrders.length > 0 && (
+                          <div>
+                            <div className="px-4 py-2 bg-orange-50 border-b border-orange-100 flex items-center gap-2">
+                              <ShoppingBag size={16} className="text-orange-600" />
+                              <span className="font-semibold text-orange-600">Food Orders ({dayFoodOrders.length})</span>
+                            </div>
+                            <div className="divide-y">
+                              {dayFoodOrders.map(order => (
+                                <div key={order.id} className="p-4 border-l-4 border-orange-500">
+                                  <div className="flex items-start justify-between mb-2">
+                                    <div>
+                                      <h4 className="font-bold text-gray-800">{order.customer_name}</h4>
+                                      <p className="text-sm text-orange-600">
+                                        {order.items?.length || 0} items
+                                      </p>
+                                    </div>
+                                    <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${getStatusColor(order.status)}`}>
+                                      {order.status}
+                                    </span>
+                                  </div>
+
+                                  <div className="space-y-1 text-sm text-gray-600">
+                                    <p className="flex items-center gap-2">
+                                      <Clock size={14} className="text-gray-400" />
+                                      {formatTime(order.delivery_time)}
+                                    </p>
+                                    {order.delivery_address && (
+                                      <p className="flex items-center gap-2">
+                                        <MapPin size={14} className="text-gray-400" />
+                                        {order.delivery_address}
+                                      </p>
+                                    )}
+                                    <p className="flex items-center gap-2">
+                                      <Phone size={14} className="text-gray-400" />
+                                      {order.customer_phone}
+                                    </p>
+                                  </div>
+
+                                  <div className="mt-3 pt-3 border-t flex justify-between items-center">
+                                    <span className="font-bold text-orange-600">₱{order.total_amount?.toLocaleString()}</span>
+                                    <Link to="/admin/food-orders" className="text-sm text-orange-600 hover:underline">
+                                      View →
+                                    </Link>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </>
                     )}
                   </div>
                 </>
@@ -300,7 +401,7 @@ export default function BookingCalendar() {
                 <div className="p-8 text-center">
                   <Calendar size={48} className="text-gray-300 mx-auto mb-4" />
                   <h3 className="font-semibold text-gray-800 mb-2">Select a Day</h3>
-                  <p className="text-gray-500 text-sm">Click on any day to view bookings</p>
+                  <p className="text-gray-500 text-sm">Click on any day to view orders</p>
                 </div>
               )}
             </div>
@@ -308,18 +409,14 @@ export default function BookingCalendar() {
         </div>
 
         {/* Legend */}
-        <div className="mt-6 bg-white rounded-xl shadow p-4 flex flex-wrap gap-4 justify-center">
+        <div className="mt-6 bg-white rounded-xl shadow p-4 flex flex-wrap gap-6 justify-center">
           <div className="flex items-center gap-2">
-            <div className="w-4 h-4 rounded bg-amber-100 border border-amber-300"></div>
-            <span className="text-sm text-gray-600">Pending</span>
+            <div className="w-4 h-4 rounded bg-red-100 border-l-2 border-red-500"></div>
+            <span className="text-sm text-gray-600">Catering Booking</span>
           </div>
           <div className="flex items-center gap-2">
-            <div className="w-4 h-4 rounded bg-green-100 border border-green-300"></div>
-            <span className="text-sm text-gray-600">Confirmed</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-4 rounded bg-blue-100 border border-blue-300"></div>
-            <span className="text-sm text-gray-600">Completed</span>
+            <div className="w-4 h-4 rounded bg-orange-100 border-l-2 border-orange-500"></div>
+            <span className="text-sm text-gray-600">Food Order</span>
           </div>
           <div className="flex items-center gap-2">
             <div className="w-4 h-4 rounded bg-yellow-50 border border-yellow-300"></div>
