@@ -8,7 +8,7 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <div>
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-12 h-12 bg-red-700 rounded-full flex items-center justify-center"><span className="text-white text-sm font-bold">RC</span></div>
+              <img src="/logo-white.png" alt="Red Carpet" className="h-12 w-auto" />
               <div><h3 className="font-bold text-lg">Red Carpet</h3><p className="text-gray-400 text-sm">Food and Catering Services</p></div>
             </div>
             <p className="text-gray-400 text-sm">Premium catering services for all occasions.</p>
