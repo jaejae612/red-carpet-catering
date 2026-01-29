@@ -1,14 +1,16 @@
 import React, { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { Mail, Lock, AlertCircle } from 'lucide-react'
+import { Mail, Lock, AlertCircle, CheckCircle } from 'lucide-react'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
-  const { signIn, signInWithGoogle, signInWithFacebook } = useAuth()
+  const [showForgotPassword, setShowForgotPassword] = useState(false)
+  const [resetSent, setResetSent] = useState(false)
+  const { signIn, signInWithGoogle, resetPassword } = useAuth()
   const navigate = useNavigate()
 
   const handleSubmit = async (e) => {
@@ -34,12 +36,21 @@ export default function LoginPage() {
     }
   }
 
-  const handleFacebookLogin = async () => {
+  const handleResetPassword = async (e) => {
+    e.preventDefault()
+    if (!email) {
+      setError('Please enter your email address')
+      return
+    }
     setError('')
+    setLoading(true)
     try {
-      await signInWithFacebook()
+      await resetPassword(email)
+      setResetSent(true)
     } catch (err) {
-      setError(err.message || 'Failed to sign in with Facebook')
+      setError(err.message || 'Failed to send reset email')
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -82,17 +93,44 @@ export default function LoginPage() {
 
           {error && <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6 flex items-center gap-2"><AlertCircle size={20} />{error}</div>}
           
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
-              <div className="relative"><Mail className="absolute left-3 top-3 text-gray-400" size={20} /><input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="your@email.com" required className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500" /></div>
+          {showForgotPassword ? (
+            // Forgot Password Form
+            <div className="space-y-6">
+              {resetSent ? (
+                <div className="text-center py-6">
+                  <CheckCircle size={48} className="text-green-500 mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold text-gray-800 mb-2">Check your email</h3>
+                  <p className="text-gray-600 mb-4">We've sent a password reset link to <strong>{email}</strong></p>
+                  <button onClick={() => { setShowForgotPassword(false); setResetSent(false) }} className="text-red-700 font-medium hover:underline">Back to login</button>
+                </div>
+              ) : (
+                <>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                    <div className="relative"><Mail className="absolute left-3 top-3 text-gray-400" size={20} /><input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="your@email.com" required className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500" /></div>
+                  </div>
+                  <button onClick={handleResetPassword} disabled={loading} className="w-full bg-red-700 text-white py-3 rounded-xl font-medium hover:bg-red-800 disabled:opacity-50">{loading ? 'Sending...' : 'Send Reset Link'}</button>
+                  <button onClick={() => setShowForgotPassword(false)} className="w-full text-gray-600 hover:text-gray-800">Back to login</button>
+                </>
+              )}
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Password</label>
-              <div className="relative"><Lock className="absolute left-3 top-3 text-gray-400" size={20} /><input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" required className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500" /></div>
-            </div>
-            <button type="submit" disabled={loading} className="w-full bg-red-700 text-white py-3 rounded-xl font-medium hover:bg-red-800 disabled:opacity-50">{loading ? 'Signing in...' : 'Sign In'}</button>
-          </form>
+          ) : (
+            // Login Form
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
+                <div className="relative"><Mail className="absolute left-3 top-3 text-gray-400" size={20} /><input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="your@email.com" required className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500" /></div>
+              </div>
+              <div>
+                <div className="flex justify-between items-center mb-2">
+                  <label className="block text-sm font-medium text-gray-700">Password</label>
+                  <button type="button" onClick={() => setShowForgotPassword(true)} className="text-sm text-red-700 hover:underline">Forgot password?</button>
+                </div>
+                <div className="relative"><Lock className="absolute left-3 top-3 text-gray-400" size={20} /><input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" required className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500" /></div>
+              </div>
+              <button type="submit" disabled={loading} className="w-full bg-red-700 text-white py-3 rounded-xl font-medium hover:bg-red-800 disabled:opacity-50">{loading ? 'Signing in...' : 'Sign In'}</button>
+            </form>
+          )}
           <p className="text-center text-gray-500 mt-6">Don't have an account? <Link to="/signup" className="text-red-700 font-medium hover:underline">Sign up</Link></p>
         </div>
       </div>

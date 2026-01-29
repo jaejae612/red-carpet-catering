@@ -79,12 +79,20 @@ export function AuthProvider({ children }) {
     setProfile(null)
   }
 
+  const resetPassword = async (email) => {
+    const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/reset-password`
+    })
+    if (error) throw error
+    return data
+  }
+
   return (
     <AuthContext.Provider value={{
       user, userProfile: profile, loading,
       isAdmin: profile?.role === 'admin',
       isConfigured: isConfigured(),
-      signUp, signIn, signOut, signInWithGoogle, signInWithFacebook
+      signUp, signIn, signOut, signInWithGoogle, signInWithFacebook, resetPassword
     }}>
       {children}
     </AuthContext.Provider>
