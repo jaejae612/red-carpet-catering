@@ -276,7 +276,7 @@ export default function DailyBookingSummary() {
       {/* Print Styles */}
       <style>{`
         @media print {
-          body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+          html, body { background: white !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
           .print\\:hidden { display: none !important; }
           .print\\:shadow-none { box-shadow: none !important; }
           .print\\:rounded-none { border-radius: 0 !important; }
@@ -292,7 +292,10 @@ export default function DailyBookingSummary() {
           .print\\:divide-gray-400 > * + * { border-color: #9ca3af !important; }
           .print\\:h-12 { height: 3rem !important; }
           .print\\:p-4 { padding: 1rem !important; }
-          @page { margin: 1cm; }
+          .bg-gray-100 { background: white !important; }
+          footer { display: none !important; }
+          nav { display: none !important; }
+          @page { margin: 0.5cm; }
         }
       `}</style>
     </div>
