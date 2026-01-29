@@ -6,23 +6,30 @@ import { ArrowLeft, Printer, Calendar, MapPin, Users, Phone, Clock, ChevronLeft,
 
 export default function DailyBookingSummary() {
   const [bookings, setBookings] = useState([])
+  const [equipment, setEquipment] = useState([])
   const [loading, setLoading] = useState(true)
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0])
 
   useEffect(() => {
-    fetchBookings()
+    fetchData()
   }, [selectedDate])
 
-  const fetchBookings = async () => {
+  const fetchData = async () => {
     setLoading(true)
     try {
-      const { data } = await supabase
-        .from('bookings')
-        .select('*')
-        .eq('event_date', selectedDate)
-        .neq('status', 'cancelled')
-        .order('event_time', { ascending: true })
-      setBookings(data || [])
+      const [bookingsRes, equipmentRes] = await Promise.all([
+        supabase
+          .from('bookings')
+          .select('*')
+          .eq('event_date', selectedDate)
+          .neq('status', 'cancelled')
+          .order('event_time', { ascending: true }),
+        supabase
+          .from('equipment')
+          .select('*')
+      ])
+      setBookings(bookingsRes.data || [])
+      setEquipment(equipmentRes.data || [])
     } catch (error) {
       console.error('Error:', error)
     } finally {
@@ -228,6 +235,23 @@ export default function DailyBookingSummary() {
                                 {s.name} ({s.role === 'head_waiter' ? 'HW' : 'S'})
                               </span>
                             ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Assigned Equipment */}
+                      {booking.assigned_equipment && Object.keys(booking.assigned_equipment).length > 0 && (
+                        <div>
+                          <strong className="text-gray-700">Equipment:</strong>
+                          <div className="flex flex-wrap gap-1 mt-1">
+                            {Object.entries(booking.assigned_equipment).map(([equipId, qty]) => {
+                              const equip = equipment.find(e => e.id === equipId)
+                              return equip && qty > 0 ? (
+                                <span key={equipId} className="px-2 py-0.5 bg-blue-100 text-blue-700 rounded text-sm">
+                                  {equip.name}: {qty}
+                                </span>
+                              ) : null
+                            })}
                           </div>
                         </div>
                       )}
