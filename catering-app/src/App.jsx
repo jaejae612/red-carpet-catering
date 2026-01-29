@@ -15,6 +15,7 @@ import AdminFoodItems from './pages/admin/AdminFoodItems'
 import AdminMenu from './pages/admin/AdminMenu'
 import AdminStaff from './pages/admin/AdminStaff'
 import AdminEquipment from './pages/admin/AdminEquipment'
+import DailyBookingSummary from './pages/admin/DailyBookingSummary'
 import SetupGuide from './pages/SetupGuide'
 import Navbar from './components/Navbar'
 import Footer from './components/Footer'
@@ -59,6 +60,7 @@ function App() {
           <Route path="/admin/staff" element={<ProtectedRoute adminOnly><AdminLayout><AdminStaff /></AdminLayout></ProtectedRoute>} />
           <Route path="/admin/equipment" element={<ProtectedRoute adminOnly><AdminLayout><AdminEquipment /></AdminLayout></ProtectedRoute>} />
           <Route path="/admin/menu" element={<ProtectedRoute adminOnly><AdminLayout><AdminMenu /></AdminLayout></ProtectedRoute>} />
+          <Route path="/admin/daily-summary" element={<ProtectedRoute adminOnly><DailyBookingSummary /></ProtectedRoute>} />
           
           {/* Catch all */}
           <Route path="*" element={<Navigate to="/" replace />} />
