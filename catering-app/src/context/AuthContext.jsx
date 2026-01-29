@@ -51,6 +51,28 @@ export function AuthProvider({ children }) {
     return data
   }
 
+  const signInWithGoogle = async () => {
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: window.location.origin
+      }
+    })
+    if (error) throw error
+    return data
+  }
+
+  const signInWithFacebook = async () => {
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: 'facebook',
+      options: {
+        redirectTo: window.location.origin
+      }
+    })
+    if (error) throw error
+    return data
+  }
+
   const signOut = async () => {
     await supabase.auth.signOut()
     setUser(null)
@@ -59,10 +81,10 @@ export function AuthProvider({ children }) {
 
   return (
     <AuthContext.Provider value={{
-      user, profile, loading,
+      user, userProfile: profile, loading,
       isAdmin: profile?.role === 'admin',
       isConfigured: isConfigured(),
-      signUp, signIn, signOut
+      signUp, signIn, signOut, signInWithGoogle, signInWithFacebook
     }}>
       {children}
     </AuthContext.Provider>
