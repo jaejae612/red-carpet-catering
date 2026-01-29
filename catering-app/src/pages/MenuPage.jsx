@@ -72,7 +72,7 @@ export default function MenuPage() {
                   ) : pkg.id === 'menu510' ? (
                     <p className="text-xs text-gray-500 mt-1">🛠️ Build Your Own • 🍚 Plain Rice, Fried Rice & Arroz Valenciana</p>
                   ) : (
-                    <p className="text-xs text-green-600 mt-1">📋 Preset Buffet Menus • 🍚 All rice options included</p>
+                    <p className="text-xs text-green-600 mt-1">📋 Preset Buffet Menus</p>
                   )}
                 </div>
                 {expandedPackage === pkg.id ? <ChevronUp size={24} className="text-gray-400" /> : <ChevronDown size={24} className="text-gray-400" />}
