@@ -521,13 +521,19 @@ export default function BookingPage() {
               className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 appearance-none bg-white"
             >
               <option value="">Select time</option>
-              {[6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22].map(hour => {
+              {[6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22].flatMap(hour => {
                 const minHour = isSameDayAdmin ? parseInt(getMinTimeForToday()?.split(':')[0] || 0) : 0
-                if (isSameDayAdmin && hour < minHour) return null
-                const displayHour = hour > 12 ? hour - 12 : hour
+                if (isSameDayAdmin && hour < minHour) return []
+                const displayHour = hour > 12 ? hour - 12 : hour === 0 ? 12 : hour
                 const ampm = hour >= 12 ? 'PM' : 'AM'
-                const display = hour === 12 ? '12:00 PM' : `${displayHour}:00 ${ampm}`
-                return <option key={hour} value={`${hour.toString().padStart(2, '0')}:00`}>{display}</option>
+                return [
+                  <option key={`${hour}:00`} value={`${hour.toString().padStart(2, '0')}:00`}>
+                    {hour === 12 ? '12:00 PM' : `${displayHour}:00 ${ampm}`}
+                  </option>,
+                  <option key={`${hour}:30`} value={`${hour.toString().padStart(2, '0')}:30`}>
+                    {hour === 12 ? '12:30 PM' : `${displayHour}:30 ${ampm}`}
+                  </option>
+                ]
               })}
             </select>
           </div>
