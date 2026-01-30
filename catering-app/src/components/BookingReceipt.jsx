@@ -148,7 +148,12 @@ export default function BookingReceipt({ booking, onClose }) {
                   <p className="text-sm text-gray-500 mb-2">Add-ons:</p>
                   <ul className="list-disc list-inside text-sm">
                     {booking.add_ons.map((addon, idx) => (
-                      <li key={idx}>{addon.name || addon}</li>
+                      <li key={idx}>
+                        {typeof addon === 'string' ? addon : 
+                         addon.name ? `${addon.name}${addon.quantity ? ` (${addon.quantity})` : ''}` :
+                         addon.id ? `${addon.id}${addon.quantity ? ` x${addon.quantity}` : ''}` :
+                         JSON.stringify(addon)}
+                      </li>
                     ))}
                   </ul>
                 </div>
@@ -160,7 +165,9 @@ export default function BookingReceipt({ booking, onClose }) {
                   <p className="text-sm text-gray-500 mb-2">Selected Dishes:</p>
                   <ul className="list-disc list-inside text-sm">
                     {booking.custom_dishes.map((dish, idx) => (
-                      <li key={idx}>{dish.name || dish}</li>
+                      <li key={idx}>
+                        {typeof dish === 'string' ? dish : dish.name || dish.id || JSON.stringify(dish)}
+                      </li>
                     ))}
                   </ul>
                 </div>
