@@ -14,13 +14,19 @@ export const sendEmail = async ({ to, subject, html }) => {
   }
   
   try {
-    const { data, error } = await supabase.functions.invoke('send-email', {
-      body: { to, subject, html }
+    const response = await fetch('https://uitplgqukaxrribgrpvv.supabase.co/functions/v1/send-email', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ to, subject, html })
     })
 
-    if (error) {
-      console.error('Email error:', error)
-      return { success: false, error: error.message }
+    const data = await response.json()
+    
+    if (!response.ok) {
+      console.error('Email error:', data)
+      return { success: false, error: data.error || 'Failed to send email' }
     }
 
     return { success: true, data }
