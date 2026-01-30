@@ -18,14 +18,26 @@ serve(async (req) => {
   }
 
   try {
-    const { to, subject, html } = await req.json()
+    const bodyText = await req.text()
+    console.log('Raw body received:', bodyText)
+    
+    let body
+    try {
+      body = JSON.parse(bodyText)
+    } catch (e) {
+      // Maybe it's already an object or double-encoded
+      body = typeof bodyText === 'string' ? JSON.parse(JSON.parse(bodyText)) : bodyText
+    }
+    
+    const { to, subject, html } = body
+    console.log('Parsed:', { to, subject: subject?.substring(0, 50), hasHtml: !!html })
 
     if (!RESEND_API_KEY) {
       throw new Error('RESEND_API_KEY not configured')
     }
 
     if (!to || !subject || !html) {
-      throw new Error('Missing required fields: to, subject, html')
+      throw new Error(`Missing required fields: to=${!!to}, subject=${!!subject}, html=${!!html}`)
     }
 
     const res = await fetch('https://api.resend.com/emails', {
@@ -52,6 +64,7 @@ serve(async (req) => {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
   } catch (error) {
+    console.error('Error:', error.message)
     return new Response(JSON.stringify({ success: false, error: error.message }), {
       status: 400,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

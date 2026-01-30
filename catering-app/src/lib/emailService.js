@@ -15,7 +15,7 @@ export const sendEmail = async ({ to, subject, html }) => {
   
   try {
     const { data, error } = await supabase.functions.invoke('send-email', {
-      body: JSON.stringify({ to, subject, html })
+      body: { to, subject, html }
     })
 
     if (error) {
