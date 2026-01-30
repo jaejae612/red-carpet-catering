@@ -26,6 +26,8 @@ export default function BookingCalendar() {
     const firstDay = new Date(year, month, 1).toISOString().split('T')[0]
     const lastDay = new Date(year, month + 1, 0).toISOString().split('T')[0]
 
+    console.log('Fetching for:', firstDay, 'to', lastDay)
+
     try {
       const [bookingsRes, foodOrdersRes] = await Promise.all([
         supabase
@@ -43,6 +45,8 @@ export default function BookingCalendar() {
           .neq('status', 'cancelled')
           .order('delivery_time', { ascending: true })
       ])
+      console.log('Bookings received:', bookingsRes.data?.length, bookingsRes.data)
+      console.log('Food orders received:', foodOrdersRes.data?.length, foodOrdersRes.data)
       setBookings(bookingsRes.data || [])
       setFoodOrders(foodOrdersRes.data || [])
     } catch (error) {
