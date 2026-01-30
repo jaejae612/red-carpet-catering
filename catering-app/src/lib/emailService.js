@@ -1,39 +1,22 @@
-// Email notification service using Resend
-// To use this, you need to:
-// 1. Sign up at https://resend.com
-// 2. Get your API key
-// 3. Add VITE_RESEND_API_KEY to your environment variables
+// Email notification service using Supabase Edge Function + Resend
+// Setup required:
+// 1. Deploy the send-email edge function to Supabase
+// 2. Add RESEND_API_KEY to Supabase secrets: supabase secrets set RESEND_API_KEY=re_xxxxx
 
-const RESEND_API_KEY = import.meta.env.VITE_RESEND_API_KEY
+import { supabase } from './supabase'
 
 export const sendEmail = async ({ to, subject, html }) => {
-  if (!RESEND_API_KEY) {
-    console.warn('Resend API key not configured')
-    return { success: false, error: 'Email not configured' }
-  }
-
   try {
-    const response = await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${RESEND_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        from: 'Red Carpet Catering <onboarding@resend.dev>',
-        to: [to],
-        subject,
-        html,
-      }),
+    const { data, error } = await supabase.functions.invoke('send-email', {
+      body: { to, subject, html }
     })
 
-    if (!response.ok) {
-      const errorData = await response.json()
-      console.error('Resend error:', errorData)
-      throw new Error(errorData.message || 'Failed to send email')
+    if (error) {
+      console.error('Email error:', error)
+      return { success: false, error: error.message }
     }
 
-    return { success: true }
+    return { success: true, data }
   } catch (error) {
     console.error('Email error:', error)
     return { success: false, error: error.message }
