@@ -105,7 +105,7 @@ export default function MyOrdersPage() {
                   )}
                   <div className="mt-4 pt-4 border-t border-gray-200">
                     <button
-                      onClick={() => setReceiptBooking(order)}
+                      onClick={(e) => { e.stopPropagation(); setReceiptBooking(order) }}
                       className="flex items-center gap-2 text-red-700 hover:text-red-800 font-medium"
                     >
                       <FileText size={18} /> View Receipt
