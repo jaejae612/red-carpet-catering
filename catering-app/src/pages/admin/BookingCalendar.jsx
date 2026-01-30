@@ -123,11 +123,15 @@ export default function BookingCalendar() {
     delivered: 'bg-gray-100 text-gray-700'
   }[status] || 'bg-gray-100 text-gray-700')
 
-  // Calculate monthly stats
+  // Calculate monthly stats - only count paid bookings for revenue
   const totalBookings = bookings.length
   const totalFoodOrders = foodOrders.length
-  const totalCateringRevenue = bookings.reduce((sum, b) => sum + (b.total_amount || 0), 0)
-  const totalFoodRevenue = foodOrders.reduce((sum, o) => sum + (o.total_amount || 0), 0)
+  const totalCateringRevenue = bookings
+    .filter(b => b.payment_status === 'deposit_paid' || b.payment_status === 'fully_paid')
+    .reduce((sum, b) => sum + (b.total_amount || 0), 0)
+  const totalFoodRevenue = foodOrders
+    .filter(o => o.payment_status === 'paid' || o.payment_status === 'fully_paid')
+    .reduce((sum, o) => sum + (o.total_amount || 0), 0)
 
   return (
     <div className="py-8 px-4">

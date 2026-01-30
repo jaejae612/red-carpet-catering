@@ -1,100 +1,371 @@
 import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
-import { ClipboardList, Users, Package, Calendar, Clock, ShoppingBag, Printer, BarChart3 } from 'lucide-react'
+import { ArrowLeft, TrendingUp, Users, Calendar, DollarSign, Package, Clock, ChevronDown } from 'lucide-react'
 
-export default function AdminDashboard() {
-  const [stats, setStats] = useState({ totalBookings: 0, pendingBookings: 0, totalStaff: 0, totalEquipment: 0, totalFoodOrders: 0, pendingFoodOrders: 0, todayBookings: 0 })
-  const [recentBookings, setRecentBookings] = useState([])
-  const [recentFoodOrders, setRecentFoodOrders] = useState([])
+export default function AdminDashboardStats() {
+  const [bookings, setBookings] = useState([])
+  const [foodOrders, setFoodOrders] = useState([])
   const [loading, setLoading] = useState(true)
+  const [timeRange, setTimeRange] = useState('month') // week, month, year, all
 
-  useEffect(() => { fetchData() }, [])
+  useEffect(() => {
+    fetchData()
+  }, [])
 
   const fetchData = async () => {
-    const today = new Date().toISOString().split('T')[0]
     try {
-      const [{ count: total }, { count: pending }, { count: staff }, { count: equip }, { data: recent }, { count: foodTotal }, { count: foodPending }, { data: recentFood }, { count: todayCount }] = await Promise.all([
-        supabase.from('bookings').select('*', { count: 'exact', head: true }),
-        supabase.from('bookings').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
-        supabase.from('staff').select('*', { count: 'exact', head: true }),
-        supabase.from('equipment').select('*', { count: 'exact', head: true }),
-        supabase.from('bookings').select('*').order('created_at', { ascending: false }).limit(5),
-        supabase.from('food_orders').select('*', { count: 'exact', head: true }),
-        supabase.from('food_orders').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
-        supabase.from('food_orders').select('*').order('created_at', { ascending: false }).limit(5),
-        supabase.from('bookings').select('*', { count: 'exact', head: true }).eq('event_date', today).neq('status', 'cancelled')
+      const [bookingsRes, foodOrdersRes] = await Promise.all([
+        supabase.from('bookings').select('*').order('created_at', { ascending: false }),
+        supabase.from('food_orders').select('*').order('created_at', { ascending: false })
       ])
-      setStats({ totalBookings: total || 0, pendingBookings: pending || 0, totalStaff: staff || 0, totalEquipment: equip || 0, totalFoodOrders: foodTotal || 0, pendingFoodOrders: foodPending || 0, todayBookings: todayCount || 0 })
-      setRecentBookings(recent || [])
-      setRecentFoodOrders(recentFood || [])
-    } catch (error) { console.error('Error:', error) } finally { setLoading(false) }
+      setBookings(bookingsRes.data || [])
+      setFoodOrders(foodOrdersRes.data || [])
+    } catch (error) {
+      console.error('Error:', error)
+    } finally {
+      setLoading(false)
+    }
   }
 
-  const getStatusColor = (status) => ({ pending: 'bg-amber-100 text-amber-700', confirmed: 'bg-blue-100 text-blue-700', completed: 'bg-green-100 text-green-700', preparing: 'bg-purple-100 text-purple-700', ready: 'bg-green-100 text-green-700', delivered: 'bg-gray-100 text-gray-700' }[status] || 'bg-gray-100 text-gray-700')
+  // Filter data by time range
+  const filterByTimeRange = (data, dateField = 'created_at') => {
+    const now = new Date()
+    let startDate = new Date()
+    
+    switch (timeRange) {
+      case 'week':
+        startDate.setDate(now.getDate() - 7)
+        break
+      case 'month':
+        startDate.setMonth(now.getMonth() - 1)
+        break
+      case 'year':
+        startDate.setFullYear(now.getFullYear() - 1)
+        break
+      default:
+        return data
+    }
+    
+    return data.filter(item => new Date(item[dateField]) >= startDate)
+  }
+
+  const filteredBookings = filterByTimeRange(bookings)
+  const filteredFoodOrders = filterByTimeRange(foodOrders)
+
+  // Calculate stats - only count paid bookings for revenue
+  const paidBookings = filteredBookings.filter(b => b.payment_status === 'deposit_paid' || b.payment_status === 'fully_paid')
+  const paidFoodOrders = filteredFoodOrders.filter(o => o.payment_status === 'paid' || o.payment_status === 'fully_paid')
+  const totalBookingRevenue = paidBookings.reduce((sum, b) => sum + (b.total_amount || 0), 0)
+  const totalFoodRevenue = paidFoodOrders.reduce((sum, o) => sum + (o.total_amount || 0), 0)
+  const totalRevenue = totalBookingRevenue + totalFoodRevenue
+  const totalGuests = filteredBookings.reduce((sum, b) => sum + (b.number_of_pax || 0), 0)
+  
+  const pendingBookings = filteredBookings.filter(b => b.status === 'pending').length
+  const confirmedBookings = filteredBookings.filter(b => b.status === 'confirmed').length
+  const completedBookings = filteredBookings.filter(b => b.status === 'completed').length
+  
+  const unpaidBookings = filteredBookings.filter(b => b.payment_status === 'unpaid' || !b.payment_status).length
+  const depositPaid = filteredBookings.filter(b => b.payment_status === 'deposit_paid').length
+  const fullyPaid = filteredBookings.filter(b => b.payment_status === 'fully_paid').length
+
+  // Group bookings by month for chart
+  const getMonthlyData = () => {
+    const months = {}
+    const now = new Date()
+    
+    // Initialize last 6 months
+    for (let i = 5; i >= 0; i--) {
+      const date = new Date(now.getFullYear(), now.getMonth() - i, 1)
+      const key = date.toLocaleDateString('en-US', { month: 'short', year: '2-digit' })
+      months[key] = { bookings: 0, revenue: 0, guests: 0 }
+    }
+    
+    // Fill in data - only count paid bookings for revenue
+    bookings.forEach(b => {
+      const date = new Date(b.event_date || b.created_at)
+      const key = date.toLocaleDateString('en-US', { month: 'short', year: '2-digit' })
+      if (months[key]) {
+        months[key].bookings++
+        // Only add to revenue if paid
+        if (b.payment_status === 'deposit_paid' || b.payment_status === 'fully_paid') {
+          months[key].revenue += b.total_amount || 0
+        }
+        months[key].guests += b.number_of_pax || 0
+      }
+    })
+    
+    return Object.entries(months).map(([month, data]) => ({ month, ...data }))
+  }
+
+  const monthlyData = getMonthlyData()
+  const maxRevenue = Math.max(...monthlyData.map(d => d.revenue), 1)
+  const maxBookings = Math.max(...monthlyData.map(d => d.bookings), 1)
+
+  // Top customers
+  const getTopCustomers = () => {
+    const customers = {}
+    bookings.forEach(b => {
+      const name = b.customer_name || 'Unknown'
+      if (!customers[name]) {
+        customers[name] = { name, bookings: 0, totalSpent: 0 }
+      }
+      customers[name].bookings++
+      customers[name].totalSpent += b.total_amount || 0
+    })
+    return Object.values(customers)
+      .sort((a, b) => b.totalSpent - a.totalSpent)
+      .slice(0, 5)
+  }
+
+  const topCustomers = getTopCustomers()
+
+  // Upcoming bookings
+  const upcomingBookings = bookings
+    .filter(b => new Date(b.event_date) >= new Date() && b.status !== 'cancelled')
+    .sort((a, b) => new Date(a.event_date) - new Date(b.event_date))
+    .slice(0, 5)
+
+  if (loading) {
+    return (
+      <div className="min-h-[60vh] flex items-center justify-center">
+        <div className="w-12 h-12 border-4 border-red-200 border-t-red-700 rounded-full animate-spin"></div>
+      </div>
+    )
+  }
 
   return (
-    <div>
-      <div className="flex justify-between items-start mb-8">
-        <div><h1 className="text-3xl font-bold text-gray-800">Dashboard</h1><p className="text-gray-500">Overview of your business</p></div>
-        <div className="flex gap-2">
-          <Link to="/admin/stats" className="flex items-center gap-2 bg-purple-600 text-white px-4 py-2 rounded-xl font-medium hover:bg-purple-700">
-            <BarChart3 size={20} />
-            Analytics
-          </Link>
-          <Link to="/admin/daily-summary" className="flex items-center gap-2 bg-red-700 text-white px-4 py-2 rounded-xl font-medium hover:bg-red-800">
-            <Printer size={20} />
-            Print Summary
-          </Link>
+    <div className="py-8 px-4">
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center gap-4">
+            <Link to="/admin" className="p-2 hover:bg-gray-100 rounded-lg">
+              <ArrowLeft size={24} />
+            </Link>
+            <div>
+              <h1 className="text-3xl font-bold text-gray-800">Dashboard</h1>
+              <p className="text-gray-500">Business analytics and insights</p>
+            </div>
+          </div>
+          
+          {/* Time Range Selector */}
+          <div className="relative">
+            <select
+              value={timeRange}
+              onChange={(e) => setTimeRange(e.target.value)}
+              className="appearance-none bg-white border border-gray-200 rounded-lg px-4 py-2 pr-10 focus:outline-none focus:ring-2 focus:ring-red-500"
+            >
+              <option value="week">Last 7 Days</option>
+              <option value="month">Last 30 Days</option>
+              <option value="year">Last Year</option>
+              <option value="all">All Time</option>
+            </select>
+            <ChevronDown className="absolute right-3 top-2.5 text-gray-400 pointer-events-none" size={20} />
+          </div>
         </div>
-      </div>
 
-      {/* Today's Bookings Alert */}
-      {stats.todayBookings > 0 && (
-        <Link to="/admin/daily-summary" className="block mb-6 p-4 bg-gradient-to-r from-red-600 to-red-700 rounded-xl text-white hover:from-red-700 hover:to-red-800">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <Calendar size={24} />
+        {/* Stats Cards */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+          <div className="bg-white rounded-2xl shadow-lg p-6">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                <DollarSign className="text-green-600" size={20} />
+              </div>
+              <span className="text-gray-500 text-sm">Total Revenue</span>
+            </div>
+            <p className="text-2xl font-bold text-gray-800">₱{totalRevenue.toLocaleString()}</p>
+            <p className="text-xs text-gray-400 mt-1">Bookings: ₱{totalBookingRevenue.toLocaleString()}</p>
+          </div>
+
+          <div className="bg-white rounded-2xl shadow-lg p-6">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                <Calendar className="text-blue-600" size={20} />
+              </div>
+              <span className="text-gray-500 text-sm">Bookings</span>
+            </div>
+            <p className="text-2xl font-bold text-gray-800">{filteredBookings.length}</p>
+            <p className="text-xs text-gray-400 mt-1">{pendingBookings} pending</p>
+          </div>
+
+          <div className="bg-white rounded-2xl shadow-lg p-6">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
+                <Users className="text-purple-600" size={20} />
+              </div>
+              <span className="text-gray-500 text-sm">Total Guests</span>
+            </div>
+            <p className="text-2xl font-bold text-gray-800">{totalGuests.toLocaleString()}</p>
+            <p className="text-xs text-gray-400 mt-1">Avg: {filteredBookings.length > 0 ? Math.round(totalGuests / filteredBookings.length) : 0} per event</p>
+          </div>
+
+          <div className="bg-white rounded-2xl shadow-lg p-6">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center">
+                <Package className="text-orange-600" size={20} />
+              </div>
+              <span className="text-gray-500 text-sm">Food Orders</span>
+            </div>
+            <p className="text-2xl font-bold text-gray-800">{filteredFoodOrders.length}</p>
+            <p className="text-xs text-gray-400 mt-1">₱{totalFoodRevenue.toLocaleString()}</p>
+          </div>
+        </div>
+
+        <div className="grid lg:grid-cols-3 gap-6">
+          {/* Revenue Chart */}
+          <div className="lg:col-span-2 bg-white rounded-2xl shadow-lg p-6">
+            <h2 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+              <TrendingUp size={20} className="text-green-600" />
+              Monthly Revenue
+            </h2>
+            <div className="space-y-3">
+              {monthlyData.map((data, i) => (
+                <div key={i} className="flex items-center gap-3">
+                  <span className="w-16 text-sm text-gray-500">{data.month}</span>
+                  <div className="flex-1 h-8 bg-gray-100 rounded-full overflow-hidden">
+                    <div 
+                      className="h-full bg-gradient-to-r from-red-500 to-red-700 rounded-full flex items-center justify-end pr-2"
+                      style={{ width: `${Math.max((data.revenue / maxRevenue) * 100, 5)}%` }}
+                    >
+                      {data.revenue > 0 && (
+                        <span className="text-xs text-white font-medium">₱{(data.revenue / 1000).toFixed(0)}k</span>
+                      )}
+                    </div>
+                  </div>
+                  <span className="w-12 text-sm text-gray-600 text-right">{data.bookings}</span>
+                </div>
+              ))}
+            </div>
+            <div className="flex justify-end mt-2 text-xs text-gray-400">
+              <span>Bookings count →</span>
+            </div>
+          </div>
+
+          {/* Booking Status */}
+          <div className="bg-white rounded-2xl shadow-lg p-6">
+            <h2 className="text-lg font-bold text-gray-800 mb-4">Booking Status</h2>
+            <div className="space-y-4">
               <div>
-                <p className="font-bold text-lg">Today's Bookings: {stats.todayBookings}</p>
-                <p className="text-red-200 text-sm">Click to view and print daily summary</p>
+                <div className="flex justify-between text-sm mb-1">
+                  <span className="text-gray-600">Pending</span>
+                  <span className="font-medium text-amber-600">{pendingBookings}</span>
+                </div>
+                <div className="h-2 bg-gray-100 rounded-full">
+                  <div className="h-full bg-amber-500 rounded-full" style={{ width: `${(pendingBookings / Math.max(filteredBookings.length, 1)) * 100}%` }}></div>
+                </div>
+              </div>
+              <div>
+                <div className="flex justify-between text-sm mb-1">
+                  <span className="text-gray-600">Confirmed</span>
+                  <span className="font-medium text-blue-600">{confirmedBookings}</span>
+                </div>
+                <div className="h-2 bg-gray-100 rounded-full">
+                  <div className="h-full bg-blue-500 rounded-full" style={{ width: `${(confirmedBookings / Math.max(filteredBookings.length, 1)) * 100}%` }}></div>
+                </div>
+              </div>
+              <div>
+                <div className="flex justify-between text-sm mb-1">
+                  <span className="text-gray-600">Completed</span>
+                  <span className="font-medium text-green-600">{completedBookings}</span>
+                </div>
+                <div className="h-2 bg-gray-100 rounded-full">
+                  <div className="h-full bg-green-500 rounded-full" style={{ width: `${(completedBookings / Math.max(filteredBookings.length, 1)) * 100}%` }}></div>
+                </div>
               </div>
             </div>
-            <Printer size={24} />
-          </div>
-        </Link>
-      )}
 
-      <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mb-8">
-        <Link to="/admin/bookings" className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl"><div className="flex items-center justify-between mb-4"><div className="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center"><ClipboardList className="text-red-700" size={24} /></div><span className="text-3xl font-bold text-gray-800">{stats.totalBookings}</span></div><p className="text-gray-600 font-medium">Catering</p></Link>
-        <Link to="/admin/bookings" className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl"><div className="flex items-center justify-between mb-4"><div className="w-12 h-12 bg-amber-100 rounded-xl flex items-center justify-center"><Clock className="text-amber-700" size={24} /></div><span className="text-3xl font-bold text-amber-600">{stats.pendingBookings}</span></div><p className="text-gray-600 font-medium">Pending</p></Link>
-        <Link to="/admin/food-orders" className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl"><div className="flex items-center justify-between mb-4"><div className="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center"><ShoppingBag className="text-orange-700" size={24} /></div><span className="text-3xl font-bold text-gray-800">{stats.totalFoodOrders}</span></div><p className="text-gray-600 font-medium">Food Orders</p></Link>
-        <Link to="/admin/food-orders" className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl"><div className="flex items-center justify-between mb-4"><div className="w-12 h-12 bg-yellow-100 rounded-xl flex items-center justify-center"><Clock className="text-yellow-700" size={24} /></div><span className="text-3xl font-bold text-yellow-600">{stats.pendingFoodOrders}</span></div><p className="text-gray-600 font-medium">Pending Food</p></Link>
-        <Link to="/admin/staff" className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl"><div className="flex items-center justify-between mb-4"><div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center"><Users className="text-blue-700" size={24} /></div><span className="text-3xl font-bold text-gray-800">{stats.totalStaff}</span></div><p className="text-gray-600 font-medium">Staff</p></Link>
-        <Link to="/admin/equipment" className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl"><div className="flex items-center justify-between mb-4"><div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center"><Package className="text-green-700" size={24} /></div><span className="text-3xl font-bold text-gray-800">{stats.totalEquipment}</span></div><p className="text-gray-600 font-medium">Equipment</p></Link>
-      </div>
-      
-      <div className="grid md:grid-cols-2 gap-6">
-        {/* Recent Catering Bookings */}
-        <div className="bg-white rounded-2xl shadow-lg p-6"><div className="flex justify-between items-center mb-6"><h2 className="text-xl font-bold text-gray-800">Recent Catering</h2><Link to="/admin/bookings" className="text-red-700 font-medium hover:underline">View All</Link></div>
-          {recentBookings.length === 0 ? <p className="text-gray-500 text-center py-8">No bookings yet</p> : (
-            <div className="space-y-4">{recentBookings.map(booking => (
-              <Link key={booking.id} to="/admin/bookings" className="block p-4 bg-gray-50 rounded-xl hover:bg-gray-100">
-                <div className="flex justify-between items-start"><div><div className="flex items-center gap-2 mb-1"><span className="font-semibold text-gray-800">{booking.customer_name}</span><span className={`px-2 py-0.5 rounded-full text-xs font-medium ${getStatusColor(booking.status)}`}>{booking.status}</span></div><p className="text-sm text-gray-500">{booking.menu_package} • {booking.number_of_pax} pax</p><p className="text-sm text-gray-500 flex items-center gap-1 mt-1"><Calendar size={14} />{booking.event_date}</p></div><p className="font-bold text-red-700">₱{booking.total_amount?.toLocaleString()}</p></div>
-              </Link>
-            ))}</div>
-          )}
+            <h3 className="text-md font-bold text-gray-800 mt-6 mb-3">Payment Status</h3>
+            <div className="space-y-4">
+              <div>
+                <div className="flex justify-between text-sm mb-1">
+                  <span className="text-gray-600">Unpaid</span>
+                  <span className="font-medium text-red-600">{unpaidBookings}</span>
+                </div>
+                <div className="h-2 bg-gray-100 rounded-full">
+                  <div className="h-full bg-red-500 rounded-full" style={{ width: `${(unpaidBookings / Math.max(filteredBookings.length, 1)) * 100}%` }}></div>
+                </div>
+              </div>
+              <div>
+                <div className="flex justify-between text-sm mb-1">
+                  <span className="text-gray-600">Deposit Paid</span>
+                  <span className="font-medium text-amber-600">{depositPaid}</span>
+                </div>
+                <div className="h-2 bg-gray-100 rounded-full">
+                  <div className="h-full bg-amber-500 rounded-full" style={{ width: `${(depositPaid / Math.max(filteredBookings.length, 1)) * 100}%` }}></div>
+                </div>
+              </div>
+              <div>
+                <div className="flex justify-between text-sm mb-1">
+                  <span className="text-gray-600">Fully Paid</span>
+                  <span className="font-medium text-green-600">{fullyPaid}</span>
+                </div>
+                <div className="h-2 bg-gray-100 rounded-full">
+                  <div className="h-full bg-green-500 rounded-full" style={{ width: `${(fullyPaid / Math.max(filteredBookings.length, 1)) * 100}%` }}></div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
-        {/* Recent Food Orders */}
-        <div className="bg-white rounded-2xl shadow-lg p-6"><div className="flex justify-between items-center mb-6"><h2 className="text-xl font-bold text-gray-800">Recent Food Orders</h2><Link to="/admin/food-orders" className="text-orange-600 font-medium hover:underline">View All</Link></div>
-          {recentFoodOrders.length === 0 ? <p className="text-gray-500 text-center py-8">No food orders yet</p> : (
-            <div className="space-y-4">{recentFoodOrders.map(order => (
-              <Link key={order.id} to="/admin/food-orders" className="block p-4 bg-gray-50 rounded-xl hover:bg-gray-100">
-                <div className="flex justify-between items-start"><div><div className="flex items-center gap-2 mb-1"><span className="font-semibold text-gray-800">{order.customer_name}</span><span className={`px-2 py-0.5 rounded-full text-xs font-medium ${getStatusColor(order.status)}`}>{order.status}</span></div><p className="text-sm text-gray-500">{order.items?.length || 0} items</p><p className="text-sm text-gray-500 flex items-center gap-1 mt-1"><Calendar size={14} />{order.delivery_date}</p></div><p className="font-bold text-orange-600">₱{order.total_amount?.toLocaleString()}</p></div>
-              </Link>
-            ))}</div>
-          )}
+        {/* Bottom Row */}
+        <div className="grid lg:grid-cols-2 gap-6 mt-6">
+          {/* Top Customers */}
+          <div className="bg-white rounded-2xl shadow-lg p-6">
+            <h2 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+              <Users size={20} className="text-purple-600" />
+              Top Customers
+            </h2>
+            {topCustomers.length > 0 ? (
+              <div className="space-y-3">
+                {topCustomers.map((customer, i) => (
+                  <div key={i} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
+                    <div className="flex items-center gap-3">
+                      <span className="w-8 h-8 bg-red-100 text-red-700 rounded-full flex items-center justify-center font-bold text-sm">
+                        {i + 1}
+                      </span>
+                      <div>
+                        <p className="font-medium text-gray-800">{customer.name}</p>
+                        <p className="text-xs text-gray-500">{customer.bookings} booking{customer.bookings > 1 ? 's' : ''}</p>
+                      </div>
+                    </div>
+                    <span className="font-bold text-green-600">₱{customer.totalSpent.toLocaleString()}</span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-gray-500 text-center py-8">No customer data yet</p>
+            )}
+          </div>
+
+          {/* Upcoming Bookings */}
+          <div className="bg-white rounded-2xl shadow-lg p-6">
+            <h2 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+              <Clock size={20} className="text-blue-600" />
+              Upcoming Bookings
+            </h2>
+            {upcomingBookings.length > 0 ? (
+              <div className="space-y-3">
+                {upcomingBookings.map((booking, i) => (
+                  <div key={i} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
+                    <div>
+                      <p className="font-medium text-gray-800">{booking.customer_name}</p>
+                      <p className="text-xs text-gray-500">{booking.venue}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-medium text-gray-800">{booking.event_date}</p>
+                      <p className="text-xs text-gray-500">{booking.number_of_pax} pax</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-gray-500 text-center py-8">No upcoming bookings</p>
+            )}
+            <Link to="/admin/bookings" className="block text-center text-red-700 font-medium mt-4 hover:text-red-800">
+              View All Bookings →
+            </Link>
+          </div>
         </div>
       </div>
     </div>
