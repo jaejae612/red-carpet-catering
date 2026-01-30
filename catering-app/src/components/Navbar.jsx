@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { Menu, X, User, LogOut, ChevronDown } from 'lucide-react'
+import { Menu, X, User, LogOut, ChevronDown, Settings } from 'lucide-react'
 
 export default function Navbar() {
   const { user, userProfile, isAdmin, signOut } = useAuth()
@@ -44,6 +44,7 @@ export default function Navbar() {
                   {showUserMenu && (
                     <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-2 text-gray-800">
                       <div className="px-4 py-2 border-b"><p className="font-medium truncate">{userProfile?.full_name}</p><p className="text-xs text-gray-500 truncate">{user.email}</p></div>
+                      <Link to="/profile" onClick={() => setShowUserMenu(false)} className="w-full px-4 py-2 hover:bg-gray-100 flex items-center gap-2"><Settings size={16} />Profile</Link>
                       <button onClick={handleSignOut} className="w-full px-4 py-2 text-left hover:bg-gray-100 flex items-center gap-2 text-red-600"><LogOut size={16} />Sign Out</button>
                     </div>
                   )}
@@ -68,6 +69,7 @@ export default function Navbar() {
             <>
               <Link to="/book" onClick={() => setIsOpen(false)} className="block py-2">Book Catering</Link>
               <Link to="/my-orders" onClick={() => setIsOpen(false)} className="block py-2">My Orders</Link>
+              <Link to="/profile" onClick={() => setIsOpen(false)} className="block py-2">Profile</Link>
               {isAdmin && <Link to="/admin" onClick={() => setIsOpen(false)} className="block py-2">Admin</Link>}
               <button onClick={handleSignOut} className="flex items-center gap-2 text-red-200 pt-3 border-t border-red-600"><LogOut size={16} />Sign Out</button>
             </>

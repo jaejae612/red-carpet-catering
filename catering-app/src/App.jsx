@@ -6,6 +6,7 @@ import MenuPage from './pages/MenuPage'
 import FoodMenuPage from './pages/FoodMenuPage'
 import LoginPage from './pages/LoginPage'
 import ResetPasswordPage from './pages/ResetPasswordPage'
+import ProfilePage from './pages/ProfilePage'
 import SignUpPage from './pages/SignUpPage'
 import BookingPage from './pages/BookingPage'
 import MyOrdersPage from './pages/MyOrdersPage'
@@ -49,6 +50,7 @@ function App() {
           <Route path="/order-food" element={<FoodMenuPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />
+          <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
           <Route path="/signup" element={<SignUpPage />} />
           
           {/* Protected Customer Routes */}
