@@ -170,13 +170,6 @@ export default function FoodMenuPage() {
       const { data, error: insertError } = await supabase.from('food_orders').insert([orderData]).select().single()
       if (insertError) throw insertError
 
-      // Send email notifications (async, don't wait)
-      if (data) {
-        import('../lib/emailService.js').then(({ sendFoodOrderNotifications }) => {
-          sendFoodOrderNotifications(data).catch(console.error)
-        })
-      }
-
       setCart([])
       setShowCheckout(false)
       setShowCart(false)

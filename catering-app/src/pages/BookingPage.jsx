@@ -455,13 +455,6 @@ export default function BookingPage() {
       const { data, error: insertError } = await supabase.from('bookings').insert([bookingData]).select().single()
       if (insertError) throw insertError
 
-      // Send email notifications (async, don't wait)
-      if (data) {
-        import('../lib/emailService.js').then(({ sendBookingNotifications }) => {
-          sendBookingNotifications(data).catch(console.error)
-        })
-      }
-
       navigate(isAdmin ? '/admin/bookings' : '/my-orders')
     } catch (err) {
       setError(err.message)

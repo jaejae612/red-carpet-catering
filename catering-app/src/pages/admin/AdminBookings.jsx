@@ -2,8 +2,9 @@ import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import { menuPackages } from '../../lib/menuData'
-import { ArrowLeft, Calendar, MapPin, Users, Phone, Mail, Check, Plus, Minus, X, Save, Search, Edit2, CreditCard } from 'lucide-react'
+import { ArrowLeft, Calendar, MapPin, Users, Phone, Mail, Check, Plus, Minus, X, Save, Search, Edit2, CreditCard, Send } from 'lucide-react'
 import AdminBookingEdit from '../../components/AdminBookingEdit'
+import { sendBookingNotifications } from '../../lib/emailService'
 
 export default function AdminBookings() {
   const [bookings, setBookings] = useState([])
@@ -17,6 +18,7 @@ export default function AdminBookings() {
   const [showStaffPicker, setShowStaffPicker] = useState(null)
   const [showEditModal, setShowEditModal] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [sendingEmail, setSendingEmail] = useState(false)
 
   useEffect(() => { fetchData() }, [])
 
@@ -79,6 +81,32 @@ export default function AdminBookings() {
     }
   }
 
+  const handleSendEmail = async () => {
+    if (!selectedBooking) return
+    if (!selectedBooking.customer_email) {
+      alert('No customer email address')
+      return
+    }
+    
+    const confirmSend = window.confirm(`Send booking confirmation email to ${selectedBooking.customer_email}?`)
+    if (!confirmSend) return
+
+    setSendingEmail(true)
+    try {
+      const result = await sendBookingNotifications(selectedBooking)
+      if (result.customer?.success || result.admin?.success) {
+        alert('Email sent successfully!')
+      } else {
+        alert('Failed to send email. Check console for details.')
+      }
+    } catch (error) {
+      console.error('Email error:', error)
+      alert('Error sending email: ' + error.message)
+    } finally {
+      setSendingEmail(false)
+    }
+  }
+
   const filtered = bookings
     .filter(b => (b.customer_name?.toLowerCase().includes(searchTerm.toLowerCase()) || b.venue?.toLowerCase().includes(searchTerm.toLowerCase())) && (statusFilter === 'all' || b.status === statusFilter))
     .sort((a, b) => {
@@ -104,7 +132,7 @@ export default function AdminBookings() {
         <div className="lg:col-span-2">
           {selectedBooking ? (
             <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
-              <div className="bg-gradient-to-r from-red-700 to-red-800 text-white p-6"><div className="flex justify-between items-start"><div><h2 className="text-xl font-bold">{selectedBooking.customer_name}</h2><p className="text-red-200">{menuPackages[selectedBooking.menu_package]?.name} • {selectedBooking.menu_option}</p></div><div className="flex items-center gap-2"><button onClick={() => setShowEditModal(true)} className="bg-white/20 hover:bg-white/30 px-3 py-1 rounded-lg text-sm flex items-center gap-1"><Edit2 size={14} /> Edit</button><select value={selectedBooking.status} onChange={(e) => { updateStatus(selectedBooking.id, e.target.value); setSelectedBooking({ ...selectedBooking, status: e.target.value }) }} className="bg-white/20 text-white border-0 rounded-lg px-3 py-1 text-sm"><option value="pending" className="text-gray-800">Pending</option><option value="confirmed" className="text-gray-800">Confirmed</option><option value="completed" className="text-gray-800">Completed</option><option value="cancelled" className="text-gray-800">Cancelled</option></select></div></div></div>
+              <div className="bg-gradient-to-r from-red-700 to-red-800 text-white p-6"><div className="flex justify-between items-start"><div><h2 className="text-xl font-bold">{selectedBooking.customer_name}</h2><p className="text-red-200">{menuPackages[selectedBooking.menu_package]?.name} • {selectedBooking.menu_option}</p></div><div className="flex items-center gap-2"><button onClick={handleSendEmail} disabled={sendingEmail} className="bg-white/20 hover:bg-white/30 px-3 py-1 rounded-lg text-sm flex items-center gap-1 disabled:opacity-50"><Send size={14} /> {sendingEmail ? 'Sending...' : 'Email'}</button><button onClick={() => setShowEditModal(true)} className="bg-white/20 hover:bg-white/30 px-3 py-1 rounded-lg text-sm flex items-center gap-1"><Edit2 size={14} /> Edit</button><select value={selectedBooking.status} onChange={(e) => { updateStatus(selectedBooking.id, e.target.value); setSelectedBooking({ ...selectedBooking, status: e.target.value }) }} className="bg-white/20 text-white border-0 rounded-lg px-3 py-1 text-sm"><option value="pending" className="text-gray-800">Pending</option><option value="confirmed" className="text-gray-800">Confirmed</option><option value="completed" className="text-gray-800">Completed</option><option value="cancelled" className="text-gray-800">Cancelled</option></select></div></div></div>
               <div className="p-6 space-y-6">
                 <div className="grid md:grid-cols-2 gap-4">
                   <div className="bg-gray-50 rounded-xl p-4"><h3 className="font-semibold text-gray-700 mb-3">Event</h3><div className="space-y-2 text-sm"><p className="flex items-start gap-2"><Calendar size={16} className="text-gray-400 mt-0.5" />{selectedBooking.event_date} at {selectedBooking.event_time}</p><p className="flex items-start gap-2"><MapPin size={16} className="text-gray-400 mt-0.5" />{selectedBooking.venue}</p><p className="flex items-center gap-2"><Users size={16} className="text-gray-400" />{selectedBooking.number_of_pax} guests</p>{selectedBooking.motif && <p>🎨 {selectedBooking.motif}</p>}</div></div>

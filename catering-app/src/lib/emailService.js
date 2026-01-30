@@ -20,7 +20,7 @@ export const sendEmail = async ({ to, subject, html }) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        from: 'Red Carpet Catering <bookings@redcarpetcatering.com>',
+        from: 'Red Carpet Catering <onboarding@resend.dev>',
         to: [to],
         subject,
         html,
@@ -28,7 +28,9 @@ export const sendEmail = async ({ to, subject, html }) => {
     })
 
     if (!response.ok) {
-      throw new Error('Failed to send email')
+      const errorData = await response.json()
+      console.error('Resend error:', errorData)
+      throw new Error(errorData.message || 'Failed to send email')
     }
 
     return { success: true }
