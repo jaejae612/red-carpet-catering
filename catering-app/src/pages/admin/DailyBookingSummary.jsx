@@ -125,6 +125,12 @@ export default function DailyBookingSummary() {
       </div>
 
       {/* Printable Content */}
+      <style>{`
+        @media print {
+          * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+          .print\\:border { border: 1px solid #666 !important; }
+        }
+      `}</style>
       <div className="max-w-5xl mx-auto p-4 print:p-0 print:max-w-none">
         <div className="bg-white rounded-2xl shadow-lg print:shadow-none print:rounded-none">
           
@@ -231,7 +237,7 @@ export default function DailyBookingSummary() {
                           <strong className="text-gray-700">Staff:</strong>
                           <div className="flex flex-wrap gap-1 mt-1">
                             {booking.assigned_staff.map((s, i) => (
-                              <span key={i} className="px-2 py-0.5 bg-gray-100 rounded text-sm">
+                              <span key={i} className="px-2 py-0.5 bg-gray-100 rounded text-sm print:bg-transparent print:border print:border-gray-400">
                                 {s.name} ({s.role === 'head_waiter' ? 'HW' : 'S'})
                               </span>
                             ))}
@@ -247,7 +253,7 @@ export default function DailyBookingSummary() {
                             {Object.entries(booking.assigned_equipment).map(([equipId, qty]) => {
                               const equip = equipment.find(e => e.id === equipId)
                               return equip && qty > 0 ? (
-                                <span key={equipId} className="px-2 py-0.5 bg-blue-100 text-blue-700 rounded text-sm">
+                                <span key={equipId} className="px-2 py-0.5 bg-blue-100 text-blue-700 rounded text-sm print:bg-transparent print:text-black print:border print:border-gray-400">
                                   {equip.name}: {qty}
                                 </span>
                               ) : null
