@@ -15,10 +15,12 @@ export default function BookingCalendar() {
 
   useEffect(() => {
     fetchMonthData()
-  }, [currentDate])
+  }, [currentDate.getMonth(), currentDate.getFullYear()])
 
   const fetchMonthData = async () => {
     setLoading(true)
+    setBookings([])  // Clear existing data while loading
+    setFoodOrders([])
     const year = currentDate.getFullYear()
     const month = currentDate.getMonth()
     const firstDay = new Date(year, month, 1).toISOString().split('T')[0]
