@@ -23,8 +23,11 @@ export default function BookingCalendar() {
     setFoodOrders([])
     const year = currentDate.getFullYear()
     const month = currentDate.getMonth()
-    const firstDay = new Date(year, month, 1).toISOString().split('T')[0]
-    const lastDay = new Date(year, month + 1, 0).toISOString().split('T')[0]
+    
+    // Format dates correctly without timezone issues
+    const firstDay = `${year}-${String(month + 1).padStart(2, '0')}-01`
+    const lastDayOfMonth = new Date(year, month + 1, 0).getDate()
+    const lastDay = `${year}-${String(month + 1).padStart(2, '0')}-${String(lastDayOfMonth).padStart(2, '0')}`
 
     console.log('Fetching for:', firstDay, 'to', lastDay)
 
