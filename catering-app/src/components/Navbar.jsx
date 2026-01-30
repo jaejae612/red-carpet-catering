@@ -29,7 +29,7 @@ export default function Navbar() {
             </Link>
           </div>
           <div className="hidden md:flex items-center gap-6">
-            <Link to="/" className="hover:text-red-200">Home</Link>
+            <Link to="/" onClick={() => window.scrollTo(0, 0)} className="hover:text-red-200">Home</Link>
             <Link to="/menu" className="hover:text-red-200">Catering</Link>
             <Link to="/food-menu" className="hover:text-red-200">Food Menu</Link>
             {user ? (
@@ -62,7 +62,7 @@ export default function Navbar() {
       </div>
       {isOpen && (
         <div className="md:hidden bg-red-800 border-t border-red-600 px-4 py-4 space-y-3">
-          <Link to="/" onClick={() => setIsOpen(false)} className="block py-2">Home</Link>
+          <Link to="/" onClick={() => { setIsOpen(false); window.scrollTo(0, 0) }} className="block py-2">Home</Link>
           <Link to="/menu" onClick={() => setIsOpen(false)} className="block py-2">Catering</Link>
           <Link to="/food-menu" onClick={() => setIsOpen(false)} className="block py-2">Food Menu</Link>
           {user ? (
