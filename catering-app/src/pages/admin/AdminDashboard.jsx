@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
-import { ClipboardList, Users, Package, Calendar, Clock, ShoppingBag, Printer } from 'lucide-react'
+import { ClipboardList, Users, Package, Calendar, Clock, ShoppingBag, Printer, BarChart3 } from 'lucide-react'
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState({ totalBookings: 0, pendingBookings: 0, totalStaff: 0, totalEquipment: 0, totalFoodOrders: 0, pendingFoodOrders: 0, todayBookings: 0 })
@@ -37,10 +37,16 @@ export default function AdminDashboard() {
     <div>
       <div className="flex justify-between items-start mb-8">
         <div><h1 className="text-3xl font-bold text-gray-800">Dashboard</h1><p className="text-gray-500">Overview of your business</p></div>
-        <Link to="/admin/daily-summary" className="flex items-center gap-2 bg-red-700 text-white px-4 py-2 rounded-xl font-medium hover:bg-red-800">
-          <Printer size={20} />
-          Print Daily Summary
-        </Link>
+        <div className="flex gap-2">
+          <Link to="/admin/stats" className="flex items-center gap-2 bg-purple-600 text-white px-4 py-2 rounded-xl font-medium hover:bg-purple-700">
+            <BarChart3 size={20} />
+            Analytics
+          </Link>
+          <Link to="/admin/daily-summary" className="flex items-center gap-2 bg-red-700 text-white px-4 py-2 rounded-xl font-medium hover:bg-red-800">
+            <Printer size={20} />
+            Print Summary
+          </Link>
+        </div>
       </div>
 
       {/* Today's Bookings Alert */}

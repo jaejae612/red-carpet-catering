@@ -11,6 +11,7 @@ import SignUpPage from './pages/SignUpPage'
 import BookingPage from './pages/BookingPage'
 import MyOrdersPage from './pages/MyOrdersPage'
 import AdminDashboard from './pages/admin/AdminDashboard'
+import AdminDashboardStats from './pages/admin/AdminDashboardStats'
 import AdminBookings from './pages/admin/AdminBookings'
 import AdminFoodOrders from './pages/admin/AdminFoodOrders'
 import AdminFoodItems from './pages/admin/AdminFoodItems'
@@ -67,6 +68,7 @@ function App() {
           <Route path="/admin/menu" element={<ProtectedRoute adminOnly><AdminLayout><AdminMenu /></AdminLayout></ProtectedRoute>} />
           <Route path="/admin/daily-summary" element={<ProtectedRoute adminOnly><DailyBookingSummary /></ProtectedRoute>} />
           <Route path="/admin/calendar" element={<ProtectedRoute adminOnly><AdminLayout><BookingCalendar /></AdminLayout></ProtectedRoute>} />
+          <Route path="/admin/stats" element={<ProtectedRoute adminOnly><AdminLayout><AdminDashboardStats /></AdminLayout></ProtectedRoute>} />
           
           {/* Catch all */}
           <Route path="*" element={<Navigate to="/" replace />} />

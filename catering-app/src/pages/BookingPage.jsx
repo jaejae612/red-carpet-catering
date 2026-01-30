@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
 import { menuPackages, addOnStations, calculatePricePerHead, calculateTotal } from '../lib/menuData'
@@ -30,17 +30,40 @@ const getDishCategories = (selectedPackage) => {
 export default function BookingPage() {
   const { user, profile, isAdmin } = useAuth()
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const [step, setStep] = useState(1)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [dishes, setDishes] = useState([])
+  
+  // Check for duplicate booking data
+  const getDuplicateData = () => {
+    if (searchParams.get('duplicate') === 'true') {
+      const data = sessionStorage.getItem('duplicateBooking')
+      if (data) {
+        sessionStorage.removeItem('duplicateBooking')
+        return JSON.parse(data)
+      }
+    }
+    return null
+  }
+  
+  const duplicateData = getDuplicateData()
+  
   const [booking, setBooking] = useState({ 
-    venue: '', date: '', time: '', selectedPackage: '', selectedMenuOption: '', 
-    numberOfPax: 60, addOns: [], motif: '', specialRequests: '',
-    customerName: isAdmin ? '' : (profile?.full_name || ''),
-    customerPhone: isAdmin ? '' : (profile?.phone || ''),
-    customerEmail: isAdmin ? '' : (user?.email || ''),
-    customDishes: {}
+    venue: duplicateData?.venue || '', 
+    date: '', 
+    time: duplicateData?.event_time || '', 
+    selectedPackage: duplicateData?.menu_package || '', 
+    selectedMenuOption: duplicateData?.menu_option || '', 
+    numberOfPax: duplicateData?.number_of_pax || 60, 
+    addOns: duplicateData?.add_ons || [], 
+    motif: duplicateData?.motif || '', 
+    specialRequests: duplicateData?.special_requests || '',
+    customerName: duplicateData?.customer_name || (isAdmin ? '' : (profile?.full_name || '')),
+    customerPhone: duplicateData?.customer_phone || (isAdmin ? '' : (profile?.phone || '')),
+    customerEmail: duplicateData?.customer_email || (isAdmin ? '' : (user?.email || '')),
+    customDishes: duplicateData?.custom_dishes || {}
   })
 
   // Get dynamic dish categories based on selected package
