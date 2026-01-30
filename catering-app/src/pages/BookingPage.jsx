@@ -433,7 +433,7 @@ export default function BookingPage() {
 
       const customDishesArray = Object.values(booking.customDishes).flat()
 
-      const { error: insertError } = await supabase.from('bookings').insert([{
+      const bookingData = {
         user_id: isAdmin ? null : user.id, 
         customer_name: customerName, 
         customer_phone: customerPhone, 
@@ -450,8 +450,18 @@ export default function BookingPage() {
         special_requests: booking.specialRequests, 
         total_amount: calculateTotal(booking.selectedPackage, booking.numberOfPax, booking.addOns), 
         status: 'pending'
-      }])
+      }
+
+      const { data, error: insertError } = await supabase.from('bookings').insert([bookingData]).select().single()
       if (insertError) throw insertError
+
+      // Send email notifications (async, don't wait)
+      if (data) {
+        import('../lib/emailService.js').then(({ sendBookingNotifications }) => {
+          sendBookingNotifications(data).catch(console.error)
+        })
+      }
+
       navigate(isAdmin ? '/admin/bookings' : '/my-orders')
     } catch (err) {
       setError(err.message)

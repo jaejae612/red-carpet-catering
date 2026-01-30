@@ -3,7 +3,8 @@ import { Link, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
 import { menuPackages } from '../lib/menuData'
-import { Calendar, MapPin, Users, Clock, ChevronDown, ChevronUp, Plus, ShoppingBag, ClipboardList, Truck, Package } from 'lucide-react'
+import { Calendar, MapPin, Users, Clock, ChevronDown, ChevronUp, Plus, ShoppingBag, ClipboardList, Truck, Package, FileText } from 'lucide-react'
+import BookingReceipt from '../components/BookingReceipt'
 
 export default function MyOrdersPage() {
   const { user } = useAuth()
@@ -13,6 +14,7 @@ export default function MyOrdersPage() {
   const [foodOrders, setFoodOrders] = useState([])
   const [loading, setLoading] = useState(true)
   const [expandedOrder, setExpandedOrder] = useState(null)
+  const [receiptBooking, setReceiptBooking] = useState(null)
 
   useEffect(() => { fetchOrders() }, [user])
   useEffect(() => { setSearchParams({ tab: activeTab }) }, [activeTab])
@@ -101,6 +103,14 @@ export default function MyOrdersPage() {
                       <p className="text-sm text-gray-600">{order.special_requests}</p>
                     </div>
                   )}
+                  <div className="mt-4 pt-4 border-t border-gray-200">
+                    <button
+                      onClick={() => setReceiptBooking(order)}
+                      className="flex items-center gap-2 text-red-700 hover:text-red-800 font-medium"
+                    >
+                      <FileText size={18} /> View Receipt
+                    </button>
+                  </div>
                 </div>
               )}
             </div>
@@ -225,6 +235,11 @@ export default function MyOrdersPage() {
         {/* Content */}
         {activeTab === 'catering' ? renderCateringOrders() : renderFoodOrders()}
       </div>
+
+      {/* Receipt Modal */}
+      {receiptBooking && (
+        <BookingReceipt booking={receiptBooking} onClose={() => setReceiptBooking(null)} />
+      )}
     </div>
   )
 }
