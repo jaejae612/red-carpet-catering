@@ -13,6 +13,7 @@ export default function AdminBookings() {
   const [selectedBooking, setSelectedBooking] = useState(null)
   const [searchTerm, setSearchTerm] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
+  const [sortOrder, setSortOrder] = useState('asc')
   const [showStaffPicker, setShowStaffPicker] = useState(null)
   const [showEditModal, setShowEditModal] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -78,7 +79,13 @@ export default function AdminBookings() {
     }
   }
 
-  const filtered = bookings.filter(b => (b.customer_name?.toLowerCase().includes(searchTerm.toLowerCase()) || b.venue?.toLowerCase().includes(searchTerm.toLowerCase())) && (statusFilter === 'all' || b.status === statusFilter))
+  const filtered = bookings
+    .filter(b => (b.customer_name?.toLowerCase().includes(searchTerm.toLowerCase()) || b.venue?.toLowerCase().includes(searchTerm.toLowerCase())) && (statusFilter === 'all' || b.status === statusFilter))
+    .sort((a, b) => {
+      const dateA = new Date(a.event_date)
+      const dateB = new Date(b.event_date)
+      return sortOrder === 'asc' ? dateA - dateB : dateB - dateA
+    })
 
   if (loading) return <div className="min-h-[60vh] flex items-center justify-center"><div className="w-12 h-12 border-4 border-red-200 border-t-red-700 rounded-full animate-spin"></div></div>
 
@@ -87,7 +94,11 @@ export default function AdminBookings() {
       <div className="flex items-center gap-4 mb-8"><Link to="/admin" className="p-2 hover:bg-gray-100 rounded-lg"><ArrowLeft size={24} /></Link><div><h1 className="text-3xl font-bold text-gray-800">Manage Bookings</h1><p className="text-gray-500">Assign staff and equipment</p></div></div>
       <div className="grid lg:grid-cols-3 gap-6">
         <div className="lg:col-span-1"><div className="bg-white rounded-2xl shadow-lg p-4 sticky top-24">
-          <div className="mb-4"><div className="relative mb-3"><Search className="absolute left-3 top-2.5 text-gray-400" size={20} /><input type="text" placeholder="Search..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500" /></div><select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="w-full px-3 py-2 border border-gray-200 rounded-lg"><option value="all">All Status</option><option value="pending">Pending</option><option value="confirmed">Confirmed</option><option value="completed">Completed</option></select></div>
+          <div className="mb-4"><div className="relative mb-3"><Search className="absolute left-3 top-2.5 text-gray-400" size={20} /><input type="text" placeholder="Search..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500" /></div>
+          <div className="grid grid-cols-2 gap-2">
+            <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="px-3 py-2 border border-gray-200 rounded-lg text-sm"><option value="all">All Status</option><option value="pending">Pending</option><option value="confirmed">Confirmed</option><option value="completed">Completed</option><option value="cancelled">Cancelled</option></select>
+            <select value={sortOrder} onChange={(e) => setSortOrder(e.target.value)} className="px-3 py-2 border border-gray-200 rounded-lg text-sm"><option value="asc">Date ↑ Soonest</option><option value="desc">Date ↓ Latest</option></select>
+          </div></div>
           <div className="space-y-2 max-h-[60vh] overflow-y-auto">{filtered.map(b => (<button key={b.id} onClick={() => setSelectedBooking(b)} className={`w-full p-3 rounded-xl text-left ${selectedBooking?.id === b.id ? 'bg-red-50 border-2 border-red-700' : 'bg-gray-50 hover:bg-gray-100 border-2 border-transparent'}`}><div className="flex justify-between items-start mb-1"><span className="font-medium text-gray-800 truncate">{b.customer_name}</span><span className={`px-2 py-0.5 rounded-full text-xs font-medium ${getStatusColor(b.status)}`}>{b.status}</span></div><p className="text-sm text-gray-500">{b.event_date}</p><div className="flex items-center justify-between mt-1"><span className="text-sm text-gray-500">{b.number_of_pax} pax • ₱{b.total_amount?.toLocaleString()}</span><span className={`px-2 py-0.5 rounded-full text-xs font-medium ${getPaymentStatusColor(b.payment_status)}`}>{getPaymentStatusLabel(b.payment_status)}</span></div></button>))}{filtered.length === 0 && <p className="text-center text-gray-500 py-4">No bookings</p>}</div>
         </div></div>
         <div className="lg:col-span-2">
