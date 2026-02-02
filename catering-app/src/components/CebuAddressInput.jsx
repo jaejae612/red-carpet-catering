@@ -1,126 +1,100 @@
 import React, { useState, useEffect } from 'react'
-import { MapPin, AlertCircle, Truck, Info, Phone } from 'lucide-react'
+import { MapPin, AlertCircle, Truck, Info, Phone, Fuel } from 'lucide-react'
 import { 
   CEBU_SERVICE_AREAS, 
-  OUTSIDE_SERVICE_AREA,
   getCityList, 
   getBarangays, 
   getDeliveryFee,
-  getCateringFee,
+  getGasCharge,
   getCityInfo,
   formatAddress,
-  getMinimumPax
+  getMinimumPax,
+  requiresQuotation
 } from '../lib/cebuAreas'
 
 /**
- * CebuAddressInput - Reusable component for Cebu-only addresses
+ * CebuAddressInput - Cebu-only address input with city/barangay dropdowns
  * 
  * Props:
  * - value: { city, barangay, street, landmark }
- * - onChange: (addressData) => void
- * - type: 'delivery' | 'catering' | 'venue' (affects fee display)
- * - showFee: boolean (show delivery/catering fee)
- * - required: boolean
- * - disabled: boolean
- * - className: string
+ * - onChange: (addressData) => void - returns full address data including fees
+ * - type: 'catering' | 'delivery' (affects which fee to show)
+ * - showFee: boolean (default true)
+ * - required: boolean (default true)
+ * - disabled: boolean (default false)
+ * - currentPax: number (for min pax validation in catering)
  */
 export default function CebuAddressInput({ 
   value = {}, 
   onChange, 
-  type = 'delivery',
+  type = 'catering',
   showFee = true,
   required = true,
   disabled = false,
-  className = ''
+  currentPax = 30
 }) {
-  const [address, setAddress] = useState({
-    city: value.city || '',
-    barangay: value.barangay || '',
-    street: value.street || '',
-    landmark: value.landmark || ''
-  })
-  
-  const [barangayList, setBarangayList] = useState([])
-  const [showOutsideWarning, setShowOutsideWarning] = useState(false)
-  
   const cities = getCityList()
+  const [barangayList, setBarangayList] = useState([])
   
   // Update barangay list when city changes
   useEffect(() => {
-    if (address.city) {
-      setBarangayList(getBarangays(address.city))
-      setShowOutsideWarning(false)
+    if (value.city) {
+      setBarangayList(getBarangays(value.city))
     } else {
       setBarangayList([])
     }
-  }, [address.city])
+  }, [value.city])
   
-  // Notify parent of changes
-  useEffect(() => {
-    if (onChange) {
-      const cityInfo = getCityInfo(address.city)
-      onChange({
-        ...address,
-        cityName: cityInfo?.name || '',
-        deliveryFee: getDeliveryFee(address.city),
-        cateringFee: getCateringFee(address.city),
-        minPax: getMinimumPax(address.city),
-        formatted: formatAddress(address.street, address.barangay, address.city, address.landmark),
-        isValid: !!(address.city && address.barangay && address.street)
-      })
+  // Handle field changes
+  const handleChange = (field, fieldValue) => {
+    const newValue = { ...value, [field]: fieldValue }
+    
+    // Reset barangay if city changes
+    if (field === 'city') {
+      newValue.barangay = ''
     }
-  }, [address])
-  
-  const handleCityChange = (cityId) => {
-    setAddress(prev => ({
-      ...prev,
-      city: cityId,
-      barangay: '' // Reset barangay when city changes
-    }))
+    
+    // Calculate fees and format address
+    const cityInfo = getCityInfo(newValue.city)
+    const formatted = newValue.city && newValue.barangay && newValue.street 
+      ? formatAddress(newValue.street, newValue.barangay, newValue.city, newValue.landmark)
+      : ''
+    
+    onChange({
+      ...newValue,
+      cityName: cityInfo?.name || '',
+      deliveryFee: getDeliveryFee(newValue.city) || 0,
+      gasCharge: getGasCharge(newValue.city) || 0,
+      minPax: getMinimumPax(newValue.city),
+      requiresQuote: requiresQuotation(newValue.city),
+      formatted,
+      isValid: !!(newValue.city && newValue.barangay && newValue.street?.trim())
+    })
   }
   
-  const handleBarangayChange = (barangay) => {
-    setAddress(prev => ({ ...prev, barangay }))
-  }
-  
-  const handleStreetChange = (street) => {
-    setAddress(prev => ({ ...prev, street }))
-  }
-  
-  const handleLandmarkChange = (landmark) => {
-    setAddress(prev => ({ ...prev, landmark }))
-  }
-  
-  const cityInfo = getCityInfo(address.city)
-  const fee = type === 'catering' ? cityInfo?.cateringFee : cityInfo?.deliveryFee
+  const cityInfo = getCityInfo(value.city)
+  const fee = type === 'catering' ? cityInfo?.gasCharge : cityInfo?.deliveryFee
+  const minPax = cityInfo?.minPax || 30
+  const needsQuote = cityInfo?.requiresQuote
   
   return (
-    <div className={`space-y-4 ${className}`}>
-      {/* Header */}
-      <div className="flex items-center gap-2 text-gray-700">
-        <MapPin size={20} className="text-red-600" />
-        <span className="font-medium">
-          {type === 'catering' ? 'Venue Address' : 'Delivery Address'}
-          {required && <span className="text-red-500 ml-1">*</span>}
-        </span>
-      </div>
-      
+    <div className="space-y-4">
       {/* Service Area Notice */}
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 flex items-start gap-2">
         <Info size={18} className="text-blue-600 flex-shrink-0 mt-0.5" />
         <p className="text-sm text-blue-700">
-          We currently serve <strong>Metro Cebu</strong> and nearby areas only.
+          Service limited to <strong>Metro Cebu</strong> and nearby areas.
         </p>
       </div>
       
       {/* City Selection */}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">
-          City / Municipality
+          City / Municipality {required && <span className="text-red-500">*</span>}
         </label>
         <select
-          value={address.city}
-          onChange={(e) => handleCityChange(e.target.value)}
+          value={value.city || ''}
+          onChange={(e) => handleChange('city', e.target.value)}
           disabled={disabled}
           required={required}
           className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 bg-white disabled:bg-gray-100"
@@ -129,23 +103,23 @@ export default function CebuAddressInput({
           {cities.map(city => (
             <option key={city.id} value={city.id}>
               {city.name}
+              {type === 'catering' && city.gasCharge > 0 && ` (+₱${city.gasCharge} gas)`}
               {type === 'delivery' && city.deliveryFee > 0 && ` (+₱${city.deliveryFee})`}
-              {type === 'catering' && city.cateringFee > 0 && ` (+₱${city.cateringFee})`}
+              {city.requiresQuote && ' (Quote needed)'}
             </option>
           ))}
-          <option value="outside" disabled>── Other Areas ──</option>
         </select>
       </div>
       
       {/* Barangay Selection */}
-      {address.city && barangayList.length > 0 && (
+      {value.city && barangayList.length > 0 && (
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            Barangay
+            Barangay {required && <span className="text-red-500">*</span>}
           </label>
           <select
-            value={address.barangay}
-            onChange={(e) => handleBarangayChange(e.target.value)}
+            value={value.barangay || ''}
+            onChange={(e) => handleChange('barangay', e.target.value)}
             disabled={disabled}
             required={required}
             className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 bg-white disabled:bg-gray-100"
@@ -159,33 +133,33 @@ export default function CebuAddressInput({
       )}
       
       {/* Street Address */}
-      {address.city && (
+      {value.city && (
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
-            Street / Building / Unit
+            Street / Building / Venue Name {required && <span className="text-red-500">*</span>}
           </label>
           <input
             type="text"
-            value={address.street}
-            onChange={(e) => handleStreetChange(e.target.value)}
+            value={value.street || ''}
+            onChange={(e) => handleChange('street', e.target.value)}
             disabled={disabled}
             required={required}
-            placeholder="e.g., 123 Main St., Unit 5B, ABC Building"
+            placeholder={type === 'catering' ? "e.g., Function Room, ABC Hotel" : "e.g., 123 Main St., Unit 5B"}
             className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 disabled:bg-gray-100"
           />
         </div>
       )}
       
       {/* Landmark (Optional) */}
-      {address.city && (
+      {value.city && (
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">
             Landmark <span className="text-gray-400">(Optional)</span>
           </label>
           <input
             type="text"
-            value={address.landmark}
-            onChange={(e) => handleLandmarkChange(e.target.value)}
+            value={value.landmark || ''}
+            onChange={(e) => handleChange('landmark', e.target.value)}
             disabled={disabled}
             placeholder="e.g., Near SM City, Beside BDO"
             className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 disabled:bg-gray-100"
@@ -193,15 +167,19 @@ export default function CebuAddressInput({
         </div>
       )}
       
-      {/* Delivery/Catering Fee Display */}
-      {showFee && address.city && cityInfo && (
+      {/* Gas Charge / Delivery Fee Display */}
+      {showFee && value.city && cityInfo && !needsQuote && (
         <div className={`rounded-xl p-4 flex items-center justify-between ${
           fee === 0 ? 'bg-green-50 border border-green-200' : 'bg-amber-50 border border-amber-200'
         }`}>
           <div className="flex items-center gap-2">
-            <Truck size={20} className={fee === 0 ? 'text-green-600' : 'text-amber-600'} />
+            {type === 'catering' ? (
+              <Fuel size={20} className={fee === 0 ? 'text-green-600' : 'text-amber-600'} />
+            ) : (
+              <Truck size={20} className={fee === 0 ? 'text-green-600' : 'text-amber-600'} />
+            )}
             <span className={`font-medium ${fee === 0 ? 'text-green-700' : 'text-amber-700'}`}>
-              {type === 'catering' ? 'Venue Charge' : 'Delivery Fee'}:
+              {type === 'catering' ? 'Gas Charge:' : 'Delivery Fee:'}
             </span>
           </div>
           <span className={`font-bold text-lg ${fee === 0 ? 'text-green-700' : 'text-amber-700'}`}>
@@ -210,71 +188,40 @@ export default function CebuAddressInput({
         </div>
       )}
       
-      {/* Area-specific notes */}
-      {cityInfo?.note && (
-        <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 flex items-start gap-2">
-          <AlertCircle size={18} className="text-amber-600 flex-shrink-0 mt-0.5" />
-          <p className="text-sm text-amber-700">{cityInfo.note}</p>
-        </div>
-      )}
-      
-      {/* Minimum pax warning for catering */}
-      {type === 'catering' && cityInfo && cityInfo.minPax > 30 && (
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 flex items-start gap-2">
-          <Info size={18} className="text-blue-600 flex-shrink-0 mt-0.5" />
-          <p className="text-sm text-blue-700">
-            Minimum <strong>{cityInfo.minPax} guests</strong> required for catering in {cityInfo.name}.
-          </p>
-        </div>
-      )}
-      
-      {/* Outside Service Area Warning */}
-      {showOutsideWarning && (
-        <div className="bg-red-50 border border-red-200 rounded-xl p-4">
-          <div className="flex items-start gap-3">
-            <AlertCircle className="text-red-600 flex-shrink-0 mt-0.5" size={20} />
-            <div>
-              <p className="font-medium text-red-800">{OUTSIDE_SERVICE_AREA.message}</p>
-              <div className="mt-2 flex items-center gap-2 text-red-700">
-                <Phone size={16} />
-                <a href={`tel:${OUTSIDE_SERVICE_AREA.phone}`} className="font-semibold hover:underline">
-                  {OUTSIDE_SERVICE_AREA.phone}
-                </a>
-              </div>
-            </div>
+      {/* Requires Quote Warning */}
+      {value.city && needsQuote && (
+        <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-start gap-3">
+          <AlertCircle className="text-amber-600 flex-shrink-0 mt-0.5" size={20} />
+          <div>
+            <p className="font-medium text-amber-800">Quotation Required</p>
+            <p className="text-sm text-amber-700 mt-1">{cityInfo?.note || 'This area requires a custom quote. We will contact you with pricing.'}</p>
+            <p className="text-sm text-amber-700 mt-2 flex items-center gap-1">
+              <Phone size={14} /> Call: <strong>0917-187-6510</strong>
+            </p>
           </div>
         </div>
       )}
       
+      {/* Minimum Pax Warning for Catering */}
+      {type === 'catering' && value.city && minPax > 30 && currentPax < minPax && (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-3 flex items-start gap-2">
+          <AlertCircle size={18} className="text-red-600 flex-shrink-0 mt-0.5" />
+          <p className="text-sm text-red-700">
+            <strong>{cityInfo?.name}</strong> requires minimum <strong>{minPax} guests</strong>. 
+            Current: {currentPax} guests.
+          </p>
+        </div>
+      )}
+      
       {/* Formatted Address Preview */}
-      {address.city && address.barangay && address.street && (
+      {value.city && value.barangay && value.street && (
         <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
           <p className="text-sm text-gray-500 mb-1">Complete Address:</p>
           <p className="font-medium text-gray-800">
-            {formatAddress(address.street, address.barangay, address.city, address.landmark)}
+            {formatAddress(value.street, value.barangay, value.city, value.landmark)}
           </p>
         </div>
       )}
     </div>
   )
-}
-
-/**
- * Simple hook for address state management
- */
-export const useCebuAddress = (initialValue = {}) => {
-  const [address, setAddress] = useState({
-    city: initialValue.city || '',
-    barangay: initialValue.barangay || '',
-    street: initialValue.street || '',
-    landmark: initialValue.landmark || '',
-    cityName: '',
-    deliveryFee: 0,
-    cateringFee: 0,
-    minPax: 30,
-    formatted: '',
-    isValid: false
-  })
-  
-  return [address, setAddress]
 }
