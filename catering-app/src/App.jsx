@@ -10,8 +10,14 @@ import ProfilePage from './pages/ProfilePage'
 import SignUpPage from './pages/SignUpPage'
 import BookingPage from './pages/BookingPage'
 import MyOrdersPage from './pages/MyOrdersPage'
+
+// New Catering Pages
+import CateringSelectionPage from './pages/CateringSelectionPage'
+import CocktailBookingPage from './pages/CocktailBookingPage'
+import PackedMealOrderPage from './pages/PackedMealOrderPage'
+
+// Admin Pages
 import AdminDashboard from './pages/admin/AdminDashboard'
-import AdminDashboardStats from './pages/admin/AdminDashboardStats'
 import AdminBookings from './pages/admin/AdminBookings'
 import AdminFoodOrders from './pages/admin/AdminFoodOrders'
 import AdminFoodItems from './pages/admin/AdminFoodItems'
@@ -20,6 +26,8 @@ import AdminStaff from './pages/admin/AdminStaff'
 import AdminEquipment from './pages/admin/AdminEquipment'
 import DailyBookingSummary from './pages/admin/DailyBookingSummary'
 import BookingCalendar from './pages/admin/BookingCalendar'
+
+// Components
 import SetupGuide from './pages/SetupGuide'
 import Navbar from './components/Navbar'
 import Footer from './components/Footer'
@@ -51,12 +59,17 @@ function App() {
           <Route path="/order-food" element={<FoodMenuPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/reset-password" element={<ResetPasswordPage />} />
-          <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
           <Route path="/signup" element={<SignUpPage />} />
           
           {/* Protected Customer Routes */}
-          <Route path="/book" element={<ProtectedRoute><BookingPage /></ProtectedRoute>} />
+          <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
           <Route path="/my-orders" element={<ProtectedRoute><MyOrdersPage /></ProtectedRoute>} />
+          
+          {/* Catering Booking Routes */}
+          <Route path="/catering" element={<ProtectedRoute><CateringSelectionPage /></ProtectedRoute>} />
+          <Route path="/book" element={<ProtectedRoute><BookingPage /></ProtectedRoute>} />
+          <Route path="/book/cocktail" element={<ProtectedRoute><CocktailBookingPage /></ProtectedRoute>} />
+          <Route path="/order/packed-meals" element={<ProtectedRoute><PackedMealOrderPage /></ProtectedRoute>} />
           
           {/* Admin Routes with Sidebar */}
           <Route path="/admin" element={<ProtectedRoute adminOnly><AdminLayout><AdminDashboard /></AdminLayout></ProtectedRoute>} />
@@ -68,7 +81,6 @@ function App() {
           <Route path="/admin/menu" element={<ProtectedRoute adminOnly><AdminLayout><AdminMenu /></AdminLayout></ProtectedRoute>} />
           <Route path="/admin/daily-summary" element={<ProtectedRoute adminOnly><DailyBookingSummary /></ProtectedRoute>} />
           <Route path="/admin/calendar" element={<ProtectedRoute adminOnly><AdminLayout><BookingCalendar /></AdminLayout></ProtectedRoute>} />
-          <Route path="/admin/stats" element={<ProtectedRoute adminOnly><AdminLayout><AdminDashboardStats /></AdminLayout></ProtectedRoute>} />
           
           {/* Catch all */}
           <Route path="*" element={<Navigate to="/" replace />} />
