@@ -12,8 +12,17 @@ import {
   additionalDrinks,
   calculateAddOnsBreakdown
 } from '../lib/menuData'
-import { Calendar, Clock, MapPin, Check, Plus, Minus, Send, Palette, Info, ChevronRight, ChevronLeft, User, Phone, Mail, UtensilsCrossed, AlertCircle, PartyPopper, Droplets, Gift } from 'lucide-react'
-import TermsAndConditions from '../components/TermsAndConditions'
+import { 
+  CEBU_SERVICE_AREAS, 
+  getCityList, 
+  getBarangays, 
+  getGasCharge, 
+  getCityInfo, 
+  formatAddress, 
+  getMinimumPax,
+  requiresQuotation
+} from '../lib/cebuAreas'
+import { Calendar, Clock, MapPin, Check, Plus, Minus, Send, Palette, Info, ChevronRight, ChevronLeft, User, Phone, Mail, UtensilsCrossed, AlertCircle, PartyPopper, Droplets, Gift, Fuel } from 'lucide-react'
 
 const BASE_DISH_CATEGORIES = [
   { id: 'salad', name: 'Salad', pick: 1, color: 'bg-green-100 text-green-800' },
@@ -45,7 +54,6 @@ export default function BookingPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [dishes, setDishes] = useState([])
-  const [termsAccepted, setTermsAccepted] = useState(false)
   
   // Check for duplicate booking data
   const getDuplicateData = () => {
@@ -63,6 +71,9 @@ export default function BookingPage() {
   
   const [booking, setBooking] = useState({ 
     venue: duplicateData?.venue || '', 
+    // Structured venue address for Cebu-only
+    venueAddress: duplicateData?.venue_address || { city: '', barangay: '', street: '', landmark: '' },
+    venueGasCharge: 0,
     date: '', 
     time: duplicateData?.event_time || '', 
     selectedPackage: duplicateData?.menu_package || '', 
@@ -494,7 +505,10 @@ export default function BookingPage() {
       return sum + (item ? item.price * (d.quantity || 1) : 0)
     }, 0)
     
-    return menuTotal + stationsTotal + drinkTotal
+    // Gas charge based on venue location
+    const gasCharge = booking.venueGasCharge || 0
+    
+    return menuTotal + stationsTotal + drinkTotal + gasCharge
   }
 
   // Get motif display string
@@ -544,7 +558,9 @@ export default function BookingPage() {
         customer_name: customerName, 
         customer_phone: customerPhone, 
         customer_email: customerEmail,
-        venue: booking.venue, 
+        venue: booking.venue,
+        venue_address: booking.venueAddress, // Structured address {city, barangay, street, landmark}
+        gas_charge: booking.venueGasCharge || 0, // Gas charge based on location
         event_date: booking.date, 
         event_time: booking.time, 
         menu_package: booking.selectedPackage,
@@ -704,12 +720,155 @@ export default function BookingPage() {
         </div>
       )}
 
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">Venue Address *</label>
-        <div className="relative">
-          <MapPin className="absolute left-3 top-3 text-gray-400" size={20} />
-          <textarea value={booking.venue} onChange={(e) => updateBooking('venue', e.target.value)} placeholder="Complete address" required className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 min-h-[100px]" />
+      {/* Venue Address - Cebu Only */}
+      <div className="space-y-4">
+        <label className="block text-sm font-medium text-gray-700 flex items-center gap-2">
+          <MapPin size={18} className="text-red-600" />
+          Venue Address (Cebu Only) *
+        </label>
+        
+        {/* Service Area Notice */}
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 flex items-start gap-2">
+          <Info size={16} className="text-blue-600 flex-shrink-0 mt-0.5" />
+          <p className="text-sm text-blue-700">Service limited to <strong>Metro Cebu</strong> and nearby areas.</p>
         </div>
+        
+        {/* City Selection */}
+        <div>
+          <label className="block text-sm text-gray-600 mb-1">City / Municipality *</label>
+          <select
+            value={booking.venueAddress.city}
+            onChange={(e) => {
+              const cityId = e.target.value
+              const gasCharge = getGasCharge(cityId) || 0
+              updateBooking('venueAddress', { ...booking.venueAddress, city: cityId, barangay: '' })
+              updateBooking('venueGasCharge', gasCharge)
+              // Also update venue string for backward compatibility
+              if (cityId) {
+                const cityInfo = getCityInfo(cityId)
+                updateBooking('venue', cityInfo?.name || '')
+              }
+            }}
+            required
+            className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 bg-white"
+          >
+            <option value="">Select city...</option>
+            {getCityList().map(city => (
+              <option key={city.id} value={city.id}>
+                {city.name}
+                {city.gasCharge > 0 && ` (+₱${city.gasCharge} gas)`}
+                {city.requiresQuote && ' (Quote needed)'}
+              </option>
+            ))}
+          </select>
+        </div>
+        
+        {/* Barangay Selection */}
+        {booking.venueAddress.city && (
+          <div>
+            <label className="block text-sm text-gray-600 mb-1">Barangay *</label>
+            <select
+              value={booking.venueAddress.barangay}
+              onChange={(e) => {
+                updateBooking('venueAddress', { ...booking.venueAddress, barangay: e.target.value })
+              }}
+              required
+              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 bg-white"
+            >
+              <option value="">Select barangay...</option>
+              {getBarangays(booking.venueAddress.city).map(brgy => (
+                <option key={brgy} value={brgy}>{brgy}</option>
+              ))}
+            </select>
+          </div>
+        )}
+        
+        {/* Street / Venue Name */}
+        {booking.venueAddress.city && (
+          <div>
+            <label className="block text-sm text-gray-600 mb-1">Street / Building / Venue Name *</label>
+            <input
+              type="text"
+              value={booking.venueAddress.street}
+              onChange={(e) => {
+                updateBooking('venueAddress', { ...booking.venueAddress, street: e.target.value })
+                // Update venue string
+                const fullAddress = formatAddress(e.target.value, booking.venueAddress.barangay, booking.venueAddress.city, booking.venueAddress.landmark)
+                updateBooking('venue', fullAddress)
+              }}
+              required
+              placeholder="e.g., Function Room, ABC Hotel"
+              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500"
+            />
+          </div>
+        )}
+        
+        {/* Landmark */}
+        {booking.venueAddress.city && (
+          <div>
+            <label className="block text-sm text-gray-600 mb-1">Landmark <span className="text-gray-400">(Optional)</span></label>
+            <input
+              type="text"
+              value={booking.venueAddress.landmark}
+              onChange={(e) => {
+                updateBooking('venueAddress', { ...booking.venueAddress, landmark: e.target.value })
+                const fullAddress = formatAddress(booking.venueAddress.street, booking.venueAddress.barangay, booking.venueAddress.city, e.target.value)
+                updateBooking('venue', fullAddress)
+              }}
+              placeholder="e.g., Near SM City, Beside BDO"
+              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500"
+            />
+          </div>
+        )}
+        
+        {/* Gas Charge Display */}
+        {booking.venueAddress.city && !requiresQuotation(booking.venueAddress.city) && (
+          <div className={`rounded-xl p-4 flex items-center justify-between ${
+            booking.venueGasCharge === 0 ? 'bg-green-50 border border-green-200' : 'bg-amber-50 border border-amber-200'
+          }`}>
+            <div className="flex items-center gap-2">
+              <Fuel size={20} className={booking.venueGasCharge === 0 ? 'text-green-600' : 'text-amber-600'} />
+              <span className={`font-medium ${booking.venueGasCharge === 0 ? 'text-green-700' : 'text-amber-700'}`}>
+                Gas Charge:
+              </span>
+            </div>
+            <span className={`font-bold text-lg ${booking.venueGasCharge === 0 ? 'text-green-700' : 'text-amber-700'}`}>
+              {booking.venueGasCharge === 0 ? 'FREE' : `₱${booking.venueGasCharge.toLocaleString()}`}
+            </span>
+          </div>
+        )}
+        
+        {/* Requires Quote Warning */}
+        {booking.venueAddress.city && requiresQuotation(booking.venueAddress.city) && (
+          <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-start gap-3">
+            <AlertCircle className="text-amber-600 flex-shrink-0 mt-0.5" size={20} />
+            <div>
+              <p className="font-medium text-amber-800">Quotation Required</p>
+              <p className="text-sm text-amber-700 mt-1">{getCityInfo(booking.venueAddress.city)?.note || 'This area requires a custom quote.'}</p>
+              <p className="text-sm text-amber-700 mt-2 flex items-center gap-1">
+                <Phone size={14} /> Call: <strong>0917-187-6510</strong>
+              </p>
+            </div>
+          </div>
+        )}
+        
+        {/* Min Pax Warning */}
+        {booking.venueAddress.city && getMinimumPax(booking.venueAddress.city) > 30 && booking.numberOfPax < getMinimumPax(booking.venueAddress.city) && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-3 flex items-start gap-2">
+            <AlertCircle size={16} className="text-red-600 flex-shrink-0 mt-0.5" />
+            <p className="text-sm text-red-700">
+              <strong>{getCityInfo(booking.venueAddress.city)?.name}</strong> requires minimum <strong>{getMinimumPax(booking.venueAddress.city)} guests</strong>.
+            </p>
+          </div>
+        )}
+        
+        {/* Address Preview */}
+        {booking.venueAddress.city && booking.venueAddress.barangay && booking.venueAddress.street && (
+          <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
+            <p className="text-sm text-gray-500 mb-1">Complete Address:</p>
+            <p className="font-medium text-gray-800">{booking.venue}</p>
+          </div>
+        )}
       </div>
       <div className="grid grid-cols-2 gap-4">
         <div>
@@ -1556,19 +1715,27 @@ export default function BookingPage() {
           <h3 className="font-semibold text-gray-700 mb-3">Order Details</h3>
           <div className="space-y-2 text-sm">
             <div className="flex justify-between"><span>{pkg?.name}</span><span>{booking.selectedMenuOption}</span></div>
-            <div className="flex justify-between"><span>{booking.numberOfPax} pax Ã— â‚±{pph}</span><span className="font-medium">â‚±{(pph * booking.numberOfPax).toLocaleString()}</span></div>
+            <div className="flex justify-between"><span>{booking.numberOfPax} pax × ₱{pph}</span><span className="font-medium">₱{(pph * booking.numberOfPax).toLocaleString()}</span></div>
             
             {/* Drink add-ons */}
             {booking.drinkAddOns.map(addon => { 
               const item = additionalDrinks.find(a => a.id === addon.id)
-              return <div key={addon.id} className="flex justify-between text-blue-600"><span>ðŸ¥¤ {item?.name} Ã—{addon.quantity}</span><span>â‚±{((item?.price || 0) * addon.quantity).toLocaleString()}</span></div> 
+              return <div key={addon.id} className="flex justify-between text-blue-600"><span>🥤 {item?.name} ×{addon.quantity}</span><span>₱{((item?.price || 0) * addon.quantity).toLocaleString()}</span></div> 
             })}
             
             {/* Station add-ons */}
             {booking.addOns.map(addon => { 
               const item = addOnStations.find(a => a.id === addon.id)
-              return <div key={addon.id} className="flex justify-between text-gray-600"><span>{item?.name} Ã—{addon.quantity}</span><span>â‚±{((item?.price || 0) * addon.quantity).toLocaleString()}</span></div> 
+              return <div key={addon.id} className="flex justify-between text-gray-600"><span>{item?.name} ×{addon.quantity}</span><span>₱{((item?.price || 0) * addon.quantity).toLocaleString()}</span></div> 
             })}
+            
+            {/* Gas Charge */}
+            {booking.venueGasCharge > 0 && (
+              <div className="flex justify-between text-amber-600 pt-2 border-t border-gray-200">
+                <span className="flex items-center gap-1">⛽ Gas Charge ({getCityInfo(booking.venueAddress.city)?.name})</span>
+                <span>₱{booking.venueGasCharge.toLocaleString()}</span>
+              </div>
+            )}
           </div>
         </div>
 
@@ -1749,15 +1916,8 @@ export default function BookingPage() {
             <span className="text-lg font-semibold">Total</span>
             <span className="text-2xl font-bold">₱{total.toLocaleString()}</span>
           </div>
-          <p className="text-red-200 text-sm mt-1">50% Deposit required: ₱{Math.round(total * 0.5).toLocaleString()}</p>
+          <p className="text-red-200 text-sm mt-1">Deposit: ₱5,000</p>
         </div>
-
-        {/* Terms and Conditions */}
-        <TermsAndConditions 
-          compact={true}
-          accepted={termsAccepted}
-          onAccept={setTermsAccepted}
-        />
         
         {error && <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">{error}</div>}
       </div>
@@ -1774,8 +1934,13 @@ export default function BookingPage() {
       // Other occasion validation
       if (booking.occasion === 'other' && !booking.occasionOther) return false
       if (!isValidDate(booking.date, booking.time)) return false
-      if (isAdmin) return booking.customerName && booking.customerPhone && booking.venue
-      return booking.venue
+      // Venue address validation - require city, barangay, and street
+      const hasValidVenue = booking.venueAddress.city && booking.venueAddress.barangay && booking.venueAddress.street?.trim()
+      // Check minimum pax for the area
+      const minPax = getMinimumPax(booking.venueAddress.city)
+      if (booking.venueAddress.city && booking.numberOfPax < minPax) return false
+      if (isAdmin) return booking.customerName && booking.customerPhone && hasValidVenue
+      return hasValidVenue
     }
     if (step === 2) return booking.selectedPackage && booking.selectedMenuOption
     if (step === 3) {
@@ -1815,8 +1980,8 @@ export default function BookingPage() {
                 Continue <ChevronRight size={20} />
               </button>
             ) : (
-              <button onClick={handleSubmit} disabled={loading || !termsAccepted} className="flex-1 py-3 bg-red-700 text-white rounded-xl font-medium hover:bg-red-800 disabled:opacity-50 flex items-center justify-center gap-2">
-                <Send size={20} /> {loading ? 'Submitting...' : !termsAccepted ? 'Accept Terms to Continue' : 'Submit Order'}
+              <button onClick={handleSubmit} disabled={loading} className="flex-1 py-3 bg-red-700 text-white rounded-xl font-medium hover:bg-red-800 disabled:opacity-50 flex items-center justify-center gap-2">
+                <Send size={20} /> {loading ? 'Submitting...' : 'Submit Order'}
               </button>
             )}
           </div>
