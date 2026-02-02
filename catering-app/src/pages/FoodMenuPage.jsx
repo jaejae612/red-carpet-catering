@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
-import { FOOD_CATEGORIES, SERVING_SIZES, FIXED_PRICE_SIZE, BINGCAVA_SIZES, LUMPIA_SIZES, getItemPrice, getAvailableSizes, calculateCartTotal, getCategoryInfo } from '../lib/foodOrderData'
+import { FOOD_CATEGORIES, SERVING_SIZES, FIXED_PRICE_SIZE, BINGCAVA_SIZES, LUMPIA_SIZES, DESSERT_SIZES, getItemPrice, getAvailableSizes, calculateCartTotal, getCategoryInfo } from '../lib/foodOrderData'
 import { ShoppingCart, Plus, Minus, X, Search, ChevronRight, MapPin, Calendar, Clock, User, Phone, Mail, Send, Trash2, AlertCircle } from 'lucide-react'
 
 export default function FoodMenuPage() {
@@ -110,6 +110,9 @@ export default function FoodMenuPage() {
     let sizeInfo
     if (selectedSize === 'fixed') {
       sizeInfo = FIXED_PRICE_SIZE
+    } else if (selectedSize.startsWith('dessert_')) {
+      // Handle dessert sizes
+      sizeInfo = DESSERT_SIZES.find(s => s.id === selectedSize)
     } else if (selectedItem.name?.toLowerCase().includes('bingcava')) {
       sizeInfo = BINGCAVA_SIZES.find(s => s.id === selectedSize)
     } else if (selectedItem.name?.toLowerCase().includes('lumpia')) {
@@ -198,41 +201,75 @@ export default function FoodMenuPage() {
         <div className="bg-white rounded-2xl shadow-lg p-4 mb-6 sticky top-16 z-20">
           <div className="relative mb-3">
             <Search className="absolute left-3 top-3 text-gray-400" size={20} />
-            <input type="text" placeholder="Search dishes..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500" />
+            <input
+              type="text"
+              placeholder="Search dishes..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500"
+            />
           </div>
-          <div className="flex gap-2 overflow-x-auto pb-2">
-            <button onClick={() => setSelectedCategory('all')} className={`flex-shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-colors ${selectedCategory === 'all' ? 'bg-red-700 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}>All</button>
-            {FOOD_CATEGORIES.map(cat => {
-              const count = foodItems.filter(i => i.category === cat.id).length
-              if (count === 0) return null
-              return (
-                <button key={cat.id} onClick={() => setSelectedCategory(cat.id)} className={`flex-shrink-0 px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap transition-colors ${selectedCategory === cat.id ? 'bg-red-700 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}>{cat.icon} {cat.name}</button>
-              )
-            })}
+          <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+            <button
+              onClick={() => setSelectedCategory('all')}
+              className={`px-4 py-2 rounded-full whitespace-nowrap text-sm font-medium transition-colors ${
+                selectedCategory === 'all' ? 'bg-red-700 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
+            >
+              All
+            </button>
+            {FOOD_CATEGORIES.map(cat => (
+              <button
+                key={cat.id}
+                onClick={() => setSelectedCategory(cat.id)}
+                className={`px-4 py-2 rounded-full whitespace-nowrap text-sm font-medium transition-colors flex items-center gap-1 ${
+                  selectedCategory === cat.id ? 'bg-red-700 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                }`}
+              >
+                <span>{cat.icon}</span> {cat.name}
+              </button>
+            ))}
           </div>
         </div>
 
+        {/* Loading */}
+        {loading && (
+          <div className="flex justify-center py-12">
+            <div className="w-12 h-12 border-4 border-red-200 border-t-red-700 rounded-full animate-spin"></div>
+          </div>
+        )}
+
         {/* Menu Items */}
-        {loading ? (
-          <div className="text-center py-12"><div className="animate-spin w-12 h-12 border-4 border-red-700 border-t-transparent rounded-full mx-auto"></div><p className="mt-4 text-gray-500">Loading menu...</p></div>
-        ) : (
+        {!loading && (
           <div className="space-y-8">
             {Object.entries(groupedItems).map(([category, items]) => {
               const catInfo = getCategoryInfo(category)
               return (
                 <div key={category}>
                   <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
-                    <span className="text-2xl">{catInfo.icon}</span> {catInfo.name}
+                    <span className={`px-3 py-1 rounded-full text-sm ${catInfo.color}`}>{catInfo.icon} {catInfo.name}</span>
                     <span className="text-sm font-normal text-gray-400">({items.length})</span>
                   </h2>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {items.map(item => {
-                      const isFlat = item.category === 'dessert' || item.category === 'special'
+                      const sizes = getAvailableSizes(item)
+                      const lowestPrice = sizes.length > 0 
+                        ? Math.min(...sizes.map(s => getItemPrice(item, s.id)).filter(p => p > 0))
+                        : item.price_home || 0
                       return (
-                        <button key={item.id} onClick={() => openItemModal(item)} className="bg-white rounded-xl p-4 text-left hover:shadow-lg transition-shadow border border-gray-100 group">
-                          <h3 className="font-semibold text-gray-800 group-hover:text-red-700 transition-colors">{item.name}</h3>
-                          <p className="text-red-700 font-bold mt-2">{isFlat ? `₱${item.price_home?.toLocaleString()}` : `From ₱${item.price_home?.toLocaleString()}`}</p>
-                          {!isFlat && <p className="text-xs text-gray-400 mt-1">Click to see all sizes</p>}
+                        <button
+                          key={item.id}
+                          onClick={() => openItemModal(item)}
+                          className="bg-white rounded-xl shadow-md p-4 text-left hover:shadow-lg transition-shadow flex justify-between items-center"
+                        >
+                          <div className="flex-1">
+                            <h3 className="font-semibold text-gray-800">{item.name}</h3>
+                            <p className="text-sm text-gray-500">{item.description}</p>
+                          </div>
+                          <div className="text-right ml-4">
+                            <p className="text-lg font-bold text-red-700">₱{lowestPrice.toLocaleString()}</p>
+                            {sizes.length > 1 && <p className="text-xs text-gray-400">from</p>}
+                          </div>
                         </button>
                       )
                     })}
@@ -240,7 +277,13 @@ export default function FoodMenuPage() {
                 </div>
               )
             })}
-            {Object.keys(groupedItems).length === 0 && <div className="text-center py-12 bg-white rounded-2xl"><p className="text-gray-500">No items found</p></div>}
+          </div>
+        )}
+
+        {/* Empty State */}
+        {!loading && filteredItems.length === 0 && (
+          <div className="text-center py-12">
+            <p className="text-gray-500">No items found</p>
           </div>
         )}
       </div>
@@ -258,29 +301,28 @@ export default function FoodMenuPage() {
                 <button onClick={() => setSelectedItem(null)} className="text-gray-400 hover:text-gray-600"><X size={24} /></button>
               </div>
               
-              {/* Size Selection - only show if multiple sizes */}
-              {getAvailableSizes(selectedItem).length > 1 ? (
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Select Size</label>
-                  <div className="space-y-2">
-                    {getAvailableSizes(selectedItem).map(size => {
-                      const price = getItemPrice(selectedItem, size.id)
-                      return (
-                        <button key={size.id} onClick={() => setSelectedSize(size.id)} className={`w-full p-4 rounded-xl border-2 text-left flex justify-between items-center transition-all ${selectedSize === size.id ? 'border-red-700 bg-red-50' : 'border-gray-200 hover:border-gray-300'}`}>
-                          <div><p className="font-semibold text-gray-800">{size.name}</p><p className="text-sm text-gray-500">{size.serves}</p></div>
-                          <span className="text-lg font-bold text-red-700">₱{price.toLocaleString()}</span>
-                        </button>
-                      )
-                    })}
-                  </div>
+              {/* Size Selection - show for all items with sizes */}
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Select Size</label>
+                <div className="space-y-2">
+                  {getAvailableSizes(selectedItem).map(size => {
+                    const price = getItemPrice(selectedItem, size.id)
+                    return (
+                      <button 
+                        key={size.id} 
+                        onClick={() => setSelectedSize(size.id)} 
+                        className={`w-full p-4 rounded-xl border-2 text-left flex justify-between items-center transition-all ${selectedSize === size.id ? 'border-red-700 bg-red-50' : 'border-gray-200 hover:border-gray-300'}`}
+                      >
+                        <div>
+                          <p className="font-semibold text-gray-800">{size.name}</p>
+                          <p className="text-sm text-gray-500">{size.serves}</p>
+                        </div>
+                        <span className="text-lg font-bold text-red-700">₱{price.toLocaleString()}</span>
+                      </button>
+                    )
+                  })}
                 </div>
-              ) : (
-                /* Single price display for desserts/special */
-                <div className="mb-4 bg-red-50 rounded-xl p-4 text-center">
-                  <p className="text-3xl font-bold text-red-700">₱{selectedItem.price_home?.toLocaleString()}</p>
-                  <p className="text-sm text-gray-500 mt-1">per order</p>
-                </div>
-              )}
+              </div>
 
               <div className="mb-6">
                 <label className="block text-sm font-medium text-gray-700 mb-2">Quantity</label>

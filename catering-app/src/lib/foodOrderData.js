@@ -25,11 +25,42 @@ export const SERVING_SIZES = [
   { id: 'large', name: 'Large', serves: '80 persons', priceKey: 'price_large' },
 ]
 
+// Special sizes for Desserts (2 size options)
+export const DESSERT_SIZES = [
+  { id: 'dessert_5pax', name: '5 Pax', serves: 'Good for 5 persons', fixedPrice: 750 },
+  { id: 'dessert_20pax', name: '20 Pax', serves: 'Good for 20 persons', priceKey: 'price_home' },
+]
+
+// Special size for fixed-price items (special items only, not desserts)
+export const FIXED_PRICE_SIZE = { id: 'fixed', name: 'Per Order', serves: '', priceKey: 'price_home' }
+
+// Special sizes for Bingcava (sold by boxes - only 2 sizes)
+export const BINGCAVA_SIZES = [
+  { id: 'box6', name: 'Box of 6', serves: '6 pieces', priceKey: 'price_home' },
+  { id: 'box20', name: 'Box of 20', serves: '20 pieces', priceKey: 'price_tray' },
+]
+
+// Special sizes for Chinese Lumpia
+export const LUMPIA_SIZES = [
+  { id: 'min10', name: '10 Pieces', serves: '₱60 per piece', priceKey: 'price_home' },
+  { id: 'small', name: 'Small Set', serves: 'Wrap Your Own', priceKey: 'price_tray' },
+  { id: 'box30', name: 'Box of 30', serves: '30 pieces', priceKey: 'price_small' },
+  { id: 'box60', name: 'Box of 60', serves: '60 pieces', priceKey: 'price_medium' },
+]
+
 // Get price for an item based on size
 export const getItemPrice = (item, sizeId) => {
-  // Handle fixed price items (desserts)
+  // Handle fixed price items (special items only)
   if (sizeId === 'fixed') {
     return item.price_home || 0
+  }
+  
+  // Handle Dessert sizes
+  if (sizeId === 'dessert_5pax') {
+    return 750 // Fixed price for 5 pax
+  }
+  if (sizeId === 'dessert_20pax') {
+    return item.price_home || 1400 // Use item price or default to 1400
   }
   
   // Handle Bingcava custom sizes
@@ -50,23 +81,6 @@ export const getItemPrice = (item, sizeId) => {
   return item[size.priceKey] || 0
 }
 
-// Special size for fixed-price items (desserts)
-export const FIXED_PRICE_SIZE = { id: 'fixed', name: 'Per Order', serves: '', priceKey: 'price_home' }
-
-// Special sizes for Bingcava (sold by boxes - only 2 sizes)
-export const BINGCAVA_SIZES = [
-  { id: 'box6', name: 'Box of 6', serves: '6 pieces', priceKey: 'price_home' },
-  { id: 'box20', name: 'Box of 20', serves: '20 pieces', priceKey: 'price_tray' },
-]
-
-// Special sizes for Chinese Lumpia
-export const LUMPIA_SIZES = [
-  { id: 'min10', name: '10 Pieces', serves: '₱60 per piece', priceKey: 'price_home' },
-  { id: 'small', name: 'Small Set', serves: 'Wrap Your Own', priceKey: 'price_tray' },
-  { id: 'box30', name: 'Box of 30', serves: '30 pieces', priceKey: 'price_small' },
-  { id: 'box60', name: 'Box of 60', serves: '60 pieces', priceKey: 'price_medium' },
-]
-
 export const getAvailableSizes = (item) => {
   // Special handling for Bingcava
   if (item.name?.toLowerCase().includes('bingcava')) {
@@ -78,8 +92,13 @@ export const getAvailableSizes = (item) => {
     return LUMPIA_SIZES.filter(s => item[s.priceKey] > 0)
   }
   
-  // Desserts and other special items - single price
-  if (item.category === 'dessert' || item.category === 'special') {
+  // Desserts - return both size options (5 pax and 20 pax)
+  if (item.category === 'dessert') {
+    return DESSERT_SIZES
+  }
+  
+  // Special items (non-dessert) - single fixed price
+  if (item.category === 'special') {
     return [FIXED_PRICE_SIZE]
   }
   
