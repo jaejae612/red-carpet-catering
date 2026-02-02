@@ -33,7 +33,7 @@ export const menuPackages = {
   menu560: {
     id: 'menu560', name: 'Menu 560', pricePerHead: 560,
     pricingTiers: { 60: 560, 50: 580, 40: 630, 30: 680 },
-    allowSwap: true, // Enable dish swapping for this menu
+    allowSwap: true, // Enable dish swapping with Asian Fusion
     options: [
       { name: 'Filipino Buffet', items: ['Eggplant & Nangka salad', 'Pickled Green Mango w/ dilis', 'Roast Pork Liempo w/ special herbs', 'Kare-Kare w/ bagoong', 'Baked Crabmeat', 'Sinugbang Isda w/ vinegar sauce', 'Chicken w/ barbecue sauce', 'Garlic Rice/Plain Rice', 'Beko Bayot', 'Mango Sago'] },
       { name: 'International Buffet', items: ['Asian Mandarin Chicken Salad', 'Waldorf Salad', 'Chicken Galantina', 'Ox Tongue w/ cooked ham', 'Chicken Bacon Alfredo', 'Beef Morcon', 'Grilled Fish w/ lemon butter sauce', 'Paella/Plain Rice', 'Strawberry Cheesecake', 'Avocado Pie'] }
