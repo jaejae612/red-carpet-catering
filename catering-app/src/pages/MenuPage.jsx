@@ -301,7 +301,7 @@ export default function MenuPage() {
             <div className="bg-emerald-50 rounded-2xl p-6 mb-8">
               <h2 className="text-xl font-bold text-emerald-800 mb-2">📦 Packed Meal Choices</h2>
               <p className="text-emerald-700">Complete meals in individual boxes, perfect for meetings, seminars, and events on-the-go.</p>
-              <p className="text-sm text-emerald-600 mt-2">Minimum 30 packs • Includes tetra pack juice or bottled water • Add ₱60/pack for soda</p>
+              <p className="text-sm text-emerald-600 mt-2">Minimum 10 packs • Includes tetra pack juice or bottled water • Add ₱60/pack for soda</p>
             </div>
 
             <div className="space-y-6 mb-8">
@@ -353,7 +353,7 @@ export default function MenuPage() {
             <div className="bg-amber-50 rounded-2xl p-6 mb-8">
               <h2 className="text-xl font-bold text-amber-800 mb-2">☕ Packed Snack Choices</h2>
               <p className="text-amber-700">Light bites in convenient boxes, perfect for workshops, training sessions, and quick breaks.</p>
-              <p className="text-sm text-amber-600 mt-2">Minimum 30 packs • Includes bottled water or tetra pack juice</p>
+              <p className="text-sm text-amber-600 mt-2">Minimum 10 packs • Includes bottled water or tetra pack juice</p>
             </div>
 
             <div className="space-y-6 mb-8">

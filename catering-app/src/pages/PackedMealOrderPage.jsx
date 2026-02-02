@@ -89,7 +89,7 @@ export default function PackedMealOrderPage() {
 
   const cartTotal = cart.reduce((sum, item) => sum + getItemTotal(item), 0)
   const cartCount = cart.reduce((sum, item) => sum + item.quantity, 0)
-  const MIN_ORDER_QUANTITY = 30
+  const MIN_ORDER_QUANTITY = 10
 
   const handleSubmit = async () => {
     if (cart.length === 0) {
@@ -302,7 +302,7 @@ export default function PackedMealOrderPage() {
             <div className="text-sm text-amber-800">
               <p className="font-medium">Order Information</p>
               <ul className="mt-1 space-y-1">
-                <li>• <strong>Minimum order: 30 packs</strong></li>
+                <li>• <strong>Minimum order: 10 packs</strong></li>
                 <li>• All packed meals include tetra pack juice or bottled water</li>
                 <li>• Upgrade to canned soda for +₱60 per pack (meals only)</li>
                 <li>• Minimum lead time: 24 hours before delivery/pickup</li>

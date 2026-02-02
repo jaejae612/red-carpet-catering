@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext'
 import { 
   UtensilsCrossed, Wine, Package, Coffee, ArrowRight, Users, 
   Clock, Star, CheckCircle, ChevronDown, ChevronUp, Sparkles,
-  Calendar, MapPin, PartyPopper
+  Calendar, MapPin, PartyPopper, Heart
 } from 'lucide-react'
 
 const cateringOptions = [
@@ -82,7 +82,7 @@ const cateringOptions = [
     textColor: 'text-emerald-700',
     route: '/order/packed-meals',
     priceRange: '₱180 - ₱320 per pack',
-    minGuests: 30,
+    minGuests: 10,
     features: [
       'Complete meal in individual boxes',
       'Includes rice, viand, and dessert',
@@ -111,7 +111,7 @@ const cateringOptions = [
     textColor: 'text-amber-700',
     route: '/order/packed-meals',
     priceRange: '₱150 - ₱200 per pack',
-    minGuests: 30,
+    minGuests: 10,
     features: [
       'Light snack portions',
       '3-4 items per box',
@@ -162,27 +162,20 @@ export default function CateringSelectionPage() {
 
       {/* Quick Stats */}
       <div className="max-w-6xl mx-auto px-4 -mt-8">
-        <div className="bg-white rounded-2xl shadow-xl p-6 grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="bg-white rounded-2xl shadow-xl p-6 grid grid-cols-3 gap-4">
           <div className="text-center">
             <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-2">
               <Calendar className="text-red-700" size={24} />
             </div>
-            <p className="text-2xl font-bold text-gray-800">500+</p>
-            <p className="text-sm text-gray-500">Events Served</p>
+            <p className="text-2xl font-bold text-gray-800">{new Date().getFullYear() - 1977} Years</p>
+            <p className="text-sm text-gray-500">In Business</p>
           </div>
           <div className="text-center">
             <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-2">
-              <Users className="text-purple-700" size={24} />
+              <Heart className="text-purple-700" size={24} />
             </div>
-            <p className="text-2xl font-bold text-gray-800">50K+</p>
-            <p className="text-sm text-gray-500">Happy Guests</p>
-          </div>
-          <div className="text-center">
-            <div className="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-2">
-              <Star className="text-emerald-700" size={24} />
-            </div>
-            <p className="text-2xl font-bold text-gray-800">4.9</p>
-            <p className="text-sm text-gray-500">Average Rating</p>
+            <p className="text-2xl font-bold text-gray-800">Family</p>
+            <p className="text-sm text-gray-500">Owned & Operated</p>
           </div>
           <div className="text-center">
             <div className="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-2">
