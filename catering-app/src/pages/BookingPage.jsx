@@ -8,12 +8,11 @@ import {
   calculatePricePerHead, 
   occasionTypes,
   presetMotifColors,
-  dessertAddOns,
   freeDrinkOptions,
   additionalDrinks,
   calculateAddOnsBreakdown
 } from '../lib/menuData'
-import { Calendar, Clock, MapPin, Check, Plus, Minus, Send, Palette, Info, ChevronRight, ChevronLeft, User, Phone, Mail, UtensilsCrossed, AlertCircle, PartyPopper, Droplets, Cake, Gift } from 'lucide-react'
+import { Calendar, Clock, MapPin, Check, Plus, Minus, Send, Palette, Info, ChevronRight, ChevronLeft, User, Phone, Mail, UtensilsCrossed, AlertCircle, PartyPopper, Droplets, Gift } from 'lucide-react'
 
 const BASE_DISH_CATEGORIES = [
   { id: 'salad', name: 'Salad', pick: 1, color: 'bg-green-100 text-green-800' },
@@ -81,8 +80,6 @@ export default function BookingPage() {
     // Drinks
     freeDrink: duplicateData?.free_drink || 'softdrinks',
     drinkAddOns: duplicateData?.drink_add_ons || [],
-    // Dessert add-ons
-    dessertAddOns: duplicateData?.dessert_add_ons || [],
     // Swapped dishes (for Menu 560 Asian Fusion swaps)
     swappedDishes: duplicateData?.swapped_dishes || [],
     specialRequests: duplicateData?.special_requests || '',
@@ -187,14 +184,6 @@ export default function BookingPage() {
   }
 
   const updateAddOnQty = (id, qty) => updateBooking('addOns', booking.addOns.map(a => a.id === id ? { ...a, quantity: Math.max(1, qty) } : a))
-
-  // Dessert add-on functions
-  const toggleDessertAddOn = (addon) => {
-    const exists = booking.dessertAddOns.find(a => a.id === addon.id)
-    updateBooking('dessertAddOns', exists ? booking.dessertAddOns.filter(a => a.id !== addon.id) : [...booking.dessertAddOns, { id: addon.id, quantity: 1 }])
-  }
-
-  const updateDessertQty = (id, qty) => updateBooking('dessertAddOns', booking.dessertAddOns.map(a => a.id === id ? { ...a, quantity: Math.max(1, qty) } : a))
 
   // Drink add-on functions
   const toggleDrinkAddOn = (addon) => {
@@ -497,19 +486,13 @@ export default function BookingPage() {
       return sum + (item ? item.price * (a.quantity || 1) : 0)
     }, 0)
     
-    // Dessert add-ons
-    const dessertTotal = booking.dessertAddOns.reduce((sum, d) => {
-      const item = dessertAddOns.find(s => s.id === d.id)
-      return sum + (item ? item.price * (d.quantity || 1) : 0)
-    }, 0)
-    
     // Drink add-ons
     const drinkTotal = booking.drinkAddOns.reduce((sum, d) => {
       const item = additionalDrinks.find(s => s.id === d.id)
       return sum + (item ? item.price * (d.quantity || 1) : 0)
     }, 0)
     
-    return menuTotal + stationsTotal + dessertTotal + drinkTotal
+    return menuTotal + stationsTotal + drinkTotal
   }
 
   // Get motif display string
@@ -578,7 +561,6 @@ export default function BookingPage() {
         birthday_age: booking.birthdayAge,
         free_drink: booking.freeDrink,
         drink_add_ons: booking.drinkAddOns,
-        dessert_add_ons: booking.dessertAddOns,
         swapped_dishes: booking.swappedDishes,
         special_requests: booking.specialRequests, 
         total_amount: calculateTotal(), 
@@ -1355,38 +1337,6 @@ export default function BookingPage() {
         </div>
       </div>
 
-      {/* Dessert Add-ons */}
-      <div>
-        <label className="block text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
-          <Cake size={18} /> Dessert Platters (Optional)
-        </label>
-        <div className="space-y-2">
-          {dessertAddOns.map(dessert => {
-            const sel = booking.dessertAddOns.find(a => a.id === dessert.id)
-            return (
-              <div key={dessert.id} className="flex items-center justify-between p-3 bg-pink-50 rounded-xl border border-pink-100">
-                <button onClick={() => toggleDessertAddOn(dessert)} className="flex items-center gap-3 flex-1">
-                  <div className={`w-5 h-5 rounded border-2 flex items-center justify-center ${sel ? 'bg-pink-600 border-pink-600' : 'border-gray-300'}`}>
-                    {sel && <Check size={12} className="text-white" />}
-                  </div>
-                  <div className="text-left">
-                    <p className="font-medium text-gray-800">{dessert.name}</p>
-                    <p className="text-sm text-pink-600">₱{dessert.price.toLocaleString()} • {dessert.unit}</p>
-                  </div>
-                </button>
-                {sel && (
-                  <div className="flex items-center gap-2">
-                    <button onClick={() => updateDessertQty(dessert.id, sel.quantity - 1)} className="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center"><Minus size={12} /></button>
-                    <span className="w-8 text-center text-sm">{sel.quantity}</span>
-                    <button onClick={() => updateDessertQty(dessert.id, sel.quantity + 1)} className="w-6 h-6 rounded-full bg-pink-600 text-white flex items-center justify-center"><Plus size={12} /></button>
-                  </div>
-                )}
-              </div>
-            )
-          })}
-        </div>
-      </div>
-
       {/* Station Add-ons */}
       <div>
         <label className="block text-sm font-semibold text-gray-700 mb-3">Add-on Stations</label>
@@ -1605,12 +1555,6 @@ export default function BookingPage() {
           <div className="space-y-2 text-sm">
             <div className="flex justify-between"><span>{pkg?.name}</span><span>{booking.selectedMenuOption}</span></div>
             <div className="flex justify-between"><span>{booking.numberOfPax} pax × ₱{pph}</span><span className="font-medium">₱{(pph * booking.numberOfPax).toLocaleString()}</span></div>
-            
-            {/* Dessert add-ons */}
-            {booking.dessertAddOns.map(addon => { 
-              const item = dessertAddOns.find(a => a.id === addon.id)
-              return <div key={addon.id} className="flex justify-between text-pink-600"><span>🍰 {item?.name} ×{addon.quantity}</span><span>₱{((item?.price || 0) * addon.quantity).toLocaleString()}</span></div> 
-            })}
             
             {/* Drink add-ons */}
             {booking.drinkAddOns.map(addon => { 

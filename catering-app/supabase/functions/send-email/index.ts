@@ -47,7 +47,7 @@ serve(async (req) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        from: 'Red Carpet Catering <onboarding@resend.dev>',
+        from: 'Red Carpet Catering <bookings@ceburedcarpetcatering.com>',
         to: [to],
         subject,
         html,
