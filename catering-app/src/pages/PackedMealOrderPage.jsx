@@ -89,10 +89,16 @@ export default function PackedMealOrderPage() {
 
   const cartTotal = cart.reduce((sum, item) => sum + getItemTotal(item), 0)
   const cartCount = cart.reduce((sum, item) => sum + item.quantity, 0)
+  const MIN_ORDER_QUANTITY = 30
 
   const handleSubmit = async () => {
     if (cart.length === 0) {
       setError('Please add items to your cart')
+      return
+    }
+
+    if (cartCount < MIN_ORDER_QUANTITY) {
+      setError(`Minimum order is ${MIN_ORDER_QUANTITY} packs. You have ${cartCount} packs.`)
       return
     }
 
@@ -296,6 +302,7 @@ export default function PackedMealOrderPage() {
             <div className="text-sm text-amber-800">
               <p className="font-medium">Order Information</p>
               <ul className="mt-1 space-y-1">
+                <li>• <strong>Minimum order: 30 packs</strong></li>
                 <li>• All packed meals include tetra pack juice or bottled water</li>
                 <li>• Upgrade to canned soda for +₱60 per pack (meals only)</li>
                 <li>• Minimum lead time: 24 hours before delivery/pickup</li>
@@ -494,17 +501,27 @@ export default function PackedMealOrderPage() {
 
                   {/* Total & Submit */}
                   <div className="mt-6 pt-4 border-t border-gray-200">
+                    {/* Minimum order warning */}
+                    {cartCount < MIN_ORDER_QUANTITY && (
+                      <div className="mb-4 bg-amber-50 border border-amber-200 rounded-lg p-3 flex items-start gap-2">
+                        <AlertCircle className="text-amber-600 flex-shrink-0 mt-0.5" size={16} />
+                        <p className="text-sm text-amber-800">
+                          Minimum order is {MIN_ORDER_QUANTITY} packs. Add {MIN_ORDER_QUANTITY - cartCount} more.
+                        </p>
+                      </div>
+                    )}
+
                     <div className="flex justify-between items-center mb-4">
-                      <span className="text-lg font-medium text-gray-700">Total</span>
+                      <span className="text-lg font-medium text-gray-700">Total ({cartCount} packs)</span>
                       <span className="text-2xl font-bold text-red-700">₱{cartTotal.toLocaleString()}</span>
                     </div>
 
                     <button
                       onClick={handleSubmit}
-                      disabled={loading || cart.length === 0}
+                      disabled={loading || cart.length === 0 || cartCount < MIN_ORDER_QUANTITY}
                       className="w-full py-3 bg-red-700 text-white rounded-xl font-bold hover:bg-red-800 disabled:opacity-50 flex items-center justify-center gap-2"
                     >
-                      {loading ? 'Submitting...' : 'Place Order'}
+                      {loading ? 'Submitting...' : cartCount < MIN_ORDER_QUANTITY ? `Need ${MIN_ORDER_QUANTITY - cartCount} more packs` : 'Place Order'}
                       <Check size={20} />
                     </button>
                   </div>
@@ -523,7 +540,7 @@ export default function PackedMealOrderPage() {
             className="w-full py-4 bg-red-700 text-white rounded-xl font-bold shadow-lg flex items-center justify-center gap-3"
           >
             <ShoppingCart size={20} />
-            View Cart ({cartCount} items) - ₱{cartTotal.toLocaleString()}
+            {cartCount}/{MIN_ORDER_QUANTITY} packs - ₱{cartTotal.toLocaleString()}
           </button>
         </div>
       )}

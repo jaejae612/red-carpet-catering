@@ -82,7 +82,7 @@ const cateringOptions = [
     textColor: 'text-emerald-700',
     route: '/order/packed-meals',
     priceRange: '₱180 - ₱320 per pack',
-    minGuests: 10,
+    minGuests: 30,
     features: [
       'Complete meal in individual boxes',
       'Includes rice, viand, and dessert',
@@ -111,7 +111,7 @@ const cateringOptions = [
     textColor: 'text-amber-700',
     route: '/order/packed-meals',
     priceRange: '₱150 - ₱200 per pack',
-    minGuests: 10,
+    minGuests: 30,
     features: [
       'Light snack portions',
       '3-4 items per box',
