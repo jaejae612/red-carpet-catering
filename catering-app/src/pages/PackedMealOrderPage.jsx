@@ -37,6 +37,9 @@ export default function PackedMealOrderPage() {
 
   const menus = activeTab === 'meals' ? packedMealMenus : packedSnackMenus
 
+  const MIN_ITEM_QUANTITY = 10
+  const QUANTITY_INCREMENT = 5
+
   const addToCart = (menuId, optionKey, includeSoda = false) => {
     const menu = menus[menuId]
     if (!menu) return
@@ -46,12 +49,12 @@ export default function PackedMealOrderPage() {
     )
 
     if (existingIndex >= 0) {
-      // Update quantity
+      // Update quantity by increment
       setCart(prev => prev.map((item, idx) => 
-        idx === existingIndex ? { ...item, quantity: item.quantity + 1 } : item
+        idx === existingIndex ? { ...item, quantity: item.quantity + QUANTITY_INCREMENT } : item
       ))
     } else {
-      // Add new item
+      // Add new item starting at minimum quantity
       setCart(prev => [...prev, {
         menuId,
         optionKey,
@@ -61,14 +64,14 @@ export default function PackedMealOrderPage() {
         price: menu.pricePerPack || menu.pricePerPack,
         includeSoda,
         sodaPrice: menu.sodaUpgrade || 0,
-        quantity: 1,
+        quantity: MIN_ITEM_QUANTITY,
         type: menu.type
       }])
     }
   }
 
   const updateCartQuantity = (index, newQty) => {
-    if (newQty < 1) {
+    if (newQty < MIN_ITEM_QUANTITY) {
       removeFromCart(index)
       return
     }
@@ -306,7 +309,6 @@ export default function PackedMealOrderPage() {
                 <li>• All packed meals include tetra pack juice or bottled water</li>
                 <li>• Upgrade to canned soda for +₱60 per pack (meals only)</li>
                 <li>• Minimum lead time: 24 hours before delivery/pickup</li>
-                <li>• Bulk orders (50+ packs) may qualify for discount</li>
               </ul>
             </div>
           </div>
@@ -358,14 +360,14 @@ export default function PackedMealOrderPage() {
                       <div className="flex items-center justify-between mt-3">
                         <div className="flex items-center gap-2">
                           <button
-                            onClick={() => updateCartQuantity(index, item.quantity - 1)}
+                            onClick={() => updateCartQuantity(index, item.quantity - QUANTITY_INCREMENT)}
                             className="w-8 h-8 rounded-full bg-white border border-gray-200 flex items-center justify-center hover:bg-gray-100"
                           >
                             <Minus size={16} />
                           </button>
-                          <span className="w-8 text-center font-medium">{item.quantity}</span>
+                          <span className="w-12 text-center font-medium">{item.quantity} pax</span>
                           <button
-                            onClick={() => updateCartQuantity(index, item.quantity + 1)}
+                            onClick={() => updateCartQuantity(index, item.quantity + QUANTITY_INCREMENT)}
                             className="w-8 h-8 rounded-full bg-white border border-gray-200 flex items-center justify-center hover:bg-gray-100"
                           >
                             <Plus size={16} />
