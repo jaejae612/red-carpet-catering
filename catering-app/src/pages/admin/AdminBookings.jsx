@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import { menuPackages } from '../../lib/menuData'
 import { ArrowLeft, Calendar, MapPin, Users, Phone, Mail, Check, Plus, Minus, X, Save, Search, Edit2, CreditCard, Send, Copy, Filter, ChevronDown, ChevronUp, Wine, UtensilsCrossed } from 'lucide-react'
@@ -7,15 +7,16 @@ import AdminBookingEdit from '../../components/AdminBookingEdit'
 import { sendBookingNotifications } from '../../lib/emailService'
 
 export default function AdminBookings() {
+  const [searchParams, setSearchParams] = useSearchParams()
   const [bookings, setBookings] = useState([])
   const [staff, setStaff] = useState([])
   const [equipment, setEquipment] = useState([])
   const [loading, setLoading] = useState(true)
   const [selectedBooking, setSelectedBooking] = useState(null)
   const [searchTerm, setSearchTerm] = useState('')
-  const [statusFilter, setStatusFilter] = useState('all')
-  const [typeFilter, setTypeFilter] = useState('all') // 'all', 'buffet', 'cocktail'
-  const [paymentFilter, setPaymentFilter] = useState('all')
+  const [statusFilter, setStatusFilter] = useState(searchParams.get('status') || 'all')
+  const [typeFilter, setTypeFilter] = useState('all')
+  const [paymentFilter, setPaymentFilter] = useState(searchParams.get('payment') || 'all')
   const [dateFrom, setDateFrom] = useState('')
   const [dateTo, setDateTo] = useState('')
   const [sortOrder, setSortOrder] = useState('asc')
@@ -26,6 +27,27 @@ export default function AdminBookings() {
   const [sendingEmail, setSendingEmail] = useState(false)
 
   useEffect(() => { fetchData() }, [])
+
+  // Sync filters with URL params
+  useEffect(() => {
+    const status = searchParams.get('status')
+    const payment = searchParams.get('payment')
+    if (status) setStatusFilter(status)
+    if (payment) setPaymentFilter(payment)
+  }, [searchParams])
+
+  // Update URL when filters change
+  const updateFilter = (type, value) => {
+    const newParams = new URLSearchParams(searchParams)
+    if (value === 'all') {
+      newParams.delete(type)
+    } else {
+      newParams.set(type, value)
+    }
+    setSearchParams(newParams)
+    if (type === 'status') setStatusFilter(value)
+    if (type === 'payment') setPaymentFilter(value)
+  }
 
   const fetchData = async () => {
     try {
@@ -192,17 +214,28 @@ export default function AdminBookings() {
               </div>
               <button onClick={() => setShowFilters(!showFilters)} className="flex items-center gap-2 text-sm text-gray-600 hover:text-red-700">
                 <Filter size={16} /> {showFilters ? 'Hide' : 'Show'} Filters
+                {(statusFilter !== 'all' || paymentFilter !== 'all') && (
+                  <span className="bg-red-100 text-red-700 px-2 py-0.5 rounded-full text-xs">Active</span>
+                )}
               </button>
+              {(statusFilter !== 'all' || paymentFilter !== 'all') && (
+                <button 
+                  onClick={() => { updateFilter('status', 'all'); updateFilter('payment', 'all'); }}
+                  className="text-xs text-red-600 hover:text-red-800"
+                >
+                  Clear Filters
+                </button>
+              )}
               {showFilters && (
                 <div className="space-y-2 p-3 bg-gray-50 rounded-lg">
-                  <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="w-full px-3 py-2 border rounded-lg text-sm">
+                  <select value={statusFilter} onChange={(e) => updateFilter('status', e.target.value)} className="w-full px-3 py-2 border rounded-lg text-sm">
                     <option value="all">All Status</option>
                     <option value="pending">Pending</option>
                     <option value="confirmed">Confirmed</option>
                     <option value="completed">Completed</option>
                     <option value="cancelled">Cancelled</option>
                   </select>
-                  <select value={paymentFilter} onChange={(e) => setPaymentFilter(e.target.value)} className="w-full px-3 py-2 border rounded-lg text-sm">
+                  <select value={paymentFilter} onChange={(e) => updateFilter('payment', e.target.value)} className="w-full px-3 py-2 border rounded-lg text-sm">
                     <option value="all">All Payment</option>
                     <option value="unpaid">Unpaid</option>
                     <option value="deposit_paid">Deposit Paid</option>
