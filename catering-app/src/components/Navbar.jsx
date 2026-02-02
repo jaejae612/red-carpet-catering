@@ -1,12 +1,13 @@
 import React, { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { Menu, X, User, LogOut, ChevronDown, Settings } from 'lucide-react'
+import { Menu, X, User, LogOut, ChevronDown, Settings, UtensilsCrossed, Wine, Package } from 'lucide-react'
 
 export default function Navbar() {
   const { user, userProfile, isAdmin, signOut } = useAuth()
   const [isOpen, setIsOpen] = useState(false)
   const [showUserMenu, setShowUserMenu] = useState(false)
+  const [showCateringMenu, setShowCateringMenu] = useState(false)
   const navigate = useNavigate()
 
   const handleSignOut = async () => {
@@ -30,11 +31,80 @@ export default function Navbar() {
           </div>
           <div className="hidden md:flex items-center gap-6">
             <Link to="/" onClick={() => window.scrollTo(0, 0)} className="hover:text-red-200">Home</Link>
-            <Link to="/menu" className="hover:text-red-200">Catering</Link>
+            <Link to="/menu" className="hover:text-red-200">Menu</Link>
+            
+            {/* Catering Dropdown */}
+            <div className="relative">
+              <button 
+                onClick={() => setShowCateringMenu(!showCateringMenu)}
+                onBlur={() => setTimeout(() => setShowCateringMenu(false), 150)}
+                className="flex items-center gap-1 hover:text-red-200"
+              >
+                Book Catering
+                <ChevronDown size={16} />
+              </button>
+              {showCateringMenu && (
+                <div className="absolute top-full left-0 mt-2 w-56 bg-white rounded-xl shadow-xl py-2 text-gray-800 overflow-hidden">
+                  <Link 
+                    to="/catering" 
+                    onClick={() => setShowCateringMenu(false)}
+                    className="px-4 py-3 hover:bg-gray-50 flex items-center gap-3 border-b border-gray-100"
+                  >
+                    <div className="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center">
+                      <UtensilsCrossed size={16} className="text-red-700" />
+                    </div>
+                    <div>
+                      <p className="font-medium">All Options</p>
+                      <p className="text-xs text-gray-500">View all catering types</p>
+                    </div>
+                  </Link>
+                  <Link 
+                    to="/book" 
+                    onClick={() => setShowCateringMenu(false)}
+                    className="px-4 py-3 hover:bg-gray-50 flex items-center gap-3"
+                  >
+                    <div className="w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center">
+                      <UtensilsCrossed size={16} className="text-red-700" />
+                    </div>
+                    <div>
+                      <p className="font-medium">Buffet Catering</p>
+                      <p className="text-xs text-gray-500">Full-service events</p>
+                    </div>
+                  </Link>
+                  <Link 
+                    to="/book/cocktail" 
+                    onClick={() => setShowCateringMenu(false)}
+                    className="px-4 py-3 hover:bg-gray-50 flex items-center gap-3"
+                  >
+                    <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
+                      <Wine size={16} className="text-purple-700" />
+                    </div>
+                    <div>
+                      <p className="font-medium">Cocktail Party</p>
+                      <p className="text-xs text-gray-500">Finger foods & appetizers</p>
+                    </div>
+                  </Link>
+                  <Link 
+                    to="/order/packed-meals" 
+                    onClick={() => setShowCateringMenu(false)}
+                    className="px-4 py-3 hover:bg-gray-50 flex items-center gap-3"
+                  >
+                    <div className="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center">
+                      <Package size={16} className="text-emerald-700" />
+                    </div>
+                    <div>
+                      <p className="font-medium">Packed Meals</p>
+                      <p className="text-xs text-gray-500">Individual meal boxes</p>
+                    </div>
+                  </Link>
+                </div>
+              )}
+            </div>
+
             <Link to="/food-menu" className="hover:text-red-200">Food Menu</Link>
+            
             {user ? (
               <>
-                <Link to="/book" className="hover:text-red-200">Book Catering</Link>
                 <Link to="/my-orders" className="hover:text-red-200">My Orders</Link>
                 {isAdmin && <Link to="/admin" className="bg-white/20 px-3 py-1 rounded-full hover:bg-white/30">Admin</Link>}
                 <div className="relative">
@@ -60,14 +130,34 @@ export default function Navbar() {
           <div className="md:hidden flex items-center"><button onClick={() => setIsOpen(!isOpen)} className="p-2">{isOpen ? <X size={24} /> : <Menu size={24} />}</button></div>
         </div>
       </div>
+      
+      {/* Mobile Menu */}
       {isOpen && (
         <div className="md:hidden bg-red-800 border-t border-red-600 px-4 py-4 space-y-3">
           <Link to="/" onClick={() => { setIsOpen(false); window.scrollTo(0, 0) }} className="block py-2">Home</Link>
-          <Link to="/menu" onClick={() => setIsOpen(false)} className="block py-2">Catering</Link>
-          <Link to="/food-menu" onClick={() => setIsOpen(false)} className="block py-2">Food Menu</Link>
+          <Link to="/menu" onClick={() => setIsOpen(false)} className="block py-2">Menu</Link>
+          
+          {/* Mobile Catering Options */}
+          <div className="border-t border-red-600 pt-3 mt-3">
+            <p className="text-red-300 text-sm mb-2">Book Catering:</p>
+            <Link to="/catering" onClick={() => setIsOpen(false)} className="block py-2 pl-4 flex items-center gap-2">
+              <UtensilsCrossed size={16} /> All Options
+            </Link>
+            <Link to="/book" onClick={() => setIsOpen(false)} className="block py-2 pl-4 flex items-center gap-2">
+              <UtensilsCrossed size={16} /> Buffet Catering
+            </Link>
+            <Link to="/book/cocktail" onClick={() => setIsOpen(false)} className="block py-2 pl-4 flex items-center gap-2">
+              <Wine size={16} /> Cocktail Party
+            </Link>
+            <Link to="/order/packed-meals" onClick={() => setIsOpen(false)} className="block py-2 pl-4 flex items-center gap-2">
+              <Package size={16} /> Packed Meals
+            </Link>
+          </div>
+          
+          <Link to="/food-menu" onClick={() => setIsOpen(false)} className="block py-2 border-t border-red-600 pt-3">Food Menu</Link>
+          
           {user ? (
             <>
-              <Link to="/book" onClick={() => setIsOpen(false)} className="block py-2">Book Catering</Link>
               <Link to="/my-orders" onClick={() => setIsOpen(false)} className="block py-2">My Orders</Link>
               <Link to="/profile" onClick={() => setIsOpen(false)} className="block py-2">Profile</Link>
               {isAdmin && <Link to="/admin" onClick={() => setIsOpen(false)} className="block py-2">Admin</Link>}
