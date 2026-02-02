@@ -14,6 +14,7 @@ import {
   Clock, Palette, Info, AlertCircle, ChevronDown, ChevronUp,
   Plus, Minus, Sparkles, PartyPopper
 } from 'lucide-react'
+import TermsAndConditions from '../components/TermsAndConditions'
 
 const STEPS = [
   { id: 1, name: 'Package', icon: Wine },
@@ -29,6 +30,7 @@ export default function CocktailBookingPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [expandedMenu, setExpandedMenu] = useState(null)
+  const [termsAccepted, setTermsAccepted] = useState(false)
 
   const [booking, setBooking] = useState({
     // Package selection
@@ -646,10 +648,17 @@ export default function CocktailBookingPage() {
             <Info className="text-amber-600 flex-shrink-0 mt-0.5" size={20} />
             <div className="text-sm text-amber-800">
               <p className="font-medium">Booking Policy</p>
-              <p>₱5,000 deposit required to confirm booking. Non-refundable but consumable.</p>
+              <p>50% deposit required to confirm booking. Payment accepted via cash, check, or bank transfer.</p>
             </div>
           </div>
         </div>
+
+        {/* Terms and Conditions */}
+        <TermsAndConditions 
+          compact={true}
+          accepted={termsAccepted}
+          onAccept={setTermsAccepted}
+        />
 
         {error && (
           <div className="bg-red-50 border border-red-200 rounded-xl p-4 flex items-center gap-3">
@@ -725,10 +734,10 @@ export default function CocktailBookingPage() {
           ) : (
             <button
               onClick={handleSubmit}
-              disabled={loading}
+              disabled={loading || !termsAccepted}
               className="px-8 py-3 bg-red-700 text-white rounded-xl font-medium flex items-center gap-2 disabled:opacity-50 hover:bg-red-800"
             >
-              {loading ? 'Submitting...' : 'Submit Booking'}
+              {loading ? 'Submitting...' : !termsAccepted ? 'Accept Terms First' : 'Submit Booking'}
               <Check size={20} />
             </button>
           )}
