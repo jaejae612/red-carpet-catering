@@ -2,8 +2,18 @@ import React, { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
-import { menuPackages, addOnStations, calculatePricePerHead, calculateTotal } from '../lib/menuData'
-import { Calendar, Clock, MapPin, Check, Plus, Minus, Send, Palette, Info, ChevronRight, ChevronLeft, User, Phone, Mail, UtensilsCrossed, AlertCircle } from 'lucide-react'
+import { 
+  menuPackages, 
+  addOnStations, 
+  calculatePricePerHead, 
+  occasionTypes,
+  presetMotifColors,
+  dessertAddOns,
+  freeDrinkOptions,
+  additionalDrinks,
+  calculateAddOnsBreakdown
+} from '../lib/menuData'
+import { Calendar, Clock, MapPin, Check, Plus, Minus, Send, Palette, Info, ChevronRight, ChevronLeft, User, Phone, Mail, UtensilsCrossed, AlertCircle, PartyPopper, Droplets, Cake, Gift } from 'lucide-react'
 
 const BASE_DISH_CATEGORIES = [
   { id: 'salad', name: 'Salad', pick: 1, color: 'bg-green-100 text-green-800' },
@@ -58,7 +68,23 @@ export default function BookingPage() {
     selectedMenuOption: duplicateData?.menu_option || '', 
     numberOfPax: duplicateData?.number_of_pax || 60, 
     addOns: duplicateData?.add_ons || [], 
+    // Enhanced motif fields
     motif: duplicateData?.motif || '', 
+    motifType: duplicateData?.motif_type || 'preset', // 'preset' or 'custom'
+    motifPreset: duplicateData?.motif_preset || '',
+    motifColors: duplicateData?.motif_colors || ['#dc2626', '#ffffff'], // Custom colors
+    // Occasion fields
+    occasion: duplicateData?.occasion || '',
+    occasionOther: duplicateData?.occasion_other || '',
+    birthdayCelebrant: duplicateData?.birthday_celebrant || '', // 'boy' or 'girl'
+    birthdayAge: duplicateData?.birthday_age || '',
+    // Drinks
+    freeDrink: duplicateData?.free_drink || 'softdrinks',
+    drinkAddOns: duplicateData?.drink_add_ons || [],
+    // Dessert add-ons
+    dessertAddOns: duplicateData?.dessert_add_ons || [],
+    // Swapped dishes (for Menu 560 Asian Fusion swaps)
+    swappedDishes: duplicateData?.swapped_dishes || [],
     specialRequests: duplicateData?.special_requests || '',
     customerName: duplicateData?.customer_name || (isAdmin ? '' : (profile?.full_name || '')),
     customerPhone: duplicateData?.customer_phone || (isAdmin ? '' : (profile?.phone || '')),
@@ -161,6 +187,22 @@ export default function BookingPage() {
   }
 
   const updateAddOnQty = (id, qty) => updateBooking('addOns', booking.addOns.map(a => a.id === id ? { ...a, quantity: Math.max(1, qty) } : a))
+
+  // Dessert add-on functions
+  const toggleDessertAddOn = (addon) => {
+    const exists = booking.dessertAddOns.find(a => a.id === addon.id)
+    updateBooking('dessertAddOns', exists ? booking.dessertAddOns.filter(a => a.id !== addon.id) : [...booking.dessertAddOns, { id: addon.id, quantity: 1 }])
+  }
+
+  const updateDessertQty = (id, qty) => updateBooking('dessertAddOns', booking.dessertAddOns.map(a => a.id === id ? { ...a, quantity: Math.max(1, qty) } : a))
+
+  // Drink add-on functions
+  const toggleDrinkAddOn = (addon) => {
+    const exists = booking.drinkAddOns.find(a => a.id === addon.id)
+    updateBooking('drinkAddOns', exists ? booking.drinkAddOns.filter(a => a.id !== addon.id) : [...booking.drinkAddOns, { id: addon.id, quantity: 1 }])
+  }
+
+  const updateDrinkQty = (id, qty) => updateBooking('drinkAddOns', booking.drinkAddOns.map(a => a.id === id ? { ...a, quantity: Math.max(1, qty) } : a))
 
   // Format time for display (e.g., "14:00" -> "2:00 PM")
   const formatTime = (time) => {
@@ -441,6 +483,62 @@ export default function BookingPage() {
   const missingCategories = getMissingCategories()
   const lowCategories = getLowCategories()
 
+  // Calculate total with new add-ons
+  const calculateTotal = () => {
+    const pkg = menuPackages[booking.selectedPackage]
+    if (!pkg) return 0
+    
+    const pricePerHead = calculatePricePerHead(booking.selectedPackage, booking.numberOfPax)
+    const menuTotal = pricePerHead * booking.numberOfPax
+    
+    // Station add-ons
+    const stationsTotal = booking.addOns.reduce((sum, a) => {
+      const item = addOnStations.find(s => s.id === a.id)
+      return sum + (item ? item.price * (a.quantity || 1) : 0)
+    }, 0)
+    
+    // Dessert add-ons
+    const dessertTotal = booking.dessertAddOns.reduce((sum, d) => {
+      const item = dessertAddOns.find(s => s.id === d.id)
+      return sum + (item ? item.price * (d.quantity || 1) : 0)
+    }, 0)
+    
+    // Drink add-ons
+    const drinkTotal = booking.drinkAddOns.reduce((sum, d) => {
+      const item = additionalDrinks.find(s => s.id === d.id)
+      return sum + (item ? item.price * (d.quantity || 1) : 0)
+    }, 0)
+    
+    return menuTotal + stationsTotal + dessertTotal + drinkTotal
+  }
+
+  // Get motif display string
+  const getMotifDisplay = () => {
+    if (booking.motifType === 'preset' && booking.motifPreset) {
+      const preset = presetMotifColors.find(p => p.id === booking.motifPreset)
+      return preset?.name || ''
+    }
+    if (booking.motifType === 'custom') {
+      return `Custom: ${booking.motif || booking.motifColors.join(', ')}`
+    }
+    return booking.motif || '-'
+  }
+
+  // Get occasion display string
+  const getOccasionDisplay = () => {
+    if (!booking.occasion) return '-'
+    const occ = occasionTypes.find(o => o.id === booking.occasion)
+    let display = occ?.name || booking.occasion
+    
+    if (booking.occasion === 'other' && booking.occasionOther) {
+      display = booking.occasionOther
+    }
+    if (booking.occasion === 'birthday' && booking.birthdayCelebrant) {
+      display += ` (${booking.birthdayCelebrant === 'boy' ? 'Boy' : 'Girl'}, ${booking.birthdayAge} years old)`
+    }
+    return display
+  }
+
   const handleSubmit = async () => {
     if (!isValidDate(booking.date)) {
       setError('Cannot book for past dates. Please select a future date.')
@@ -469,9 +567,21 @@ export default function BookingPage() {
         number_of_pax: booking.numberOfPax, 
         add_ons: booking.addOns,
         custom_dishes: customDishesArray,
-        motif: booking.motif, 
+        // Enhanced fields
+        motif: getMotifDisplay(), 
+        motif_type: booking.motifType,
+        motif_preset: booking.motifPreset,
+        motif_colors: booking.motifColors,
+        occasion: booking.occasion,
+        occasion_other: booking.occasionOther,
+        birthday_celebrant: booking.birthdayCelebrant,
+        birthday_age: booking.birthdayAge,
+        free_drink: booking.freeDrink,
+        drink_add_ons: booking.drinkAddOns,
+        dessert_add_ons: booking.dessertAddOns,
+        swapped_dishes: booking.swappedDishes,
         special_requests: booking.specialRequests, 
-        total_amount: calculateTotal(booking.selectedPackage, booking.numberOfPax, booking.addOns), 
+        total_amount: calculateTotal(), 
         status: 'pending'
       }
 
@@ -518,6 +628,95 @@ export default function BookingPage() {
               </div>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Occasion Selection */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2">
+          <PartyPopper className="inline mr-2" size={16} />
+          Occasion *
+        </label>
+        <select 
+          value={booking.occasion} 
+          onChange={(e) => {
+            updateBooking('occasion', e.target.value)
+            // Reset birthday fields if not birthday
+            if (e.target.value !== 'birthday') {
+              updateBooking('birthdayCelebrant', '')
+              updateBooking('birthdayAge', '')
+            }
+          }}
+          className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500"
+        >
+          <option value="">Select occasion</option>
+          {occasionTypes.map(occ => (
+            <option key={occ.id} value={occ.id}>{occ.name}</option>
+          ))}
+        </select>
+      </div>
+
+      {/* Birthday-specific fields */}
+      {booking.occasion === 'birthday' && (
+        <div className="bg-pink-50 border border-pink-200 rounded-xl p-4 space-y-3">
+          <p className="text-pink-700 font-medium flex items-center gap-2">
+            <Gift size={18} /> Birthday Details
+          </p>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Celebrant *</label>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => updateBooking('birthdayCelebrant', 'boy')}
+                  className={`flex-1 py-3 px-4 rounded-lg font-medium transition-all ${
+                    booking.birthdayCelebrant === 'boy' 
+                      ? 'bg-blue-500 text-white' 
+                      : 'bg-white border border-gray-200 text-gray-700 hover:border-blue-300'
+                  }`}
+                >
+                  👦 Boy
+                </button>
+                <button
+                  type="button"
+                  onClick={() => updateBooking('birthdayCelebrant', 'girl')}
+                  className={`flex-1 py-3 px-4 rounded-lg font-medium transition-all ${
+                    booking.birthdayCelebrant === 'girl' 
+                      ? 'bg-pink-500 text-white' 
+                      : 'bg-white border border-gray-200 text-gray-700 hover:border-pink-300'
+                  }`}
+                >
+                  👧 Girl
+                </button>
+              </div>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Age *</label>
+              <input 
+                type="number" 
+                value={booking.birthdayAge} 
+                onChange={(e) => updateBooking('birthdayAge', e.target.value)} 
+                placeholder="Age"
+                min="1"
+                max="120"
+                className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-pink-500" 
+              />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Other occasion text field */}
+      {booking.occasion === 'other' && (
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Please specify occasion *</label>
+          <input 
+            type="text" 
+            value={booking.occasionOther} 
+            onChange={(e) => updateBooking('occasionOther', e.target.value)} 
+            placeholder="Enter occasion"
+            className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500" 
+          />
         </div>
       )}
 
@@ -604,7 +803,7 @@ export default function BookingPage() {
                 {pkg.id === 'menu470' ? (
                   <p className="text-xs text-blue-600 mt-1">🛠️ Build Your Own • 🍚 Plain Rice & Fried Rice only</p>
                 ) : pkg.id === 'menu510' ? (
-                  <p className="text-xs text-blue-600 mt-1">🛠️ Build Your Own • 🍚 Plain, Fried & Arroz Valenciana</p>
+                  <p className="text-xs text-blue-600 mt-1">🛠️ Build Your Own • 4 Main, 1 Side • 🍚 Plain, Fried & Arroz Valenciana</p>
                 ) : pkg.isCustomBuild ? (
                   <p className="text-xs text-blue-600 mt-1">🛠️ Build Your Own Menu</p>
                 ) : (
@@ -644,6 +843,14 @@ export default function BookingPage() {
               </div>
             ))}
           </div>
+          {/* Note for Menu 560 about Asian Fusion swaps */}
+          {booking.selectedPackage === 'menu560' && (
+            <div className="mt-3 bg-orange-50 border border-orange-200 rounded-lg p-3">
+              <p className="text-xs text-orange-700">
+                💡 <strong>Tip:</strong> In the next step, you can swap dishes from your selected menu with Asian Fusion alternatives like Pad Thai, Chinese Lumpia, Japanese Cheesecake, and more!
+              </p>
+            </div>
+          )}
         </div>
       )}
       {booking.selectedPackage && isCustomBuild && (
@@ -693,9 +900,11 @@ export default function BookingPage() {
       ? menuPackages[booking.selectedPackage]?.options.find(o => o.name === booking.selectedMenuOption)
       : null
     const isCustomBuild = menuPackages[booking.selectedPackage]?.isCustomBuild
-    const isPresetMenu = ['menu560', 'menu660', 'menu810'].includes(booking.selectedPackage)
+    const currentPkg = menuPackages[booking.selectedPackage]
+    const allowSwap = currentPkg?.allowSwap // Menu 560 allows swapping
+    const isPresetMenu = ['menu660', 'menu810'].includes(booking.selectedPackage) // 560 removed - it allows swaps
 
-    // For preset menus (560, 660, 810) - no customization, just show the menu
+    // For preset menus (660, 810) - no customization, just show the menu
     if (isPresetMenu) {
       return (
         <div className="space-y-6">
@@ -722,6 +931,166 @@ export default function BookingPage() {
             <p className="text-sm text-blue-700">
               <Info size={16} className="inline mr-2" />
               This is a preset buffet menu. Dishes are fixed and cannot be customized.
+            </p>
+          </div>
+        </div>
+      )
+    }
+
+    // For Menu 560 - allow swapping with Asian Fusion alternatives
+    if (allowSwap && currentPkg?.swapAlternatives) {
+      const swapItems = currentPkg.swapAlternatives.items
+      const swapName = currentPkg.swapAlternatives.name
+      
+      return (
+        <div className="space-y-6">
+          <div>
+            <h2 className="text-xl font-semibold text-gray-800">Customize Your Menu</h2>
+            <p className="text-gray-500 text-sm">Swap dishes with {swapName} alternatives (optional)</p>
+          </div>
+
+          {selectedOption && (
+            <div className="bg-green-50 border border-green-200 rounded-xl p-4">
+              <h3 className="font-semibold text-green-800 mb-3">📋 Your Base Menu: {selectedOption.name}</h3>
+              <div className="space-y-2">
+                {selectedOption.items.map((item, i) => {
+                  const isSwapped = booking.swappedDishes?.some(s => s.original === item)
+                  const swappedWith = booking.swappedDishes?.find(s => s.original === item)?.replacement
+                  return (
+                    <div key={i} className="flex items-center gap-2 text-sm">
+                      {isSwapped ? (
+                        <>
+                          <span className="text-gray-400 line-through">{item}</span>
+                          <span className="text-red-600">→</span>
+                          <span className="font-medium text-red-700">{swappedWith}</span>
+                        </>
+                      ) : (
+                        <>
+                          <Check size={14} className="text-green-600" />
+                          <span>{item}</span>
+                        </>
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Asian Fusion Swap Options */}
+          <div className="bg-orange-50 border border-orange-200 rounded-xl p-4">
+            <h3 className="font-semibold text-orange-800 mb-3">🔄 {swapName} Alternatives</h3>
+            <p className="text-sm text-orange-700 mb-3">Select items below to swap with your base menu dishes:</p>
+            
+            <div className="space-y-4">
+              {/* Group by category */}
+              {['main', 'side', 'rice', 'dessert', 'soup'].map(cat => {
+                const catItems = swapItems.filter(item => item.category === cat)
+                if (catItems.length === 0) return null
+                
+                const catLabels = { main: '🍖 Main Dishes', side: '🥬 Sides', rice: '🍚 Rice', dessert: '🍰 Desserts', soup: '🍲 Soup' }
+                
+                return (
+                  <div key={cat}>
+                    <p className="text-xs font-semibold text-orange-700 uppercase mb-2">{catLabels[cat]}</p>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                      {catItems.map((item, idx) => {
+                        const isSelected = booking.swappedDishes?.some(s => s.replacement === item.name)
+                        return (
+                          <button
+                            key={idx}
+                            onClick={() => {
+                              if (isSelected) {
+                                // Remove swap
+                                updateBooking('swappedDishes', (booking.swappedDishes || []).filter(s => s.replacement !== item.name))
+                              } else {
+                                // Find a matching item from base menu to swap
+                                const baseItems = selectedOption?.items || []
+                                const alreadySwapped = (booking.swappedDishes || []).map(s => s.original)
+                                const availableToSwap = baseItems.filter(b => !alreadySwapped.includes(b))
+                                
+                                // Try to match by category (crude matching)
+                                let matchedBase = null
+                                if (cat === 'dessert') {
+                                  matchedBase = availableToSwap.find(b => 
+                                    b.toLowerCase().includes('cake') || 
+                                    b.toLowerCase().includes('pie') || 
+                                    b.toLowerCase().includes('sago') ||
+                                    b.toLowerCase().includes('beko') ||
+                                    b.toLowerCase().includes('jelly')
+                                  )
+                                } else if (cat === 'rice') {
+                                  matchedBase = availableToSwap.find(b => 
+                                    b.toLowerCase().includes('rice') || 
+                                    b.toLowerCase().includes('paella')
+                                  )
+                                } else if (cat === 'side') {
+                                  matchedBase = availableToSwap.find(b => 
+                                    b.toLowerCase().includes('pasta') || 
+                                    b.toLowerCase().includes('pancit') ||
+                                    b.toLowerCase().includes('guisado') ||
+                                    b.toLowerCase().includes('alfredo')
+                                  )
+                                } else {
+                                  // Main dishes - pick first available that's not salad/rice/dessert
+                                  matchedBase = availableToSwap.find(b => 
+                                    !b.toLowerCase().includes('salad') &&
+                                    !b.toLowerCase().includes('rice') &&
+                                    !b.toLowerCase().includes('cake') &&
+                                    !b.toLowerCase().includes('pie') &&
+                                    !b.toLowerCase().includes('sago')
+                                  )
+                                }
+                                
+                                if (matchedBase) {
+                                  updateBooking('swappedDishes', [...(booking.swappedDishes || []), { original: matchedBase, replacement: item.name }])
+                                }
+                              }
+                            }}
+                            className={`p-3 rounded-lg text-left flex items-center justify-between transition-all ${
+                              isSelected 
+                                ? 'bg-orange-600 text-white' 
+                                : 'bg-white border border-gray-200 hover:border-orange-300'
+                            }`}
+                          >
+                            <span className="text-sm">{item.name}</span>
+                            {isSelected && <Check size={16} />}
+                          </button>
+                        )
+                      })}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+
+          {/* Summary of swaps */}
+          {booking.swappedDishes?.length > 0 && (
+            <div className="bg-red-50 border border-red-200 rounded-xl p-4">
+              <h3 className="font-semibold text-red-700 mb-2">📝 Your Swaps</h3>
+              <div className="space-y-1">
+                {booking.swappedDishes.map((swap, i) => (
+                  <div key={i} className="flex items-center gap-2 text-sm">
+                    <span className="text-gray-500">{swap.original}</span>
+                    <span className="text-red-600">→</span>
+                    <span className="font-medium text-red-700">{swap.replacement}</span>
+                    <button 
+                      onClick={() => updateBooking('swappedDishes', booking.swappedDishes.filter((_, idx) => idx !== i))}
+                      className="ml-auto text-red-400 hover:text-red-600"
+                    >
+                      ✕
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+            <p className="text-sm text-blue-700">
+              <Info size={16} className="inline mr-2" />
+              Swapping is optional. Your base {selectedOption?.name} will be served if no swaps are selected.
             </p>
           </div>
         </div>
@@ -911,6 +1280,8 @@ export default function BookingPage() {
   const renderStep4 = () => (
     <div className="space-y-6">
       <h2 className="text-xl font-semibold text-gray-800">Guests & Add-ons</h2>
+      
+      {/* Number of Pax */}
       <div className="bg-red-50 rounded-xl p-4 border border-red-100">
         <label className="block text-sm font-semibold text-red-700 mb-3">Number of Pax (Min. 30)</label>
         <div className="flex items-center justify-between">
@@ -928,6 +1299,95 @@ export default function BookingPage() {
           <span className="font-semibold text-red-700">₱{(calculatePricePerHead(booking.selectedPackage, booking.numberOfPax) * booking.numberOfPax).toLocaleString()}</span>
         </div>
       </div>
+
+      {/* Free Drinks Selection */}
+      <div className="bg-blue-50 rounded-xl p-4 border border-blue-100">
+        <label className="block text-sm font-semibold text-blue-700 mb-3 flex items-center gap-2">
+          <Droplets size={18} /> Free Drinks (1 Round Included)
+        </label>
+        <div className="grid grid-cols-2 gap-3">
+          {freeDrinkOptions.map(drink => (
+            <button
+              key={drink.id}
+              onClick={() => updateBooking('freeDrink', drink.id)}
+              className={`p-3 rounded-lg text-left transition-all ${
+                booking.freeDrink === drink.id 
+                  ? 'bg-blue-600 text-white' 
+                  : 'bg-white border border-gray-200 hover:border-blue-300'
+              }`}
+            >
+              <p className="font-medium">{drink.name}</p>
+              <p className={`text-xs ${booking.freeDrink === drink.id ? 'text-blue-100' : 'text-gray-500'}`}>{drink.description}</p>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Additional Drinks */}
+      <div>
+        <label className="block text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+          <Droplets size={18} /> Additional Drinks (Optional)
+        </label>
+        <div className="space-y-2">
+          {additionalDrinks.map(drink => {
+            const sel = booking.drinkAddOns.find(a => a.id === drink.id)
+            return (
+              <div key={drink.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
+                <button onClick={() => toggleDrinkAddOn(drink)} className="flex items-center gap-3 flex-1">
+                  <div className={`w-5 h-5 rounded border-2 flex items-center justify-center ${sel ? 'bg-blue-600 border-blue-600' : 'border-gray-300'}`}>
+                    {sel && <Check size={12} className="text-white" />}
+                  </div>
+                  <div className="text-left">
+                    <p className="font-medium text-gray-800">{drink.name}</p>
+                    <p className="text-sm text-gray-500">₱{drink.price} {drink.unit}</p>
+                  </div>
+                </button>
+                {sel && (
+                  <div className="flex items-center gap-2">
+                    <button onClick={() => updateDrinkQty(drink.id, sel.quantity - 1)} className="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center"><Minus size={12} /></button>
+                    <span className="w-8 text-center text-sm">{sel.quantity}</span>
+                    <button onClick={() => updateDrinkQty(drink.id, sel.quantity + 1)} className="w-6 h-6 rounded-full bg-blue-600 text-white flex items-center justify-center"><Plus size={12} /></button>
+                  </div>
+                )}
+              </div>
+            )
+          })}
+        </div>
+      </div>
+
+      {/* Dessert Add-ons */}
+      <div>
+        <label className="block text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+          <Cake size={18} /> Dessert Platters (Optional)
+        </label>
+        <div className="space-y-2">
+          {dessertAddOns.map(dessert => {
+            const sel = booking.dessertAddOns.find(a => a.id === dessert.id)
+            return (
+              <div key={dessert.id} className="flex items-center justify-between p-3 bg-pink-50 rounded-xl border border-pink-100">
+                <button onClick={() => toggleDessertAddOn(dessert)} className="flex items-center gap-3 flex-1">
+                  <div className={`w-5 h-5 rounded border-2 flex items-center justify-center ${sel ? 'bg-pink-600 border-pink-600' : 'border-gray-300'}`}>
+                    {sel && <Check size={12} className="text-white" />}
+                  </div>
+                  <div className="text-left">
+                    <p className="font-medium text-gray-800">{dessert.name}</p>
+                    <p className="text-sm text-pink-600">₱{dessert.price.toLocaleString()} • {dessert.unit}</p>
+                  </div>
+                </button>
+                {sel && (
+                  <div className="flex items-center gap-2">
+                    <button onClick={() => updateDessertQty(dessert.id, sel.quantity - 1)} className="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center"><Minus size={12} /></button>
+                    <span className="w-8 text-center text-sm">{sel.quantity}</span>
+                    <button onClick={() => updateDessertQty(dessert.id, sel.quantity + 1)} className="w-6 h-6 rounded-full bg-pink-600 text-white flex items-center justify-center"><Plus size={12} /></button>
+                  </div>
+                )}
+              </div>
+            )
+          })}
+        </div>
+      </div>
+
+      {/* Station Add-ons */}
       <div>
         <label className="block text-sm font-semibold text-gray-700 mb-3">Add-on Stations</label>
         <div className="space-y-2">
@@ -962,13 +1422,117 @@ export default function BookingPage() {
   const renderStep5 = () => (
     <div className="space-y-6">
       <h2 className="text-xl font-semibold text-gray-800">Motif & Requests</h2>
+      
+      {/* Motif Type Selection */}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">Event Motif/Theme</label>
-        <div className="relative">
-          <Palette className="absolute left-3 top-3 text-gray-400" size={20} />
-          <input type="text" value={booking.motif} onChange={(e) => updateBooking('motif', e.target.value)} placeholder="e.g., Blue and Gold, Rustic" className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500" />
+        <div className="flex gap-2 mb-3">
+          <button
+            onClick={() => updateBooking('motifType', 'preset')}
+            className={`flex-1 py-2 px-4 rounded-lg font-medium transition-all ${
+              booking.motifType === 'preset' 
+                ? 'bg-red-700 text-white' 
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+          >
+            Choose Preset
+          </button>
+          <button
+            onClick={() => updateBooking('motifType', 'custom')}
+            className={`flex-1 py-2 px-4 rounded-lg font-medium transition-all ${
+              booking.motifType === 'custom' 
+                ? 'bg-red-700 text-white' 
+                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+            }`}
+          >
+            Custom Colors
+          </button>
         </div>
+
+        {/* Preset Motifs */}
+        {booking.motifType === 'preset' && (
+          <div className="grid grid-cols-2 gap-2">
+            {presetMotifColors.map(preset => (
+              <button
+                key={preset.id}
+                onClick={() => updateBooking('motifPreset', preset.id)}
+                className={`p-3 rounded-lg border-2 transition-all ${
+                  booking.motifPreset === preset.id 
+                    ? 'border-red-700 bg-red-50' 
+                    : 'border-gray-200 hover:border-red-300'
+                }`}
+              >
+                <div className="flex items-center gap-2 mb-1">
+                  {preset.colors.map((color, i) => (
+                    <div 
+                      key={i} 
+                      className="w-5 h-5 rounded-full border border-gray-300" 
+                      style={{ backgroundColor: color }}
+                    />
+                  ))}
+                </div>
+                <p className="text-sm font-medium text-gray-800">{preset.name}</p>
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Custom Colors */}
+        {booking.motifType === 'custom' && (
+          <div className="space-y-4">
+            <div className="relative">
+              <Palette className="absolute left-3 top-3 text-gray-400" size={20} />
+              <input 
+                type="text" 
+                value={booking.motif} 
+                onChange={(e) => updateBooking('motif', e.target.value)} 
+                placeholder="Describe your motif (e.g., Rustic Garden, Under the Sea)" 
+                className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500" 
+              />
+            </div>
+            <div>
+              <label className="block text-sm text-gray-600 mb-2">Select Colors</label>
+              <div className="flex gap-3">
+                <div className="flex-1">
+                  <label className="block text-xs text-gray-500 mb-1">Primary Color</label>
+                  <div className="flex items-center gap-2">
+                    <input 
+                      type="color" 
+                      value={booking.motifColors[0]} 
+                      onChange={(e) => updateBooking('motifColors', [e.target.value, booking.motifColors[1]])} 
+                      className="w-12 h-12 rounded-lg cursor-pointer border-0"
+                    />
+                    <span className="text-sm text-gray-600">{booking.motifColors[0]}</span>
+                  </div>
+                </div>
+                <div className="flex-1">
+                  <label className="block text-xs text-gray-500 mb-1">Secondary Color</label>
+                  <div className="flex items-center gap-2">
+                    <input 
+                      type="color" 
+                      value={booking.motifColors[1]} 
+                      onChange={(e) => updateBooking('motifColors', [booking.motifColors[0], e.target.value])} 
+                      className="w-12 h-12 rounded-lg cursor-pointer border-0"
+                    />
+                    <span className="text-sm text-gray-600">{booking.motifColors[1]}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            {/* Preview */}
+            <div className="bg-gray-50 rounded-lg p-3">
+              <p className="text-xs text-gray-500 mb-2">Preview:</p>
+              <div 
+                className="h-8 rounded-lg" 
+                style={{ 
+                  background: `linear-gradient(135deg, ${booking.motifColors[0]} 0%, ${booking.motifColors[1]} 100%)` 
+                }}
+              />
+            </div>
+          </div>
+        )}
       </div>
+
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">Special Requests</label>
         <textarea value={booking.specialRequests} onChange={(e) => updateBooking('specialRequests', e.target.value)} placeholder="Any special requirements..." className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 min-h-[120px]" />
@@ -986,7 +1550,7 @@ export default function BookingPage() {
   const renderStep6 = () => {
     const pkg = menuPackages[booking.selectedPackage]
     const pph = calculatePricePerHead(booking.selectedPackage, booking.numberOfPax)
-    const total = calculateTotal(booking.selectedPackage, booking.numberOfPax, booking.addOns)
+    const total = calculateTotal()
     const displayName = isAdmin ? booking.customerName : (profile?.full_name || 'Customer')
     const displayPhone = isAdmin ? booking.customerPhone : (profile?.phone || '')
     const customDishesArray = Object.values(booking.customDishes).flat()
@@ -1006,9 +1570,33 @@ export default function BookingPage() {
             </div>
           </div>
           <div className="space-y-3 text-sm">
+            <div className="flex justify-between"><span className="text-gray-600">Occasion</span><span className="font-medium">{getOccasionDisplay()}</span></div>
             <div className="flex justify-between"><span className="text-gray-600">Date & Time</span><span className="font-medium">{booking.date} at {formatTime(booking.time)}</span></div>
             <div className="flex justify-between"><span className="text-gray-600">Venue</span><span className="font-medium text-right max-w-[60%]">{booking.venue}</span></div>
-            <div className="flex justify-between"><span className="text-gray-600">Motif</span><span className="font-medium">{booking.motif || '-'}</span></div>
+            <div className="flex justify-between">
+              <span className="text-gray-600">Motif</span>
+              <span className="font-medium flex items-center gap-2">
+                {booking.motifType === 'preset' && booking.motifPreset ? (
+                  <>
+                    {presetMotifColors.find(p => p.id === booking.motifPreset)?.colors.map((c, i) => (
+                      <span key={i} className="w-4 h-4 rounded-full border" style={{ backgroundColor: c }} />
+                    ))}
+                    {presetMotifColors.find(p => p.id === booking.motifPreset)?.name}
+                  </>
+                ) : booking.motifType === 'custom' ? (
+                  <>
+                    {booking.motifColors.map((c, i) => (
+                      <span key={i} className="w-4 h-4 rounded-full border" style={{ backgroundColor: c }} />
+                    ))}
+                    {booking.motif || 'Custom'}
+                  </>
+                ) : '-'}
+              </span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-600">Free Drink</span>
+              <span className="font-medium">{freeDrinkOptions.find(d => d.id === booking.freeDrink)?.name || '-'}</span>
+            </div>
           </div>
         </div>
 
@@ -1017,6 +1605,20 @@ export default function BookingPage() {
           <div className="space-y-2 text-sm">
             <div className="flex justify-between"><span>{pkg?.name}</span><span>{booking.selectedMenuOption}</span></div>
             <div className="flex justify-between"><span>{booking.numberOfPax} pax × ₱{pph}</span><span className="font-medium">₱{(pph * booking.numberOfPax).toLocaleString()}</span></div>
+            
+            {/* Dessert add-ons */}
+            {booking.dessertAddOns.map(addon => { 
+              const item = dessertAddOns.find(a => a.id === addon.id)
+              return <div key={addon.id} className="flex justify-between text-pink-600"><span>🍰 {item?.name} ×{addon.quantity}</span><span>₱{((item?.price || 0) * addon.quantity).toLocaleString()}</span></div> 
+            })}
+            
+            {/* Drink add-ons */}
+            {booking.drinkAddOns.map(addon => { 
+              const item = additionalDrinks.find(a => a.id === addon.id)
+              return <div key={addon.id} className="flex justify-between text-blue-600"><span>🥤 {item?.name} ×{addon.quantity}</span><span>₱{((item?.price || 0) * addon.quantity).toLocaleString()}</span></div> 
+            })}
+            
+            {/* Station add-ons */}
             {booking.addOns.map(addon => { 
               const item = addOnStations.find(a => a.id === addon.id)
               return <div key={addon.id} className="flex justify-between text-gray-600"><span>{item?.name} ×{addon.quantity}</span><span>₱{((item?.price || 0) * addon.quantity).toLocaleString()}</span></div> 
@@ -1034,6 +1636,24 @@ export default function BookingPage() {
             <p className="text-xs text-amber-600 font-medium bg-amber-50 px-2 py-1 rounded inline-block mb-3">
               ✏️ Some items modified from {booking.selectedMenuOption}
             </p>
+          )}
+
+          {/* Show swapped dishes for Menu 560 */}
+          {booking.swappedDishes?.length > 0 && (
+            <div className="mb-3">
+              <p className="text-xs text-orange-600 font-medium bg-orange-50 px-2 py-1 rounded inline-block mb-2">
+                🔄 Asian Fusion Swaps Applied
+              </p>
+              <div className="space-y-1 pl-2">
+                {booking.swappedDishes.map((swap, i) => (
+                  <div key={i} className="flex items-center gap-2 text-xs">
+                    <span className="text-gray-500 line-through">{swap.original}</span>
+                    <span className="text-orange-500">→</span>
+                    <span className="font-medium text-orange-700">{swap.replacement}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
           )}
           
           <div className="space-y-3">
@@ -1060,32 +1680,9 @@ export default function BookingPage() {
               <p className="text-xs font-semibold text-red-700 uppercase mb-1">🍖 Main Dishes</p>
               <div className="flex flex-wrap gap-1">
                 {(booking.customDishes['main']?.length > 0) ? (
-                  <>
-                    {booking.customDishes['main'].map(d => (
-                      <span key={d.id} className="text-sm bg-red-100 text-red-700 px-2 py-1 rounded-full">{d.name}</span>
-                    ))}
-                    {booking.customDishes['main'].length < 2 && selectedOption?.items.filter(item => 
-                      !item.toLowerCase().includes('salad') && 
-                      !item.toLowerCase().includes('rice') && 
-                      !item.toLowerCase().includes('pancit') &&
-                      !item.toLowerCase().includes('pasta') &&
-                      !item.toLowerCase().includes('cake') &&
-                      !item.toLowerCase().includes('flan') &&
-                      !item.toLowerCase().includes('float') &&
-                      !item.toLowerCase().includes('torte') &&
-                      !item.toLowerCase().includes('brownie') &&
-                      !item.toLowerCase().includes('delight') &&
-                      !item.toLowerCase().includes('chow pat') &&
-                      !item.toLowerCase().includes('broken window') &&
-                      !item.toLowerCase().includes('blitz') &&
-                      !item.toLowerCase().includes('choco') &&
-                      !item.toLowerCase().includes('zambo') &&
-                      !item.toLowerCase().includes('rainbow') &&
-                      !item.toLowerCase().includes('arroz')
-                    ).slice(0, 2 - booking.customDishes['main'].length).map((item, i) => (
-                      <span key={i} className="text-sm bg-white border px-2 py-1 rounded-full">{item}</span>
-                    ))}
-                  </>
+                  booking.customDishes['main'].map(d => (
+                    <span key={d.id} className="text-sm bg-red-100 text-red-700 px-2 py-1 rounded-full">{d.name}</span>
+                  ))
                 ) : (
                   selectedOption?.items.filter(item => 
                     !item.toLowerCase().includes('salad') && 
@@ -1105,7 +1702,7 @@ export default function BookingPage() {
                     !item.toLowerCase().includes('zambo') &&
                     !item.toLowerCase().includes('rainbow') &&
                     !item.toLowerCase().includes('arroz')
-                  ).slice(0, 2).map((item, i) => (
+                  ).slice(0, 4).map((item, i) => (
                     <span key={i} className="text-sm bg-white border px-2 py-1 rounded-full">{item}</span>
                   ))
                 )}
@@ -1117,20 +1714,9 @@ export default function BookingPage() {
               <p className="text-xs font-semibold text-orange-700 uppercase mb-1">🥬 Sides</p>
               <div className="flex flex-wrap gap-1">
                 {(booking.customDishes['side']?.length > 0) ? (
-                  <>
-                    {booking.customDishes['side'].map(d => (
-                      <span key={d.id} className="text-sm bg-red-100 text-red-700 px-2 py-1 rounded-full">{d.name}</span>
-                    ))}
-                    {booking.customDishes['side'].length < 2 && selectedOption?.items.filter(item => 
-                      item.toLowerCase().includes('pancit') || 
-                      item.toLowerCase().includes('pasta') ||
-                      item.toLowerCase().includes('vegetable') ||
-                      item.toLowerCase().includes('guisado') ||
-                      item.toLowerCase().includes('chow pat')
-                    ).slice(0, 2 - booking.customDishes['side'].length).map((item, i) => (
-                      <span key={i} className="text-sm bg-white border px-2 py-1 rounded-full">{item}</span>
-                    ))}
-                  </>
+                  booking.customDishes['side'].map(d => (
+                    <span key={d.id} className="text-sm bg-red-100 text-red-700 px-2 py-1 rounded-full">{d.name}</span>
+                  ))
                 ) : (
                   selectedOption?.items.filter(item => 
                     item.toLowerCase().includes('pancit') || 
@@ -1150,11 +1736,9 @@ export default function BookingPage() {
               <p className="text-xs font-semibold text-amber-700 uppercase mb-1">🍚 Rice</p>
               <div className="flex flex-wrap gap-1">
                 {(booking.customDishes['rice']?.length > 0) ? (
-                  <>
-                    {booking.customDishes['rice'].map(d => (
-                      <span key={d.id} className="text-sm bg-red-100 text-red-700 px-2 py-1 rounded-full">{d.name}</span>
-                    ))}
-                  </>
+                  booking.customDishes['rice'].map(d => (
+                    <span key={d.id} className="text-sm bg-red-100 text-red-700 px-2 py-1 rounded-full">{d.name}</span>
+                  ))
                 ) : (
                   selectedOption?.items.filter(item => 
                     item.toLowerCase().includes('rice') || item.toLowerCase().includes('paella') || item.toLowerCase().includes('valenciana')
@@ -1170,36 +1754,9 @@ export default function BookingPage() {
               <p className="text-xs font-semibold text-pink-700 uppercase mb-1">🍰 Desserts</p>
               <div className="flex flex-wrap gap-1">
                 {(booking.customDishes['dessert']?.length > 0) ? (
-                  <>
-                    {booking.customDishes['dessert'].map(d => (
-                      <span key={d.id} className="text-sm bg-red-100 text-red-700 px-2 py-1 rounded-full">{d.name}</span>
-                    ))}
-                    {booking.customDishes['dessert'].length < 2 && selectedOption?.items.filter(item => 
-                      item.toLowerCase().includes('cake') ||
-                      item.toLowerCase().includes('flan') ||
-                      item.toLowerCase().includes('float') ||
-                      item.toLowerCase().includes('torte') ||
-                      item.toLowerCase().includes('brownie') ||
-                      item.toLowerCase().includes('delight') ||
-                      item.toLowerCase().includes('pie') ||
-                      item.toLowerCase().includes('tart') ||
-                      item.toLowerCase().includes('broken window') ||
-                      item.toLowerCase().includes('blitz') ||
-                      item.toLowerCase().includes('choco') ||
-                      item.toLowerCase().includes('zambo') ||
-                      item.toLowerCase().includes('rainbow') ||
-                      item.toLowerCase().includes('buko') ||
-                      item.toLowerCase().includes('mango') ||
-                      item.toLowerCase().includes('maja') ||
-                      item.toLowerCase().includes('sago') ||
-                      item.toLowerCase().includes('jelly') ||
-                      item.toLowerCase().includes('ube') ||
-                      item.toLowerCase().includes('beko') ||
-                      item.toLowerCase().includes('bayot')
-                    ).slice(0, 2 - booking.customDishes['dessert'].length).map((item, i) => (
-                      <span key={i} className="text-sm bg-white border px-2 py-1 rounded-full">{item}</span>
-                    ))}
-                  </>
+                  booking.customDishes['dessert'].map(d => (
+                    <span key={d.id} className="text-sm bg-red-100 text-red-700 px-2 py-1 rounded-full">{d.name}</span>
+                  ))
                 ) : (
                   selectedOption?.items.filter(item => 
                     item.toLowerCase().includes('cake') ||
@@ -1258,16 +1815,23 @@ export default function BookingPage() {
   
   const canProceed = () => { 
     if (step === 1) {
-      if (!booking.date || !booking.time) return false
+      if (!booking.date || !booking.time || !booking.occasion) return false
+      // Birthday validation
+      if (booking.occasion === 'birthday' && (!booking.birthdayCelebrant || !booking.birthdayAge)) return false
+      // Other occasion validation
+      if (booking.occasion === 'other' && !booking.occasionOther) return false
       if (!isValidDate(booking.date, booking.time)) return false
       if (isAdmin) return booking.customerName && booking.customerPhone && booking.venue
       return booking.venue
     }
     if (step === 2) return booking.selectedPackage && booking.selectedMenuOption
     if (step === 3) {
-      // Preset menus (560, 660, 810) can always proceed - no customization needed
-      const isPresetMenu = ['menu560', 'menu660', 'menu810'].includes(booking.selectedPackage)
+      // Preset menus (660, 810) can always proceed - no customization needed
+      const isPresetMenu = ['menu660', 'menu810'].includes(booking.selectedPackage)
       if (isPresetMenu) return true
+      // Menu 560 with swap capability can always proceed (swapping is optional)
+      const allowSwap = menuPackages[booking.selectedPackage]?.allowSwap
+      if (allowSwap) return true
       return missingCategories.length === 0 // Block if menu is incomplete for custom build menus
     }
     return true 

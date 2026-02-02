@@ -33,11 +33,27 @@ export const menuPackages = {
   menu560: {
     id: 'menu560', name: 'Menu 560', pricePerHead: 560,
     pricingTiers: { 60: 560, 50: 580, 40: 630, 30: 680 },
+    allowSwap: true, // Enable dish swapping for this menu
     options: [
       { name: 'Filipino Buffet', items: ['Eggplant & Nangka salad', 'Pickled Green Mango w/ dilis', 'Roast Pork Liempo w/ special herbs', 'Kare-Kare w/ bagoong', 'Baked Crabmeat', 'Sinugbang Isda w/ vinegar sauce', 'Chicken w/ barbecue sauce', 'Garlic Rice/Plain Rice', 'Beko Bayot', 'Mango Sago'] },
-      { name: 'Asian Fusion', items: ['Ngocong Soup', 'Beef Pochero', 'Chinese Lumpia', 'Misua Guisado', 'Pad Thai', 'Lasagna', 'Callos', 'Chinese Valenciana/Plain Rice', 'Japanese Cheesecake', 'Coffee Jelly'] },
       { name: 'International Buffet', items: ['Asian Mandarin Chicken Salad', 'Waldorf Salad', 'Chicken Galantina', 'Ox Tongue w/ cooked ham', 'Chicken Bacon Alfredo', 'Beef Morcon', 'Grilled Fish w/ lemon butter sauce', 'Paella/Plain Rice', 'Strawberry Cheesecake', 'Avocado Pie'] }
-    ]
+    ],
+    // Asian Fusion items available as swap alternatives
+    swapAlternatives: {
+      name: 'Asian Fusion',
+      items: [
+        { name: 'Ngocong Soup', category: 'soup' },
+        { name: 'Beef Pochero', category: 'main' },
+        { name: 'Chinese Lumpia', category: 'main' },
+        { name: 'Misua Guisado', category: 'side' },
+        { name: 'Pad Thai', category: 'side' },
+        { name: 'Lasagna', category: 'side' },
+        { name: 'Callos', category: 'main' },
+        { name: 'Chinese Valenciana', category: 'rice' },
+        { name: 'Japanese Cheesecake', category: 'dessert' },
+        { name: 'Coffee Jelly', category: 'dessert' }
+      ]
+    }
   },
   menu660: {
     id: 'menu660', name: 'Menu 660', pricePerHead: 660,
@@ -56,6 +72,35 @@ export const menuPackages = {
   }
 }
 
+// Occasion types
+export const occasionTypes = [
+  { id: 'birthday', name: 'Birthday', requiresDetails: true },
+  { id: 'wedding', name: 'Wedding' },
+  { id: 'debut', name: 'Debut (18th Birthday)' },
+  { id: 'christening', name: 'Christening/Baptism' },
+  { id: 'anniversary', name: 'Anniversary' },
+  { id: 'graduation', name: 'Graduation' },
+  { id: 'corporate', name: 'Corporate Event' },
+  { id: 'reunion', name: 'Family Reunion' },
+  { id: 'fiesta', name: 'Fiesta' },
+  { id: 'other', name: 'Other' }
+]
+
+// Preset motif colors
+export const presetMotifColors = [
+  { id: 'blue_gold', name: 'Blue and Gold', colors: ['#1e40af', '#fbbf24'] },
+  { id: 'pink_white', name: 'Pink and White', colors: ['#ec4899', '#ffffff'] },
+  { id: 'red_gold', name: 'Red and Gold', colors: ['#dc2626', '#fbbf24'] },
+  { id: 'green_white', name: 'Green and White', colors: ['#16a34a', '#ffffff'] },
+  { id: 'purple_silver', name: 'Purple and Silver', colors: ['#7c3aed', '#c0c0c0'] },
+  { id: 'navy_coral', name: 'Navy and Coral', colors: ['#1e3a5f', '#ff6b6b'] },
+  { id: 'rustic', name: 'Rustic (Brown & Cream)', colors: ['#8b4513', '#f5f5dc'] },
+  { id: 'pastel', name: 'Pastel Mix', colors: ['#fce7f3', '#dbeafe', '#d1fae5'] },
+  { id: 'black_gold', name: 'Black and Gold', colors: ['#000000', '#fbbf24'] },
+  { id: 'tropical', name: 'Tropical (Orange & Green)', colors: ['#f97316', '#22c55e'] },
+]
+
+// Add-on Stations
 export const addOnStations = [
   { id: 'water', name: 'Water (5 gallons)', price: 50, unit: 'per 5 gallons' },
   { id: 'ice', name: 'Ice (10 kilos)', price: 150, unit: 'per bag' },
@@ -71,6 +116,24 @@ export const addOnStations = [
   { id: 'salad', name: 'Salad Bar', price: 4000, unit: 'good for 50' },
 ]
 
+// Dessert Add-ons
+export const dessertAddOns = [
+  { id: 'dessert_20pax', name: 'Dessert Platter (20 pax)', price: 1400, pax: 20, unit: 'good for 20 pax' },
+  { id: 'dessert_5pax', name: 'Dessert Platter (5 pax)', price: 750, pax: 5, unit: 'good for 5 pax' },
+]
+
+// Drinks Options
+export const freeDrinkOptions = [
+  { id: 'softdrinks', name: 'Assorted Softdrinks', description: '1 round included' },
+  { id: 'icetea', name: 'Ice Tea', description: '1 round included' },
+]
+
+export const additionalDrinks = [
+  { id: 'extra_softdrinks', name: 'Additional Softdrinks (Mismo)', price: 35, unit: 'per bottle' },
+  { id: 'ic_juice_lemongrass', name: 'Ic Juice - Lemongrass', price: 40, unit: 'per bottle' },
+  { id: 'ic_juice_calamansi', name: 'Ic Juice - Calamansi', price: 40, unit: 'per bottle' },
+]
+
 export const getPricePerHead = (packageId, pax) => {
   const pkg = menuPackages[packageId]
   if (!pkg) return 0
@@ -83,12 +146,47 @@ export const getPricePerHead = (packageId, pax) => {
 // Alias for backwards compatibility
 export const calculatePricePerHead = getPricePerHead
 
-export const calculateTotal = (packageId, pax, addOns = []) => {
+export const calculateTotal = (packageId, pax, addOns = [], dessertAddOns = [], drinkAddOns = []) => {
   const pricePerHead = getPricePerHead(packageId, pax)
   const menuTotal = pricePerHead * pax
+  
+  // Station add-ons
   const addOnsTotal = addOns.reduce((sum, a) => {
     const item = addOnStations.find(s => s.id === a.id)
     return sum + (item ? item.price * (a.quantity || 1) : 0)
   }, 0)
-  return menuTotal + addOnsTotal
+  
+  // Dessert add-ons
+  const dessertTotal = dessertAddOns.reduce((sum, d) => {
+    const item = dessertAddOns.find(s => s.id === d.id)
+    return sum + (item ? item.price * (d.quantity || 1) : 0)
+  }, 0)
+  
+  // Drink add-ons (free drink doesn't add cost)
+  const drinkTotal = drinkAddOns.reduce((sum, d) => {
+    const item = additionalDrinks.find(s => s.id === d.id)
+    return sum + (item ? item.price * (d.quantity || 1) : 0)
+  }, 0)
+  
+  return menuTotal + addOnsTotal + dessertTotal + drinkTotal
+}
+
+// Helper to calculate all add-on totals
+export const calculateAddOnsBreakdown = (addOns = [], desserts = [], drinks = []) => {
+  const stationsTotal = addOns.reduce((sum, a) => {
+    const item = addOnStations.find(s => s.id === a.id)
+    return sum + (item ? item.price * (a.quantity || 1) : 0)
+  }, 0)
+  
+  const dessertTotal = desserts.reduce((sum, d) => {
+    const item = dessertAddOns.find(s => s.id === d.id)
+    return sum + (item ? item.price * (d.quantity || 1) : 0)
+  }, 0)
+  
+  const drinkTotal = drinks.reduce((sum, d) => {
+    const item = additionalDrinks.find(s => s.id === d.id)
+    return sum + (item ? item.price * (d.quantity || 1) : 0)
+  }, 0)
+  
+  return { stationsTotal, dessertTotal, drinkTotal, total: stationsTotal + dessertTotal + drinkTotal }
 }
