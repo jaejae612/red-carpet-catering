@@ -268,7 +268,11 @@ export default function FoodMenuPage() {
                           </div>
                           <div className="text-right ml-4">
                             <p className="text-lg font-bold text-red-700">₱{lowestPrice.toLocaleString()}</p>
-                            {sizes.length > 1 && <p className="text-xs text-gray-400">from</p>}
+                            {sizes.length > 1 && (
+                              <p className="text-xs text-gray-400">
+                                {sizes.map(s => s.name).join(' • ')}
+                              </p>
+                            )}
                           </div>
                         </button>
                       )
