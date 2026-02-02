@@ -269,8 +269,8 @@ export default function FoodMenuPage() {
                           <div className="text-right ml-4">
                             <p className="text-lg font-bold text-red-700">₱{lowestPrice.toLocaleString()}</p>
                             {sizes.length > 1 && (
-                              <p className="text-xs text-gray-400">
-                                {sizes.map(s => s.name).join(' • ')}
+                              <p className="text-xs text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full">
+                                {sizes.length} sizes
                               </p>
                             )}
                           </div>
