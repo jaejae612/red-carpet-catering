@@ -13,7 +13,6 @@ import {
   calculateAddOnsBreakdown
 } from '../lib/menuData'
 import { 
-  CEBU_SERVICE_AREAS, 
   getCityList, 
   getBarangays, 
   getGasCharge, 
@@ -71,7 +70,6 @@ export default function BookingPage() {
   
   const [booking, setBooking] = useState({ 
     venue: duplicateData?.venue || '', 
-    // Structured venue address for Cebu-only
     venueAddress: duplicateData?.venue_address || { city: '', barangay: '', street: '', landmark: '' },
     venueGasCharge: 0,
     date: '', 
@@ -505,10 +503,7 @@ export default function BookingPage() {
       return sum + (item ? item.price * (d.quantity || 1) : 0)
     }, 0)
     
-    // Gas charge based on venue location
-    const gasCharge = booking.venueGasCharge || 0
-    
-    return menuTotal + stationsTotal + drinkTotal + gasCharge
+    return menuTotal + stationsTotal + drinkTotal + (booking.venueGasCharge || 0)
   }
 
   // Get motif display string
@@ -559,8 +554,8 @@ export default function BookingPage() {
         customer_phone: customerPhone, 
         customer_email: customerEmail,
         venue: booking.venue,
-        venue_address: booking.venueAddress, // Structured address {city, barangay, street, landmark}
-        gas_charge: booking.venueGasCharge || 0, // Gas charge based on location
+        venue_address: booking.venueAddress,
+        gas_charge: booking.venueGasCharge || 0,
         event_date: booking.date, 
         event_time: booking.time, 
         menu_package: booking.selectedPackage,
@@ -602,7 +597,7 @@ export default function BookingPage() {
       
       {isAdmin && (
         <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-4">
-          <p className="text-blue-700 font-medium mb-3"> Customer Information (Admin Booking)</p>
+          <p className="text-blue-700 font-medium mb-3">👤 Customer Information (Admin Booking)</p>
           <div className="space-y-3">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Customer Name *</label>
@@ -675,7 +670,7 @@ export default function BookingPage() {
                       : 'bg-white border border-gray-200 text-gray-700 hover:border-blue-300'
                   }`}
                 >
-                  <span class="w-5 h-5 rounded-full bg-blue-400 inline-flex items-center justify-center text-white text-xs font-bold">B</span> Boy
+                  👦 Boy
                 </button>
                 <button
                   type="button"
@@ -686,7 +681,7 @@ export default function BookingPage() {
                       : 'bg-white border border-gray-200 text-gray-700 hover:border-pink-300'
                   }`}
                 >
-                  <span class="w-5 h-5 rounded-full bg-pink-400 inline-flex items-center justify-center text-white text-xs font-bold">G</span> Girl
+                  👧 Girl
                 </button>
               </div>
             </div>
@@ -721,116 +716,89 @@ export default function BookingPage() {
       )}
 
       {/* Venue Address - Cebu Only */}
-      <div className="space-y-4">
+      <div className="space-y-3">
         <label className="block text-sm font-medium text-gray-700 flex items-center gap-2">
-          <MapPin size={18} className="text-red-600" />
-          Venue Address (Cebu Only) *
+          <MapPin size={18} className="text-red-600" /> Venue Address (Cebu Only) *
         </label>
         
-        {/* Service Area Notice */}
         <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 flex items-start gap-2">
           <Info size={16} className="text-blue-600 flex-shrink-0 mt-0.5" />
           <p className="text-sm text-blue-700">Service limited to <strong>Metro Cebu</strong> and nearby areas.</p>
         </div>
         
-        {/* City Selection */}
-        <div>
-          <label className="block text-sm text-gray-600 mb-1">City / Municipality *</label>
+        {/* City */}
+        <select
+          value={booking.venueAddress.city}
+          onChange={(e) => {
+            const cityId = e.target.value
+            updateBooking('venueAddress', { ...booking.venueAddress, city: cityId, barangay: '' })
+            updateBooking('venueGasCharge', getGasCharge(cityId) || 0)
+            if (cityId) {
+              const ci = getCityInfo(cityId)
+              updateBooking('venue', ci?.name || '')
+            }
+          }}
+          required
+          className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 bg-white"
+        >
+          <option value="">Select city / municipality...</option>
+          {getCityList().map(city => (
+            <option key={city.id} value={city.id}>
+              {city.name}{city.gasCharge > 0 ? ` (+₱${city.gasCharge} gas)` : ''}{city.requiresQuote ? ' (Quote needed)' : ''}
+            </option>
+          ))}
+        </select>
+        
+        {/* Barangay */}
+        {booking.venueAddress.city && (
           <select
-            value={booking.venueAddress.city}
-            onChange={(e) => {
-              const cityId = e.target.value
-              const gasCharge = getGasCharge(cityId) || 0
-              updateBooking('venueAddress', { ...booking.venueAddress, city: cityId, barangay: '' })
-              updateBooking('venueGasCharge', gasCharge)
-              // Also update venue string for backward compatibility
-              if (cityId) {
-                const cityInfo = getCityInfo(cityId)
-                updateBooking('venue', cityInfo?.name || '')
-              }
-            }}
+            value={booking.venueAddress.barangay}
+            onChange={(e) => updateBooking('venueAddress', { ...booking.venueAddress, barangay: e.target.value })}
             required
             className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 bg-white"
           >
-            <option value="">Select city...</option>
-            {getCityList().map(city => (
-              <option key={city.id} value={city.id}>
-                {city.name}
-                {city.gasCharge > 0 && ` (+₱${city.gasCharge} gas)`}
-                {city.requiresQuote && ' (Quote needed)'}
-              </option>
+            <option value="">Select barangay...</option>
+            {getBarangays(booking.venueAddress.city).map(brgy => (
+              <option key={brgy} value={brgy}>{brgy}</option>
             ))}
           </select>
-        </div>
-        
-        {/* Barangay Selection */}
-        {booking.venueAddress.city && (
-          <div>
-            <label className="block text-sm text-gray-600 mb-1">Barangay *</label>
-            <select
-              value={booking.venueAddress.barangay}
-              onChange={(e) => {
-                updateBooking('venueAddress', { ...booking.venueAddress, barangay: e.target.value })
-              }}
-              required
-              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 bg-white"
-            >
-              <option value="">Select barangay...</option>
-              {getBarangays(booking.venueAddress.city).map(brgy => (
-                <option key={brgy} value={brgy}>{brgy}</option>
-              ))}
-            </select>
-          </div>
         )}
         
-        {/* Street / Venue Name */}
+        {/* Street / Venue */}
         {booking.venueAddress.city && (
-          <div>
-            <label className="block text-sm text-gray-600 mb-1">Street / Building / Venue Name *</label>
-            <input
-              type="text"
-              value={booking.venueAddress.street}
-              onChange={(e) => {
-                updateBooking('venueAddress', { ...booking.venueAddress, street: e.target.value })
-                // Update venue string
-                const fullAddress = formatAddress(e.target.value, booking.venueAddress.barangay, booking.venueAddress.city, booking.venueAddress.landmark)
-                updateBooking('venue', fullAddress)
-              }}
-              required
-              placeholder="e.g., Function Room, ABC Hotel"
-              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500"
-            />
-          </div>
+          <input
+            type="text"
+            value={booking.venueAddress.street}
+            onChange={(e) => {
+              updateBooking('venueAddress', { ...booking.venueAddress, street: e.target.value })
+              updateBooking('venue', formatAddress(e.target.value, booking.venueAddress.barangay, booking.venueAddress.city, booking.venueAddress.landmark))
+            }}
+            required
+            placeholder="Street / Building / Venue Name *"
+            className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500"
+          />
         )}
         
         {/* Landmark */}
         {booking.venueAddress.city && (
-          <div>
-            <label className="block text-sm text-gray-600 mb-1">Landmark <span className="text-gray-400">(Optional)</span></label>
-            <input
-              type="text"
-              value={booking.venueAddress.landmark}
-              onChange={(e) => {
-                updateBooking('venueAddress', { ...booking.venueAddress, landmark: e.target.value })
-                const fullAddress = formatAddress(booking.venueAddress.street, booking.venueAddress.barangay, booking.venueAddress.city, e.target.value)
-                updateBooking('venue', fullAddress)
-              }}
-              placeholder="e.g., Near SM City, Beside BDO"
-              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500"
-            />
-          </div>
+          <input
+            type="text"
+            value={booking.venueAddress.landmark}
+            onChange={(e) => {
+              updateBooking('venueAddress', { ...booking.venueAddress, landmark: e.target.value })
+              updateBooking('venue', formatAddress(booking.venueAddress.street, booking.venueAddress.barangay, booking.venueAddress.city, e.target.value))
+            }}
+            placeholder="Landmark (Optional)"
+            className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500"
+          />
         )}
         
-        {/* Gas Charge Display */}
+        {/* Gas Charge */}
         {booking.venueAddress.city && !requiresQuotation(booking.venueAddress.city) && (
-          <div className={`rounded-xl p-4 flex items-center justify-between ${
-            booking.venueGasCharge === 0 ? 'bg-green-50 border border-green-200' : 'bg-amber-50 border border-amber-200'
-          }`}>
+          <div className={`rounded-xl p-4 flex items-center justify-between ${booking.venueGasCharge === 0 ? 'bg-green-50 border border-green-200' : 'bg-amber-50 border border-amber-200'}`}>
             <div className="flex items-center gap-2">
               <Fuel size={20} className={booking.venueGasCharge === 0 ? 'text-green-600' : 'text-amber-600'} />
-              <span className={`font-medium ${booking.venueGasCharge === 0 ? 'text-green-700' : 'text-amber-700'}`}>
-                Gas Charge:
-              </span>
+              <span className={`font-medium ${booking.venueGasCharge === 0 ? 'text-green-700' : 'text-amber-700'}`}>Gas Charge:</span>
             </div>
             <span className={`font-bold text-lg ${booking.venueGasCharge === 0 ? 'text-green-700' : 'text-amber-700'}`}>
               {booking.venueGasCharge === 0 ? 'FREE' : `₱${booking.venueGasCharge.toLocaleString()}`}
@@ -838,7 +806,7 @@ export default function BookingPage() {
           </div>
         )}
         
-        {/* Requires Quote Warning */}
+        {/* Quote Required */}
         {booking.venueAddress.city && requiresQuotation(booking.venueAddress.city) && (
           <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-start gap-3">
             <AlertCircle className="text-amber-600 flex-shrink-0 mt-0.5" size={20} />
@@ -864,9 +832,9 @@ export default function BookingPage() {
         
         {/* Address Preview */}
         {booking.venueAddress.city && booking.venueAddress.barangay && booking.venueAddress.street && (
-          <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
-            <p className="text-sm text-gray-500 mb-1">Complete Address:</p>
-            <p className="font-medium text-gray-800">{booking.venue}</p>
+          <div className="bg-gray-50 rounded-xl p-3 border border-gray-200">
+            <p className="text-xs text-gray-500 mb-1">Complete Address:</p>
+            <p className="text-sm font-medium text-gray-800">{booking.venue}</p>
           </div>
         )}
       </div>
@@ -944,13 +912,13 @@ export default function BookingPage() {
                 <h3 className="font-semibold text-gray-800">{pkg.name}</h3>
                 <p className="text-red-600">₱{pkg.pricePerHead}/head</p>
                 {pkg.id === 'menu470' ? (
-                  <p className="text-xs text-blue-600 mt-1">ðŸ› ï¸ Build Your Own â€¢ ðŸš Plain Rice & Fried Rice only</p>
+                  <p className="text-xs text-blue-600 mt-1">🛠️ Build Your Own • 🍚 Plain Rice & Fried Rice only</p>
                 ) : pkg.id === 'menu510' ? (
-                  <p className="text-xs text-blue-600 mt-1">ðŸ› ï¸ Build Your Own â€¢ 4 Main, 1 Side â€¢ ðŸš Plain, Fried & Arroz Valenciana</p>
+                  <p className="text-xs text-blue-600 mt-1">🛠️ Build Your Own • 4 Main, 1 Side • 🍚 Plain, Fried & Arroz Valenciana</p>
                 ) : pkg.isCustomBuild ? (
-                  <p className="text-xs text-blue-600 mt-1">ðŸ› ï¸ Build Your Own Menu</p>
+                  <p className="text-xs text-blue-600 mt-1">🛠️ Build Your Own Menu</p>
                 ) : (
-                  <p className="text-xs text-green-600 mt-1"> Preset Buffet â€¢ ðŸš All rice options available</p>
+                  <p className="text-xs text-green-600 mt-1">📋 Preset Buffet • 🍚 All rice options available</p>
                 )}
               </div>
               <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center ${booking.selectedPackage === pkg.id ? 'border-red-700 bg-red-700' : 'border-gray-300'}`}>
@@ -980,7 +948,7 @@ export default function BookingPage() {
                         <span key={i} className="text-xs bg-gray-100 px-2 py-1 rounded-full">{item}</span>
                       ))}
                     </div>
-                    <p className="text-xs text-green-600 mt-2"> [check]  You can customize these in the next step</p>
+                    <p className="text-xs text-green-600 mt-2">✓ You can customize these in the next step</p>
                   </div>
                 )}
               </div>
@@ -990,7 +958,7 @@ export default function BookingPage() {
           {booking.selectedPackage === 'menu560' && (
             <div className="mt-3 bg-orange-50 border border-orange-200 rounded-lg p-3">
               <p className="text-xs text-orange-700">
-                ðŸ’¡ <strong>Tip:</strong> In the next step, you can swap dishes from your selected menu with Asian Fusion alternatives like Pad Thai, Chinese Lumpia, Japanese Cheesecake, and more!
+                💡 <strong>Tip:</strong> In the next step, you can swap dishes from your selected menu with Asian Fusion alternatives like Pad Thai, Chinese Lumpia, Japanese Cheesecake, and more!
               </p>
             </div>
           )}
@@ -998,40 +966,40 @@ export default function BookingPage() {
       )}
       {booking.selectedPackage && isCustomBuild && (
         <div className="bg-blue-50 rounded-xl p-4 border border-blue-200">
-          <p className="text-sm font-semibold text-blue-700 uppercase mb-3">ðŸ› ï¸ Build Your Own Menu</p>
+          <p className="text-sm font-semibold text-blue-700 uppercase mb-3">🛠️ Build Your Own Menu</p>
           <p className="text-sm text-blue-800 mb-3">Pick your dishes in the next step:</p>
           <div className="grid grid-cols-2 gap-2 text-sm">
             {selectedPkg?.structure?.salad > 0 && (
               <div className="bg-white rounded-lg p-2 text-center">
-                <span className="text-green-600"></span> {selectedPkg.structure.salad} Salad
+                <span className="text-green-600">🥗</span> {selectedPkg.structure.salad} Salad
               </div>
             )}
             {selectedPkg?.structure?.main > 0 && (
               <div className="bg-white rounded-lg p-2 text-center">
-                <span className="text-red-600">ðŸ–</span> {selectedPkg.structure.main} Main {selectedPkg.structure.main > 1 ? 'Dishes' : 'Dish'}
+                <span className="text-red-600">🍖</span> {selectedPkg.structure.main} Main {selectedPkg.structure.main > 1 ? 'Dishes' : 'Dish'}
               </div>
             )}
             {selectedPkg?.structure?.side > 0 && (
               <div className="bg-white rounded-lg p-2 text-center">
-                <span className="text-orange-600"></span> {selectedPkg.structure.side} {selectedPkg.structure.side > 1 ? 'Sides' : 'Side'}
+                <span className="text-orange-600">🥬</span> {selectedPkg.structure.side} {selectedPkg.structure.side > 1 ? 'Sides' : 'Side'}
               </div>
             )}
             {selectedPkg?.structure?.rice > 0 && (
               <div className="bg-white rounded-lg p-2 text-center">
-                <span className="text-amber-600">ðŸš</span> {selectedPkg.structure.rice} Rice
+                <span className="text-amber-600">🍚</span> {selectedPkg.structure.rice} Rice
               </div>
             )}
             {selectedPkg?.structure?.dessert > 0 && (
               <div className="bg-white rounded-lg p-2 text-center">
-                <span className="text-pink-600">ðŸ°</span> {selectedPkg.structure.dessert} {selectedPkg.structure.dessert > 1 ? 'Desserts' : 'Dessert'}
+                <span className="text-pink-600">🍰</span> {selectedPkg.structure.dessert} {selectedPkg.structure.dessert > 1 ? 'Desserts' : 'Dessert'}
               </div>
             )}
           </div>
           {booking.selectedPackage === 'menu470' && (
-            <p className="text-xs text-blue-600 mt-3"> [check]  Rice: Plain Rice & Fried Rice only</p>
+            <p className="text-xs text-blue-600 mt-3">✓ Rice: Plain Rice & Fried Rice only</p>
           )}
           {booking.selectedPackage === 'menu510' && (
-            <p className="text-xs text-blue-600 mt-3"> [check]  Rice: Plain Rice, Fried Rice & Arroz Valenciana</p>
+            <p className="text-xs text-blue-600 mt-3">✓ Rice: Plain Rice, Fried Rice & Arroz Valenciana</p>
           )}
         </div>
       )}
@@ -1058,7 +1026,7 @@ export default function BookingPage() {
 
           {selectedOption && (
             <div className="bg-green-50 border border-green-200 rounded-xl p-4">
-              <h3 className="font-semibold text-green-800 mb-3"> [check]  {selectedOption.name}</h3>
+              <h3 className="font-semibold text-green-800 mb-3">✓ {selectedOption.name}</h3>
               <div className="space-y-2">
                 {selectedOption.items.map((item, i) => (
                   <div key={i} className="flex items-center gap-2 text-sm">
@@ -1094,7 +1062,7 @@ export default function BookingPage() {
 
           {selectedOption && (
             <div className="bg-green-50 border border-green-200 rounded-xl p-4">
-              <h3 className="font-semibold text-green-800 mb-3"> Your Base Menu: {selectedOption.name}</h3>
+              <h3 className="font-semibold text-green-800 mb-3">📋 Your Base Menu: {selectedOption.name}</h3>
               <div className="space-y-2">
                 {selectedOption.items.map((item, i) => {
                   const isSwapped = booking.swappedDishes?.some(s => s.original === item)
@@ -1104,7 +1072,7 @@ export default function BookingPage() {
                       {isSwapped ? (
                         <>
                           <span className="text-gray-400 line-through">{item}</span>
-                          <span className="text-red-600">â†’</span>
+                          <span className="text-red-600">→</span>
                           <span className="font-medium text-red-700">{swappedWith}</span>
                         </>
                       ) : (
@@ -1122,7 +1090,7 @@ export default function BookingPage() {
 
           {/* Asian Fusion Swap Options */}
           <div className="bg-orange-50 border border-orange-200 rounded-xl p-4">
-            <h3 className="font-semibold text-orange-800 mb-3">ðŸ”„ {swapName} Alternatives</h3>
+            <h3 className="font-semibold text-orange-800 mb-3">🔄 {swapName} Alternatives</h3>
             <p className="text-sm text-orange-700 mb-3">Select items below to swap with your base menu dishes:</p>
             
             <div className="space-y-4">
@@ -1131,7 +1099,7 @@ export default function BookingPage() {
                 const catItems = swapItems.filter(item => item.category === cat)
                 if (catItems.length === 0) return null
                 
-                const catLabels = { main: 'ðŸ– Main Dishes', side: ' Sides', rice: 'ðŸš Rice', dessert: 'ðŸ° Desserts', soup: 'ðŸ² Soup' }
+                const catLabels = { main: '🍖 Main Dishes', side: '🥬 Sides', rice: '🍚 Rice', dessert: '🍰 Desserts', soup: '🍲 Soup' }
                 
                 return (
                   <div key={cat}>
@@ -1211,18 +1179,18 @@ export default function BookingPage() {
           {/* Summary of swaps */}
           {booking.swappedDishes?.length > 0 && (
             <div className="bg-red-50 border border-red-200 rounded-xl p-4">
-              <h3 className="font-semibold text-red-700 mb-2">ðŸ“ Your Swaps</h3>
+              <h3 className="font-semibold text-red-700 mb-2">📝 Your Swaps</h3>
               <div className="space-y-1">
                 {booking.swappedDishes.map((swap, i) => (
                   <div key={i} className="flex items-center gap-2 text-sm">
                     <span className="text-gray-500">{swap.original}</span>
-                    <span className="text-red-600">â†’</span>
+                    <span className="text-red-600">→</span>
                     <span className="font-medium text-red-700">{swap.replacement}</span>
                     <button 
                       onClick={() => updateBooking('swappedDishes', booking.swappedDishes.filter((_, idx) => idx !== i))}
                       className="ml-auto text-red-400 hover:text-red-600"
                     >
-                       X 
+                      ✕
                     </button>
                   </div>
                 ))}
@@ -1253,19 +1221,19 @@ export default function BookingPage() {
 
         {selectedOption && !isCustomBuild && (
           <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
-            <h3 className="font-semibold text-blue-800 mb-2"> Your Base Menu: {selectedOption.name}</h3>
+            <h3 className="font-semibold text-blue-800 mb-2">📋 Your Base Menu: {selectedOption.name}</h3>
             <div className="flex flex-wrap gap-1">
               {selectedOption.items.map((item, i) => (
                 <span key={i} className="text-xs bg-white px-2 py-1 rounded-full border">{item}</span>
               ))}
             </div>
-            <p className="text-xs text-blue-600 mt-3">ðŸ‘‡ Select dishes below to swap any items you'd like to change</p>
+            <p className="text-xs text-blue-600 mt-3">👇 Select dishes below to swap any items you'd like to change</p>
           </div>
         )}
 
         {isCustomBuild && (
           <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
-            <h3 className="font-semibold text-amber-800 mb-2">ðŸ› ï¸ {menuPackages[booking.selectedPackage]?.name} - Build Your Own</h3>
+            <h3 className="font-semibold text-amber-800 mb-2">🛠️ {menuPackages[booking.selectedPackage]?.name} - Build Your Own</h3>
             <p className="text-sm text-amber-700">Select dishes from each category below. All selections are required.</p>
           </div>
         )}
@@ -1292,7 +1260,7 @@ export default function BookingPage() {
                         : 'bg-gray-200 text-gray-600'
                 }`}>
                   {selected.length >= category.pick 
-                    ? ` [check]  ${selected.length} selected` 
+                    ? `✓ ${selected.length} selected` 
                     : selected.length > 0 
                       ? `${selected.length}/${category.pick} selected` 
                       : isCustomBuild 
@@ -1332,19 +1300,19 @@ export default function BookingPage() {
           
           {!isCustomBuild && Object.values(booking.customDishes).flat().length > 0 && (
             <p className="text-xs text-amber-600 font-medium bg-amber-50 px-2 py-1 rounded inline-block mb-3">
-              âœï¸ Some items modified from {booking.selectedMenuOption}
+              ✏️ Some items modified from {booking.selectedMenuOption}
             </p>
           )}
 
           {isCustomBuild && (
             <p className="text-xs text-blue-600 font-medium bg-blue-50 px-2 py-1 rounded inline-block mb-3">
-              ðŸ› ï¸ Build Your Own - {menuPackages[booking.selectedPackage]?.name}
+              🛠️ Build Your Own - {menuPackages[booking.selectedPackage]?.name}
             </p>
           )}
           
           <div className="space-y-3">
             {DISH_CATEGORIES.map((cat, idx) => {
-              const icons = { salad: '', main: 'ðŸ–', side: '', rice: 'ðŸš', dessert: 'ðŸ°' }
+              const icons = { salad: '🥗', main: '🍖', side: '🥬', rice: '🍚', dessert: '🍰' }
               const colors = { salad: 'text-green-700', main: 'text-red-700', side: 'text-orange-700', rice: 'text-amber-700', dessert: 'text-pink-700' }
               const selected = booking.customDishes[cat.id] || []
               const isLast = idx === DISH_CATEGORIES.length - 1
@@ -1360,7 +1328,7 @@ export default function BookingPage() {
                         {selected.map(d => (
                           <span key={d.id} className="text-sm bg-red-100 text-red-700 px-2 py-1 rounded-full">{d.name}</span>
                         ))}
-                        {selected.length >= cat.pick && <span className="text-xs text-green-600 ml-1"> [check] </span>}
+                        {selected.length >= cat.pick && <span className="text-xs text-green-600 ml-1">✓</span>}
                         {selected.length < cat.pick && <span className="text-xs text-amber-600 ml-1">({selected.length}/{cat.pick})</span>}
                       </>
                     ) : isCustomBuild ? (
@@ -1380,7 +1348,7 @@ export default function BookingPage() {
           <div className="bg-red-50 border border-red-300 rounded-xl p-4 flex items-start gap-3">
             <AlertCircle className="text-red-600 flex-shrink-0 mt-0.5" size={20} />
             <div className="text-sm text-red-800">
-              <p className="font-medium">{isCustomBuild ? 'ðŸ› ï¸ Please Complete Your Menu' : 'âš ï¸ Menu Incomplete - Cannot Continue'}</p>
+              <p className="font-medium">{isCustomBuild ? '🛠️ Please Complete Your Menu' : '⚠ï¸ Menu Incomplete - Cannot Continue'}</p>
               <p className="mb-2">{isCustomBuild ? 'Select items for the following:' : 'The following categories have no items:'}</p>
               <ul className="list-disc list-inside space-y-1">
                 {missingCategories.map(cat => (
@@ -1396,7 +1364,7 @@ export default function BookingPage() {
           <div className="bg-amber-50 border border-amber-300 rounded-xl p-4 flex items-start gap-3">
             <AlertCircle className="text-amber-600 flex-shrink-0 mt-0.5" size={20} />
             <div className="text-sm text-amber-800">
-              <p className="font-medium"> [i]  Note: Some categories have fewer items than usual</p>
+              <p className="font-medium">ℹï¸ Note: Some categories have fewer items than usual</p>
               <ul className="list-disc list-inside space-y-1 mt-2">
                 {lowCategories.map(cat => (
                   <li key={cat.id}>
@@ -1411,7 +1379,7 @@ export default function BookingPage() {
           <div className="bg-green-50 border border-green-200 rounded-xl p-4 flex items-start gap-3">
             <Info className="text-green-600 flex-shrink-0 mt-0.5" size={20} />
             <div className="text-sm text-green-800">
-              <p className="font-medium"> [check]  Menu Complete - Ready to Continue!</p>
+              <p className="font-medium">✓ Menu Complete - Ready to Continue!</p>
               <p>Review your menu above. You can go back anytime to make changes.</p>
             </div>
           </div>
@@ -1670,7 +1638,7 @@ export default function BookingPage() {
     return (
       <div className="space-y-6">
         <h2 className="text-xl font-semibold text-gray-800">Review Order</h2>
-        {isAdmin && <div className="bg-blue-100 text-blue-800 px-4 py-2 rounded-lg text-sm font-medium"> Admin Booking - Status will be set to "Pending"</div>}
+        {isAdmin && <div className="bg-blue-100 text-blue-800 px-4 py-2 rounded-lg text-sm font-medium">📋 Admin Booking - Status will be set to "Pending"</div>}
         
         <div className="bg-gradient-to-br from-red-50 to-red-100 rounded-xl p-5 border border-red-200">
           <div className="flex items-center gap-3 mb-4 pb-4 border-b border-red-200">
@@ -1729,10 +1697,10 @@ export default function BookingPage() {
               return <div key={addon.id} className="flex justify-between text-gray-600"><span>{item?.name} ×{addon.quantity}</span><span>₱{((item?.price || 0) * addon.quantity).toLocaleString()}</span></div> 
             })}
             
-            {/* Gas Charge */}
+            {/* Gas charge */}
             {booking.venueGasCharge > 0 && (
-              <div className="flex justify-between text-amber-600 pt-2 border-t border-gray-200">
-                <span className="flex items-center gap-1">⛽ Gas Charge ({getCityInfo(booking.venueAddress.city)?.name})</span>
+              <div className="flex justify-between text-amber-600 pt-1 border-t border-gray-200 mt-1">
+                <span className="flex items-center gap-1"><Fuel size={14} /> Gas Charge ({getCityInfo(booking.venueAddress.city)?.name})</span>
                 <span>₱{booking.venueGasCharge.toLocaleString()}</span>
               </div>
             )}
@@ -1747,7 +1715,7 @@ export default function BookingPage() {
           
           {customDishesArray.length > 0 && (
             <p className="text-xs text-amber-600 font-medium bg-amber-50 px-2 py-1 rounded inline-block mb-3">
-              âœï¸ Some items modified from {booking.selectedMenuOption}
+              ✏️ Some items modified from {booking.selectedMenuOption}
             </p>
           )}
 
@@ -1755,13 +1723,13 @@ export default function BookingPage() {
           {booking.swappedDishes?.length > 0 && (
             <div className="mb-3">
               <p className="text-xs text-orange-600 font-medium bg-orange-50 px-2 py-1 rounded inline-block mb-2">
-                ðŸ”„ Asian Fusion Swaps Applied
+                🔄 Asian Fusion Swaps Applied
               </p>
               <div className="space-y-1 pl-2">
                 {booking.swappedDishes.map((swap, i) => (
                   <div key={i} className="flex items-center gap-2 text-xs">
                     <span className="text-gray-500 line-through">{swap.original}</span>
-                    <span className="text-orange-500">â†’</span>
+                    <span className="text-orange-500">→</span>
                     <span className="font-medium text-orange-700">{swap.replacement}</span>
                   </div>
                 ))}
@@ -1772,7 +1740,7 @@ export default function BookingPage() {
           <div className="space-y-3">
             {/* Salad */}
             <div className="border-b border-gray-200 pb-2">
-              <p className="text-xs font-semibold text-green-700 uppercase mb-1"> Salad</p>
+              <p className="text-xs font-semibold text-green-700 uppercase mb-1">🥗 Salad</p>
               <div className="flex flex-wrap gap-1">
                 {(booking.customDishes['salad']?.length > 0) ? (
                   booking.customDishes['salad'].map(d => (
@@ -1790,7 +1758,7 @@ export default function BookingPage() {
 
             {/* Main Dishes */}
             <div className="border-b border-gray-200 pb-2">
-              <p className="text-xs font-semibold text-red-700 uppercase mb-1">ðŸ– Main Dishes</p>
+              <p className="text-xs font-semibold text-red-700 uppercase mb-1">🍖 Main Dishes</p>
               <div className="flex flex-wrap gap-1">
                 {(booking.customDishes['main']?.length > 0) ? (
                   booking.customDishes['main'].map(d => (
@@ -1824,7 +1792,7 @@ export default function BookingPage() {
 
             {/* Sides */}
             <div className="border-b border-gray-200 pb-2">
-              <p className="text-xs font-semibold text-orange-700 uppercase mb-1"> Sides</p>
+              <p className="text-xs font-semibold text-orange-700 uppercase mb-1">🥬 Sides</p>
               <div className="flex flex-wrap gap-1">
                 {(booking.customDishes['side']?.length > 0) ? (
                   booking.customDishes['side'].map(d => (
@@ -1846,7 +1814,7 @@ export default function BookingPage() {
 
             {/* Rice */}
             <div className="border-b border-gray-200 pb-2">
-              <p className="text-xs font-semibold text-amber-700 uppercase mb-1">ðŸš Rice</p>
+              <p className="text-xs font-semibold text-amber-700 uppercase mb-1">🍚 Rice</p>
               <div className="flex flex-wrap gap-1">
                 {(booking.customDishes['rice']?.length > 0) ? (
                   booking.customDishes['rice'].map(d => (
@@ -1864,7 +1832,7 @@ export default function BookingPage() {
 
             {/* Desserts */}
             <div>
-              <p className="text-xs font-semibold text-pink-700 uppercase mb-1">ðŸ° Desserts</p>
+              <p className="text-xs font-semibold text-pink-700 uppercase mb-1">🍰 Desserts</p>
               <div className="flex flex-wrap gap-1">
                 {(booking.customDishes['dessert']?.length > 0) ? (
                   booking.customDishes['dessert'].map(d => (
@@ -1934,13 +1902,8 @@ export default function BookingPage() {
       // Other occasion validation
       if (booking.occasion === 'other' && !booking.occasionOther) return false
       if (!isValidDate(booking.date, booking.time)) return false
-      // Venue address validation - require city, barangay, and street
-      const hasValidVenue = booking.venueAddress.city && booking.venueAddress.barangay && booking.venueAddress.street?.trim()
-      // Check minimum pax for the area
-      const minPax = getMinimumPax(booking.venueAddress.city)
-      if (booking.venueAddress.city && booking.numberOfPax < minPax) return false
-      if (isAdmin) return booking.customerName && booking.customerPhone && hasValidVenue
-      return hasValidVenue
+      if (isAdmin) return booking.customerName && booking.customerPhone && booking.venueAddress.city && booking.venueAddress.barangay && booking.venueAddress.street
+      return booking.venueAddress.city && booking.venueAddress.barangay && booking.venueAddress.street
     }
     if (step === 2) return booking.selectedPackage && booking.selectedMenuOption
     if (step === 3) {

@@ -3,7 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
 import { menuPackages } from '../lib/menuData'
-import { Calendar, MapPin, Users, Clock, ChevronDown, ChevronUp, Plus, ShoppingBag, ClipboardList, Truck, Package, FileText, Wine, Coffee, UtensilsCrossed } from 'lucide-react'
+import { Calendar, MapPin, Users, Clock, ChevronDown, ChevronUp, Plus, ShoppingBag, ClipboardList, Truck, Package, FileText } from 'lucide-react'
 import BookingReceipt from '../components/BookingReceipt'
 
 export default function MyOrdersPage() {
@@ -43,351 +43,147 @@ export default function MyOrdersPage() {
     return colors[status] || 'bg-gray-100 text-gray-700'
   }
 
-  // Separate buffet and cocktail bookings
-  const buffetBookings = bookings.filter(b => !b.booking_type || b.booking_type === 'buffet')
-  const cocktailBookings = bookings.filter(b => b.booking_type === 'cocktail')
-  
-  // Separate regular food orders and packed meals
-  const regularFoodOrders = foodOrders.filter(o => !o.order_type || o.order_type === 'food')
-  const packedMealOrders = foodOrders.filter(o => o.order_type === 'packed_meal')
-
   if (loading) return <div className="min-h-[60vh] flex items-center justify-center"><div className="w-12 h-12 border-4 border-red-200 border-t-red-700 rounded-full animate-spin"></div></div>
 
   const renderCateringOrders = () => (
     <>
-      {buffetBookings.length === 0 && cocktailBookings.length === 0 ? (
+      {bookings.length === 0 ? (
         <div className="bg-white rounded-2xl shadow-lg p-12 text-center">
           <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4"><ClipboardList size={40} className="text-gray-400" /></div>
           <h2 className="text-xl font-semibold text-gray-800 mb-2">No catering bookings yet</h2>
-          <p className="text-gray-500 mb-4">Book your next event with us!</p>
-          <Link to="/catering" className="inline-block bg-red-700 text-white px-6 py-3 rounded-xl font-medium hover:bg-red-800">View Catering Options</Link>
+          <Link to="/book" className="inline-block bg-red-700 text-white px-6 py-3 rounded-xl font-medium hover:bg-red-800">Book Catering</Link>
         </div>
       ) : (
-        <div className="space-y-6">
-          {/* Buffet Bookings */}
-          {buffetBookings.length > 0 && (
-            <div>
-              <h3 className="flex items-center gap-2 text-lg font-semibold text-gray-700 mb-3">
-                <UtensilsCrossed size={20} className="text-red-700" /> Buffet Catering ({buffetBookings.length})
-              </h3>
-              <div className="space-y-4">
-                {buffetBookings.map(order => {
-                  const pkg = menuPackages[order.menu_package]
-                  const isExpanded = expandedOrder === order.id
-                  return (
-                    <div key={order.id} className="bg-white rounded-2xl shadow-lg overflow-hidden border-l-4 border-red-700">
-                      <button onClick={() => setExpandedOrder(isExpanded ? null : order.id)} className="w-full p-6 flex items-center justify-between hover:bg-gray-50">
-                        <div className="text-left">
-                          <div className="flex items-center gap-3 mb-2">
-                            <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(order.status)}`}>{order.status}</span>
-                            <span className="text-gray-500 text-sm">#{order.id.slice(0, 8)}</span>
-                          </div>
-                          <h3 className="font-semibold text-gray-800">{pkg?.name || order.menu_package}</h3>
-                          <div className="flex items-center gap-4 text-sm text-gray-500 mt-1">
-                            <span className="flex items-center gap-1"><Calendar size={14} />{order.event_date}</span>
-                            <span className="flex items-center gap-1"><Users size={14} />{order.number_of_pax} pax</span>
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <p className="font-bold text-red-700 text-lg">₱{order.total_amount?.toLocaleString()}</p>
-                          {isExpanded ? <ChevronUp size={20} className="text-gray-400 ml-auto mt-2" /> : <ChevronDown size={20} className="text-gray-400 ml-auto mt-2" />}
-                        </div>
-                      </button>
-                      {isExpanded && (
-                        <div className="border-t border-gray-100 p-6 bg-gray-50">
-                          <div className="grid md:grid-cols-2 gap-6">
-                            <div>
-                              <h4 className="font-semibold text-gray-700 mb-3">Event Details</h4>
-                              <div className="space-y-2 text-sm">
-                                <p className="flex items-start gap-2"><MapPin size={16} className="text-gray-400 mt-0.5" />{order.venue}</p>
-                                <p className="flex items-center gap-2"><Calendar size={16} className="text-gray-400" />{order.event_date}</p>
-                                <p className="flex items-center gap-2"><Clock size={16} className="text-gray-400" />{order.event_time}</p>
-                              </div>
-                            </div>
-                            <div>
-                              <h4 className="font-semibold text-gray-700 mb-3">Order Info</h4>
-                              <div className="space-y-2 text-sm">
-                                <p><span className="text-gray-500">Package:</span> {pkg?.name || order.menu_package}</p>
-                                <p><span className="text-gray-500">Menu:</span> {order.menu_option}</p>
-                                <p><span className="text-gray-500">Guests:</span> {order.number_of_pax} pax</p>
-                                {order.motif && <p><span className="text-gray-500">Motif:</span> {order.motif}</p>}
-                              </div>
-                            </div>
-                          </div>
-                          {order.special_requests && (
-                            <div className="mt-4 pt-4 border-t border-gray-200">
-                              <h4 className="font-semibold text-gray-700 mb-2">Special Requests</h4>
-                              <p className="text-sm text-gray-600">{order.special_requests}</p>
-                            </div>
-                          )}
-                          <div className="mt-4 pt-4 border-t border-gray-200">
-                            <button
-                              onClick={(e) => { e.stopPropagation(); setReceiptBooking(order) }}
-                              className="flex items-center gap-2 text-red-700 hover:text-red-800 font-medium"
-                            >
-                              <FileText size={18} /> View Receipt
-                            </button>
-                          </div>
-                        </div>
-                      )}
+        <div className="space-y-4">{bookings.map(order => {
+          const pkg = menuPackages[order.menu_package]
+          const isExpanded = expandedOrder === order.id
+          return (
+            <div key={order.id} className="bg-white rounded-2xl shadow-lg overflow-hidden">
+              <button onClick={() => setExpandedOrder(isExpanded ? null : order.id)} className="w-full p-6 flex items-center justify-between hover:bg-gray-50">
+                <div className="text-left">
+                  <div className="flex items-center gap-3 mb-2">
+                    <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(order.status)}`}>{order.status}</span>
+                    <span className="text-gray-500 text-sm">#{order.id.slice(0, 8)}</span>
+                  </div>
+                  <h3 className="font-semibold text-gray-800">{pkg?.name}</h3>
+                  <div className="flex items-center gap-4 text-sm text-gray-500 mt-1">
+                    <span className="flex items-center gap-1"><Calendar size={14} />{order.event_date}</span>
+                    <span className="flex items-center gap-1"><Users size={14} />{order.number_of_pax} pax</span>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <p className="font-bold text-red-700 text-lg">₱{order.total_amount?.toLocaleString()}</p>
+                  {isExpanded ? <ChevronUp size={20} className="text-gray-400 ml-auto mt-2" /> : <ChevronDown size={20} className="text-gray-400 ml-auto mt-2" />}
+                </div>
+              </button>
+              {isExpanded && (
+                <div className="border-t border-gray-100 p-6 bg-gray-50">
+                  <div className="grid md:grid-cols-2 gap-6">
+                    <div>
+                      <h4 className="font-semibold text-gray-700 mb-3">Event Details</h4>
+                      <div className="space-y-2 text-sm">
+                        <p className="flex items-start gap-2"><MapPin size={16} className="text-gray-400 mt-0.5" />{order.venue}</p>
+                        <p className="flex items-center gap-2"><Calendar size={16} className="text-gray-400" />{order.event_date}</p>
+                        <p className="flex items-center gap-2"><Clock size={16} className="text-gray-400" />{order.event_time}</p>
+                      </div>
                     </div>
-                  )
-                })}
-              </div>
-            </div>
-          )}
-
-          {/* Cocktail Bookings */}
-          {cocktailBookings.length > 0 && (
-            <div>
-              <h3 className="flex items-center gap-2 text-lg font-semibold text-gray-700 mb-3">
-                <Wine size={20} className="text-purple-700" /> Cocktail Parties ({cocktailBookings.length})
-              </h3>
-              <div className="space-y-4">
-                {cocktailBookings.map(order => {
-                  const isExpanded = expandedOrder === order.id
-                  return (
-                    <div key={order.id} className="bg-white rounded-2xl shadow-lg overflow-hidden border-l-4 border-purple-700">
-                      <button onClick={() => setExpandedOrder(isExpanded ? null : order.id)} className="w-full p-6 flex items-center justify-between hover:bg-gray-50">
-                        <div className="text-left">
-                          <div className="flex items-center gap-3 mb-2">
-                            <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(order.status)}`}>{order.status}</span>
-                            <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-700">Cocktail</span>
-                            <span className="text-gray-500 text-sm">#{order.id.slice(0, 8)}</span>
-                          </div>
-                          <h3 className="font-semibold text-gray-800">{order.menu_package}</h3>
-                          <div className="flex items-center gap-4 text-sm text-gray-500 mt-1">
-                            <span className="flex items-center gap-1"><Calendar size={14} />{order.event_date}</span>
-                            <span className="flex items-center gap-1"><Users size={14} />{order.number_of_pax} pax</span>
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <p className="font-bold text-purple-700 text-lg">₱{order.total_amount?.toLocaleString()}</p>
-                          {isExpanded ? <ChevronUp size={20} className="text-gray-400 ml-auto mt-2" /> : <ChevronDown size={20} className="text-gray-400 ml-auto mt-2" />}
-                        </div>
-                      </button>
-                      {isExpanded && (
-                        <div className="border-t border-gray-100 p-6 bg-purple-50">
-                          <div className="grid md:grid-cols-2 gap-6">
-                            <div>
-                              <h4 className="font-semibold text-gray-700 mb-3">Event Details</h4>
-                              <div className="space-y-2 text-sm">
-                                <p className="flex items-start gap-2"><MapPin size={16} className="text-gray-400 mt-0.5" />{order.venue}</p>
-                                {order.venue_address && <p className="text-gray-500 ml-6">{order.venue_address}</p>}
-                                <p className="flex items-center gap-2"><Calendar size={16} className="text-gray-400" />{order.event_date}</p>
-                                <p className="flex items-center gap-2"><Clock size={16} className="text-gray-400" />{order.event_time}</p>
-                                {order.occasion && <p><span className="text-gray-500">Occasion:</span> {order.occasion}</p>}
-                              </div>
-                            </div>
-                            <div>
-                              <h4 className="font-semibold text-gray-700 mb-3">Menu Info</h4>
-                              <div className="space-y-2 text-sm">
-                                <p><span className="text-gray-500">Package:</span> {order.menu_package}</p>
-                                <p><span className="text-gray-500">Menu:</span> {order.menu_option}</p>
-                                <p><span className="text-gray-500">Guests:</span> {order.number_of_pax} pax</p>
-                                {order.motif && <p><span className="text-gray-500">Motif:</span> {order.motif}</p>}
-                              </div>
-                            </div>
-                          </div>
-                          {/* Menu Items */}
-                          {order.menu_items && order.menu_items.length > 0 && (
-                            <div className="mt-4 pt-4 border-t border-purple-200">
-                              <h4 className="font-semibold text-gray-700 mb-2">Menu Items</h4>
-                              <div className="grid grid-cols-2 gap-2 text-sm">
-                                {order.menu_items.map((item, idx) => (
-                                  <p key={idx} className="text-gray-600">• {item}</p>
-                                ))}
-                              </div>
-                            </div>
-                          )}
-                          {/* Add-ons */}
-                          {order.add_ons && order.add_ons.length > 0 && (
-                            <div className="mt-4 pt-4 border-t border-purple-200">
-                              <h4 className="font-semibold text-gray-700 mb-2">Add-ons</h4>
-                              <div className="space-y-1 text-sm">
-                                {order.add_ons.map((addon, idx) => (
-                                  <p key={idx} className="text-gray-600">
-                                    {addon.name} × {addon.quantity} = ₱{(addon.price * addon.quantity).toLocaleString()}
-                                  </p>
-                                ))}
-                              </div>
-                            </div>
-                          )}
-                          {order.special_requests && (
-                            <div className="mt-4 pt-4 border-t border-purple-200">
-                              <h4 className="font-semibold text-gray-700 mb-2">Special Requests</h4>
-                              <p className="text-sm text-gray-600">{order.special_requests}</p>
-                            </div>
-                          )}
-                        </div>
-                      )}
+                    <div>
+                      <h4 className="font-semibold text-gray-700 mb-3">Order Info</h4>
+                      <div className="space-y-2 text-sm">
+                        <p><span className="text-gray-500">Package:</span> {pkg?.name}</p>
+                        <p><span className="text-gray-500">Menu:</span> {order.menu_option}</p>
+                        <p><span className="text-gray-500">Guests:</span> {order.number_of_pax} pax</p>
+                        {order.motif && <p><span className="text-gray-500">Motif:</span> {order.motif}</p>}
+                      </div>
                     </div>
-                  )
-                })}
-              </div>
+                  </div>
+                  {order.special_requests && (
+                    <div className="mt-4 pt-4 border-t border-gray-200">
+                      <h4 className="font-semibold text-gray-700 mb-2">Special Requests</h4>
+                      <p className="text-sm text-gray-600">{order.special_requests}</p>
+                    </div>
+                  )}
+                  <div className="mt-4 pt-4 border-t border-gray-200">
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setReceiptBooking(order) }}
+                      className="flex items-center gap-2 text-red-700 hover:text-red-800 font-medium"
+                    >
+                      <FileText size={18} /> View Receipt
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
-          )}
-        </div>
+          )
+        })}</div>
       )}
     </>
   )
 
   const renderFoodOrders = () => (
     <>
-      {regularFoodOrders.length === 0 && packedMealOrders.length === 0 ? (
+      {foodOrders.length === 0 ? (
         <div className="bg-white rounded-2xl shadow-lg p-12 text-center">
           <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4"><ShoppingBag size={40} className="text-gray-400" /></div>
           <h2 className="text-xl font-semibold text-gray-800 mb-2">No food orders yet</h2>
-          <p className="text-gray-500 mb-4">Order delicious food for delivery!</p>
-          <div className="flex gap-3 justify-center">
-            <Link to="/order-food" className="inline-block bg-orange-500 text-white px-6 py-3 rounded-xl font-medium hover:bg-orange-600">Order Food</Link>
-            <Link to="/order/packed-meals" className="inline-block bg-emerald-600 text-white px-6 py-3 rounded-xl font-medium hover:bg-emerald-700">Packed Meals</Link>
-          </div>
+          <Link to="/order-food" className="inline-block bg-orange-500 text-white px-6 py-3 rounded-xl font-medium hover:bg-orange-600">Order Food</Link>
         </div>
       ) : (
-        <div className="space-y-6">
-          {/* Regular Food Orders */}
-          {regularFoodOrders.length > 0 && (
-            <div>
-              <h3 className="flex items-center gap-2 text-lg font-semibold text-gray-700 mb-3">
-                <ShoppingBag size={20} className="text-orange-500" /> Food Orders ({regularFoodOrders.length})
-              </h3>
-              <div className="space-y-4">
-                {regularFoodOrders.map(order => {
-                  const isExpanded = expandedOrder === order.id
-                  return (
-                    <div key={order.id} className="bg-white rounded-2xl shadow-lg overflow-hidden border-l-4 border-orange-500">
-                      <button onClick={() => setExpandedOrder(isExpanded ? null : order.id)} className="w-full p-6 flex items-center justify-between hover:bg-gray-50">
-                        <div className="text-left">
-                          <div className="flex items-center gap-3 mb-2">
-                            <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(order.status)}`}>{order.status}</span>
-                            <span className="text-gray-500 text-sm">#{order.id.slice(0, 8)}</span>
-                          </div>
-                          <h3 className="font-semibold text-gray-800">{order.items?.length || 0} items</h3>
-                          <div className="flex items-center gap-4 text-sm text-gray-500 mt-1">
-                            <span className="flex items-center gap-1"><Calendar size={14} />{order.delivery_date}</span>
-                            {order.delivery_time && <span className="flex items-center gap-1"><Clock size={14} />{order.delivery_time}</span>}
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <p className="font-bold text-orange-600 text-lg">₱{order.total_amount?.toLocaleString()}</p>
-                          {isExpanded ? <ChevronUp size={20} className="text-gray-400 ml-auto mt-2" /> : <ChevronDown size={20} className="text-gray-400 ml-auto mt-2" />}
-                        </div>
-                      </button>
-                      {isExpanded && (
-                        <div className="border-t border-gray-100 p-6 bg-orange-50">
-                          <div className="grid md:grid-cols-2 gap-6">
-                            <div>
-                              <h4 className="font-semibold text-gray-700 mb-3 flex items-center gap-2"><Truck size={16} /> Delivery Details</h4>
-                              <div className="space-y-2 text-sm">
-                                <p className="flex items-start gap-2"><MapPin size={16} className="text-gray-400 mt-0.5" />{order.delivery_address || 'Pickup'}</p>
-                                <p className="flex items-center gap-2"><Calendar size={16} className="text-gray-400" />{order.delivery_date}</p>
-                                {order.delivery_time && <p className="flex items-center gap-2"><Clock size={16} className="text-gray-400" />{order.delivery_time}</p>}
-                              </div>
-                            </div>
-                            <div>
-                              <h4 className="font-semibold text-gray-700 mb-3 flex items-center gap-2"><Package size={16} /> Order Items</h4>
-                              <div className="space-y-2 text-sm">
-                                {order.items?.map((item, idx) => (
-                                  <div key={idx} className="flex justify-between">
-                                    <span>{item.name} ({item.sizeName}) × {item.quantity}</span>
-                                    <span className="font-medium">₱{(item.price * item.quantity)?.toLocaleString()}</span>
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
-                          </div>
-                          {order.special_instructions && (
-                            <div className="mt-4 pt-4 border-t border-orange-200">
-                              <h4 className="font-semibold text-gray-700 mb-2">Special Instructions</h4>
-                              <p className="text-sm text-gray-600">{order.special_instructions}</p>
-                            </div>
-                          )}
-                        </div>
-                      )}
+        <div className="space-y-4">{foodOrders.map(order => {
+          const isExpanded = expandedOrder === order.id
+          return (
+            <div key={order.id} className="bg-white rounded-2xl shadow-lg overflow-hidden">
+              <button onClick={() => setExpandedOrder(isExpanded ? null : order.id)} className="w-full p-6 flex items-center justify-between hover:bg-gray-50">
+                <div className="text-left">
+                  <div className="flex items-center gap-3 mb-2">
+                    <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(order.status)}`}>{order.status}</span>
+                    <span className="text-gray-500 text-sm">#{order.id.slice(0, 8)}</span>
+                  </div>
+                  <h3 className="font-semibold text-gray-800">{order.items?.length || 0} items</h3>
+                  <div className="flex items-center gap-4 text-sm text-gray-500 mt-1">
+                    <span className="flex items-center gap-1"><Calendar size={14} />{order.delivery_date}</span>
+                    {order.delivery_time && <span className="flex items-center gap-1"><Clock size={14} />{order.delivery_time}</span>}
+                  </div>
+                </div>
+                <div className="text-right">
+                  <p className="font-bold text-orange-600 text-lg">₱{order.total_amount?.toLocaleString()}</p>
+                  {isExpanded ? <ChevronUp size={20} className="text-gray-400 ml-auto mt-2" /> : <ChevronDown size={20} className="text-gray-400 ml-auto mt-2" />}
+                </div>
+              </button>
+              {isExpanded && (
+                <div className="border-t border-gray-100 p-6 bg-gray-50">
+                  <div className="grid md:grid-cols-2 gap-6">
+                    <div>
+                      <h4 className="font-semibold text-gray-700 mb-3 flex items-center gap-2"><Truck size={16} /> Delivery Details</h4>
+                      <div className="space-y-2 text-sm">
+                        <p className="flex items-start gap-2"><MapPin size={16} className="text-gray-400 mt-0.5" />{order.delivery_address}</p>
+                        <p className="flex items-center gap-2"><Calendar size={16} className="text-gray-400" />{order.delivery_date}</p>
+                        {order.delivery_time && <p className="flex items-center gap-2"><Clock size={16} className="text-gray-400" />{order.delivery_time}</p>}
+                      </div>
                     </div>
-                  )
-                })}
-              </div>
-            </div>
-          )}
-
-          {/* Packed Meal Orders */}
-          {packedMealOrders.length > 0 && (
-            <div>
-              <h3 className="flex items-center gap-2 text-lg font-semibold text-gray-700 mb-3">
-                <Coffee size={20} className="text-emerald-600" /> Packed Meals ({packedMealOrders.length})
-              </h3>
-              <div className="space-y-4">
-                {packedMealOrders.map(order => {
-                  const isExpanded = expandedOrder === order.id
-                  const totalPacks = order.items?.reduce((sum, item) => sum + item.quantity, 0) || 0
-                  return (
-                    <div key={order.id} className="bg-white rounded-2xl shadow-lg overflow-hidden border-l-4 border-emerald-600">
-                      <button onClick={() => setExpandedOrder(isExpanded ? null : order.id)} className="w-full p-6 flex items-center justify-between hover:bg-gray-50">
-                        <div className="text-left">
-                          <div className="flex items-center gap-3 mb-2">
-                            <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(order.status)}`}>{order.status}</span>
-                            <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-700">Packed</span>
-                            <span className="text-gray-500 text-sm">#{order.id.slice(0, 8)}</span>
+                    <div>
+                      <h4 className="font-semibold text-gray-700 mb-3 flex items-center gap-2"><Package size={16} /> Order Items</h4>
+                      <div className="space-y-2 text-sm">
+                        {order.items?.map((item, idx) => (
+                          <div key={idx} className="flex justify-between">
+                            <span>{item.name} × {item.quantity}</span>
+                            <span className="font-medium">₱{item.subtotal?.toLocaleString()}</span>
                           </div>
-                          <h3 className="font-semibold text-gray-800">{totalPacks} packs</h3>
-                          <div className="flex items-center gap-4 text-sm text-gray-500 mt-1">
-                            <span className="flex items-center gap-1"><Calendar size={14} />{order.delivery_date}</span>
-                            {order.delivery_time && <span className="flex items-center gap-1"><Clock size={14} />{order.delivery_time}</span>}
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <p className="font-bold text-emerald-600 text-lg">₱{order.total_amount?.toLocaleString()}</p>
-                          {isExpanded ? <ChevronUp size={20} className="text-gray-400 ml-auto mt-2" /> : <ChevronDown size={20} className="text-gray-400 ml-auto mt-2" />}
-                        </div>
-                      </button>
-                      {isExpanded && (
-                        <div className="border-t border-gray-100 p-6 bg-emerald-50">
-                          <div className="grid md:grid-cols-2 gap-6">
-                            <div>
-                              <h4 className="font-semibold text-gray-700 mb-3 flex items-center gap-2">
-                                <Truck size={16} /> {order.delivery_type === 'pickup' ? 'Pickup' : 'Delivery'} Details
-                              </h4>
-                              <div className="space-y-2 text-sm">
-                                {order.delivery_address && (
-                                  <p className="flex items-start gap-2"><MapPin size={16} className="text-gray-400 mt-0.5" />{order.delivery_address}</p>
-                                )}
-                                <p className="flex items-center gap-2"><Calendar size={16} className="text-gray-400" />{order.delivery_date}</p>
-                                {order.delivery_time && <p className="flex items-center gap-2"><Clock size={16} className="text-gray-400" />{order.delivery_time}</p>}
-                              </div>
-                            </div>
-                            <div>
-                              <h4 className="font-semibold text-gray-700 mb-3 flex items-center gap-2"><Package size={16} /> Order Items</h4>
-                              <div className="space-y-2 text-sm">
-                                {order.items?.map((item, idx) => (
-                                  <div key={idx} className="flex justify-between">
-                                    <div>
-                                      <span className="font-medium">{item.menu}</span>
-                                      <span className="text-gray-500 ml-2">({item.option})</span>
-                                      {item.includeSoda && <span className="ml-2 text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded">+Soda</span>}
-                                    </div>
-                                    <span className="font-medium">×{item.quantity}</span>
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
-                          </div>
-                          {order.special_instructions && (
-                            <div className="mt-4 pt-4 border-t border-emerald-200">
-                              <h4 className="font-semibold text-gray-700 mb-2">Special Instructions</h4>
-                              <p className="text-sm text-gray-600">{order.special_instructions}</p>
-                            </div>
-                          )}
-                        </div>
-                      )}
+                        ))}
+                      </div>
                     </div>
-                  )
-                })}
-              </div>
+                  </div>
+                  {order.special_instructions && (
+                    <div className="mt-4 pt-4 border-t border-gray-200">
+                      <h4 className="font-semibold text-gray-700 mb-2">Special Instructions</h4>
+                      <p className="text-sm text-gray-600">{order.special_instructions}</p>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
-          )}
-        </div>
+          )
+        })}</div>
       )}
     </>
   )
@@ -427,18 +223,12 @@ export default function MyOrdersPage() {
         </div>
 
         {/* Quick Actions */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-6">
-          <Link to="/book" className="bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded-xl font-medium hover:bg-red-100 flex items-center justify-center gap-1 text-sm">
-            <Plus size={16} /> Buffet
+        <div className="flex gap-3 mb-6">
+          <Link to="/book" className="flex-1 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl font-medium hover:bg-red-100 flex items-center justify-center gap-2">
+            <Plus size={18} /> Book Catering
           </Link>
-          <Link to="/book/cocktail" className="bg-purple-50 border border-purple-200 text-purple-700 px-3 py-2 rounded-xl font-medium hover:bg-purple-100 flex items-center justify-center gap-1 text-sm">
-            <Plus size={16} /> Cocktail
-          </Link>
-          <Link to="/order-food" className="bg-orange-50 border border-orange-200 text-orange-700 px-3 py-2 rounded-xl font-medium hover:bg-orange-100 flex items-center justify-center gap-1 text-sm">
-            <Plus size={16} /> Food
-          </Link>
-          <Link to="/order/packed-meals" className="bg-emerald-50 border border-emerald-200 text-emerald-700 px-3 py-2 rounded-xl font-medium hover:bg-emerald-100 flex items-center justify-center gap-1 text-sm">
-            <Plus size={16} /> Packed
+          <Link to="/order-food" className="flex-1 bg-orange-50 border border-orange-200 text-orange-700 px-4 py-3 rounded-xl font-medium hover:bg-orange-100 flex items-center justify-center gap-2">
+            <Plus size={18} /> Order Food
           </Link>
         </div>
 

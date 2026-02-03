@@ -10,7 +10,7 @@ import {
   getCityInfo, 
   formatAddress 
 } from '../lib/cebuAreas'
-import { ShoppingCart, Plus, Minus, X, Search, ChevronRight, ChevronLeft, MapPin, Calendar, Clock, User, Phone, Mail, Send, Trash2, Truck, Info, AlertCircle } from 'lucide-react'
+import { ShoppingCart, Plus, Minus, X, Search, ChevronRight, ChevronLeft, MapPin, Calendar, Clock, User, Phone, Mail, Send, Trash2, Truck, Info } from 'lucide-react'
 
 export default function FoodOrderPage() {
   const { user, profile } = useAuth()
@@ -32,11 +32,10 @@ export default function FoodOrderPage() {
     customerPhone: profile?.phone || '',
     customerEmail: user?.email || '',
     deliveryAddress: '',
-    // Structured address for Cebu
-    addressCity: '',
-    addressBarangay: '',
-    addressStreet: '',
-    addressLandmark: '',
+    deliveryCity: '',
+    deliveryBarangay: '',
+    deliveryStreet: '',
+    deliveryLandmark: '',
     deliveryFee: 0,
     deliveryDate: '',
     deliveryTime: '',
@@ -153,9 +152,7 @@ export default function FoodOrderPage() {
     setError('')
 
     try {
-      const subtotal = calculateCartTotal(cart)
-      const deliveryFee = orderDetails.deliveryFee || 0
-      const total = subtotal + deliveryFee
+      const total = calculateCartTotal(cart)
       
       const { error: insertError } = await supabase.from('food_orders').insert([{
         user_id: user?.id || null,
@@ -163,14 +160,14 @@ export default function FoodOrderPage() {
         customer_phone: orderDetails.customerPhone,
         customer_email: orderDetails.customerEmail,
         delivery_address: orderDetails.deliveryAddress,
-        delivery_city: orderDetails.addressCity,
-        delivery_barangay: orderDetails.addressBarangay,
+        delivery_city: orderDetails.deliveryCity,
+        delivery_barangay: orderDetails.deliveryBarangay,
         delivery_date: orderDetails.deliveryDate,
         delivery_time: orderDetails.deliveryTime,
         items: cart,
-        subtotal: subtotal,
-        delivery_fee: deliveryFee,
-        total_amount: total,
+        subtotal: total,
+        delivery_fee: orderDetails.deliveryFee || 0,
+        total_amount: total + (orderDetails.deliveryFee || 0),
         special_instructions: orderDetails.specialInstructions,
         status: 'pending'
       }])
@@ -185,8 +182,7 @@ export default function FoodOrderPage() {
     }
   }
 
-  const cartSubtotal = calculateCartTotal(cart)
-  const cartTotal = cartSubtotal + (orderDetails.deliveryFee || 0)
+  const cartTotal = calculateCartTotal(cart)
   const cartCount = cart.reduce((sum, item) => sum + item.quantity, 0)
 
   const renderStep1 = () => (
@@ -247,8 +243,8 @@ export default function FoodOrderPage() {
                       <h4 className="font-medium text-gray-800">{item.name}</h4>
                       <p className="text-sm text-red-600 mt-1">
                         {item.category === 'dessert' || item.category === 'special' 
-                          ? `â‚±${item.price_home.toLocaleString()}`
-                          : `From â‚±${item.price_home.toLocaleString()}`
+                          ? `₱${item.price_home.toLocaleString()}`
+                          : `From ₱${item.price_home.toLocaleString()}`
                         }
                       </p>
                     </button>
@@ -297,7 +293,7 @@ export default function FoodOrderPage() {
                           <p className="font-medium">{size.name}</p>
                           <p className="text-sm text-gray-500">{size.serves}</p>
                         </div>
-                        <span className="font-semibold text-red-700">â‚±{price.toLocaleString()}</span>
+                        <span className="font-semibold text-red-700">₱{price.toLocaleString()}</span>
                       </button>
                     )
                   })}
@@ -328,7 +324,7 @@ export default function FoodOrderPage() {
                 className="w-full py-3 bg-red-700 text-white rounded-xl font-semibold hover:bg-red-800 flex items-center justify-center gap-2"
               >
                 <ShoppingCart size={20} />
-                Add to Cart - â‚±{(getItemPrice(selectedItem, selectedSize) * quantity).toLocaleString()}
+                Add to Cart - ₱{(getItemPrice(selectedItem, selectedSize) * quantity).toLocaleString()}
               </button>
             </div>
           </div>
@@ -356,8 +352,8 @@ export default function FoodOrderPage() {
               <div className="flex justify-between items-start">
                 <div className="flex-1">
                   <h4 className="font-medium text-gray-800">{item.name}</h4>
-                  <p className="text-sm text-gray-500">{item.sizeName} â€¢ {item.serves}</p>
-                  <p className="text-red-700 font-medium mt-1">â‚±{item.price.toLocaleString()} each</p>
+                  <p className="text-sm text-gray-500">{item.sizeName} • {item.serves}</p>
+                  <p className="text-red-700 font-medium mt-1">₱{item.price.toLocaleString()} each</p>
                 </div>
                 <button onClick={() => removeFromCart(item.id)} className="text-gray-400 hover:text-red-600">
                   <Trash2 size={18} />
@@ -373,7 +369,7 @@ export default function FoodOrderPage() {
                     <Plus size={14} />
                   </button>
                 </div>
-                <span className="font-semibold">â‚±{(item.price * item.quantity).toLocaleString()}</span>
+                <span className="font-semibold">₱{(item.price * item.quantity).toLocaleString()}</span>
               </div>
             </div>
           ))}
@@ -381,9 +377,8 @@ export default function FoodOrderPage() {
           <div className="bg-red-50 rounded-xl p-4 border border-red-100">
             <div className="flex justify-between items-center">
               <span className="font-semibold text-gray-800">Subtotal</span>
-              <span className="text-xl font-bold text-red-700">₱{cartSubtotal.toLocaleString()}</span>
+              <span className="text-xl font-bold text-red-700">₱{cartTotal.toLocaleString()}</span>
             </div>
-            <p className="text-sm text-gray-500 mt-1">+ Delivery fee based on location</p>
           </div>
         </div>
       )}
@@ -441,111 +436,91 @@ export default function FoodOrderPage() {
         </div>
 
         {/* Delivery Address - Cebu Only */}
-        <div className="space-y-4">
+        <div className="space-y-3">
           <label className="block text-sm font-medium text-gray-700 flex items-center gap-2">
-            <MapPin size={18} className="text-red-600" />
-            Delivery Address (Cebu Only) *
+            <Truck size={18} className="text-red-600" /> Delivery Address (Cebu Only) *
           </label>
           
-          {/* Service Area Notice */}
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 flex items-start gap-2">
             <Info size={16} className="text-blue-600 flex-shrink-0 mt-0.5" />
-            <p className="text-sm text-blue-700">Delivery available within <strong>Metro Cebu</strong> only.</p>
+            <p className="text-sm text-blue-700">Delivery available within <strong>Metro Cebu</strong> area.</p>
           </div>
           
-          {/* City Selection */}
-          <div>
-            <label className="block text-sm text-gray-600 mb-1">City / Municipality *</label>
+          {/* City */}
+          <select
+            value={orderDetails.deliveryCity}
+            onChange={(e) => {
+              const cityId = e.target.value
+              const fee = getDeliveryFee(cityId) || 0
+              setOrderDetails({
+                ...orderDetails, 
+                deliveryCity: cityId, 
+                deliveryBarangay: '',
+                deliveryFee: fee,
+                deliveryAddress: ''
+              })
+            }}
+            required
+            className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 bg-white"
+          >
+            <option value="">Select city / municipality...</option>
+            {getCityList().filter(c => !c.requiresQuote).map(city => (
+              <option key={city.id} value={city.id}>
+                {city.name}{city.deliveryFee > 0 ? ` (+₱${city.deliveryFee} delivery)` : ' (Free delivery)'}
+              </option>
+            ))}
+          </select>
+          
+          {/* Barangay */}
+          {orderDetails.deliveryCity && (
             <select
-              value={orderDetails.addressCity}
-              onChange={(e) => {
-                const cityId = e.target.value
-                const fee = getDeliveryFee(cityId) || 0
-                const cityInfo = getCityInfo(cityId)
-                setOrderDetails({
-                  ...orderDetails, 
-                  addressCity: cityId, 
-                  addressBarangay: '',
-                  deliveryFee: fee,
-                  deliveryAddress: cityInfo?.name || ''
-                })
-              }}
+              value={orderDetails.deliveryBarangay}
+              onChange={(e) => setOrderDetails({...orderDetails, deliveryBarangay: e.target.value})}
               required
               className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 bg-white"
             >
-              <option value="">Select city...</option>
-              {getCityList().filter(c => c.deliveryFee !== null).map(city => (
-                <option key={city.id} value={city.id}>
-                  {city.name}
-                  {city.deliveryFee > 0 ? ` (+₱${city.deliveryFee} delivery)` : ' (Free delivery)'}
-                </option>
+              <option value="">Select barangay...</option>
+              {getBarangays(orderDetails.deliveryCity).map(brgy => (
+                <option key={brgy} value={brgy}>{brgy}</option>
               ))}
             </select>
-          </div>
-          
-          {/* Barangay Selection */}
-          {orderDetails.addressCity && (
-            <div>
-              <label className="block text-sm text-gray-600 mb-1">Barangay *</label>
-              <select
-                value={orderDetails.addressBarangay}
-                onChange={(e) => setOrderDetails({...orderDetails, addressBarangay: e.target.value})}
-                required
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 bg-white"
-              >
-                <option value="">Select barangay...</option>
-                {getBarangays(orderDetails.addressCity).map(brgy => (
-                  <option key={brgy} value={brgy}>{brgy}</option>
-                ))}
-              </select>
-            </div>
           )}
           
-          {/* Street Address */}
-          {orderDetails.addressCity && (
-            <div>
-              <label className="block text-sm text-gray-600 mb-1">Street / Building / Unit *</label>
-              <input
-                type="text"
-                value={orderDetails.addressStreet}
-                onChange={(e) => {
-                  const fullAddress = formatAddress(e.target.value, orderDetails.addressBarangay, orderDetails.addressCity, orderDetails.addressLandmark)
-                  setOrderDetails({...orderDetails, addressStreet: e.target.value, deliveryAddress: fullAddress})
-                }}
-                required
-                placeholder="e.g., 123 Main St., Unit 5B"
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500"
-              />
-            </div>
+          {/* Street */}
+          {orderDetails.deliveryCity && (
+            <input
+              type="text"
+              value={orderDetails.deliveryStreet}
+              onChange={(e) => {
+                const addr = formatAddress(e.target.value, orderDetails.deliveryBarangay, orderDetails.deliveryCity, orderDetails.deliveryLandmark)
+                setOrderDetails({...orderDetails, deliveryStreet: e.target.value, deliveryAddress: addr})
+              }}
+              required
+              placeholder="Street / Building / Unit *"
+              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500"
+            />
           )}
           
           {/* Landmark */}
-          {orderDetails.addressCity && (
-            <div>
-              <label className="block text-sm text-gray-600 mb-1">Landmark <span className="text-gray-400">(Optional)</span></label>
-              <input
-                type="text"
-                value={orderDetails.addressLandmark}
-                onChange={(e) => {
-                  const fullAddress = formatAddress(orderDetails.addressStreet, orderDetails.addressBarangay, orderDetails.addressCity, e.target.value)
-                  setOrderDetails({...orderDetails, addressLandmark: e.target.value, deliveryAddress: fullAddress})
-                }}
-                placeholder="e.g., Near SM City, Beside BDO"
-                className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500"
-              />
-            </div>
+          {orderDetails.deliveryCity && (
+            <input
+              type="text"
+              value={orderDetails.deliveryLandmark}
+              onChange={(e) => {
+                const addr = formatAddress(orderDetails.deliveryStreet, orderDetails.deliveryBarangay, orderDetails.deliveryCity, e.target.value)
+                setOrderDetails({...orderDetails, deliveryLandmark: e.target.value, deliveryAddress: addr})
+              }}
+              placeholder="Landmark (Optional)"
+              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500"
+            />
           )}
           
-          {/* Delivery Fee Display */}
-          {orderDetails.addressCity && (
-            <div className={`rounded-xl p-4 flex items-center justify-between ${
-              orderDetails.deliveryFee === 0 ? 'bg-green-50 border border-green-200' : 'bg-amber-50 border border-amber-200'
-            }`}>
+          {/* Delivery Fee */}
+          {orderDetails.deliveryCity && (
+            <div className={`rounded-xl p-4 flex items-center justify-between ${orderDetails.deliveryFee === 0 ? 'bg-green-50 border border-green-200' : 'bg-amber-50 border border-amber-200'}`}>
               <div className="flex items-center gap-2">
                 <Truck size={20} className={orderDetails.deliveryFee === 0 ? 'text-green-600' : 'text-amber-600'} />
-                <span className={`font-medium ${orderDetails.deliveryFee === 0 ? 'text-green-700' : 'text-amber-700'}`}>
-                  Delivery Fee:
-                </span>
+                <span className={`font-medium ${orderDetails.deliveryFee === 0 ? 'text-green-700' : 'text-amber-700'}`}>Delivery Fee:</span>
               </div>
               <span className={`font-bold text-lg ${orderDetails.deliveryFee === 0 ? 'text-green-700' : 'text-amber-700'}`}>
                 {orderDetails.deliveryFee === 0 ? 'FREE' : `₱${orderDetails.deliveryFee}`}
@@ -554,10 +529,10 @@ export default function FoodOrderPage() {
           )}
           
           {/* Address Preview */}
-          {orderDetails.addressCity && orderDetails.addressBarangay && orderDetails.addressStreet && (
-            <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
-              <p className="text-sm text-gray-500 mb-1">Delivery Address:</p>
-              <p className="font-medium text-gray-800">{orderDetails.deliveryAddress}</p>
+          {orderDetails.deliveryCity && orderDetails.deliveryBarangay && orderDetails.deliveryStreet && (
+            <div className="bg-gray-50 rounded-xl p-3 border border-gray-200">
+              <p className="text-xs text-gray-500 mb-1">Delivery to:</p>
+              <p className="text-sm font-medium text-gray-800">{orderDetails.deliveryAddress}</p>
             </div>
           )}
         </div>
@@ -646,8 +621,8 @@ export default function FoodOrderPage() {
         <div className="space-y-2">
           {cart.map(item => (
             <div key={item.id} className="flex justify-between text-sm">
-              <span className="text-gray-600">{item.name} ({item.sizeName}) Ã—{item.quantity}</span>
-              <span className="font-medium">â‚±{(item.price * item.quantity).toLocaleString()}</span>
+              <span className="text-gray-600">{item.name} ({item.sizeName}) ×{item.quantity}</span>
+              <span className="font-medium">₱{(item.price * item.quantity).toLocaleString()}</span>
             </div>
           ))}
         </div>
@@ -655,17 +630,19 @@ export default function FoodOrderPage() {
 
       <div className="bg-red-700 text-white rounded-xl p-5">
         <div className="space-y-2">
-          <div className="flex justify-between items-center text-red-200">
+          <div className="flex justify-between items-center text-red-200 text-sm">
             <span>Subtotal</span>
-            <span>₱{cartSubtotal.toLocaleString()}</span>
+            <span>₱{cartTotal.toLocaleString()}</span>
           </div>
-          <div className="flex justify-between items-center text-red-200">
-            <span>Delivery Fee ({getCityInfo(orderDetails.addressCity)?.name || 'N/A'})</span>
+          <div className="flex justify-between items-center text-red-200 text-sm">
+            <span className="flex items-center gap-1">
+              <Truck size={14} /> Delivery Fee {orderDetails.deliveryCity ? `(${getCityInfo(orderDetails.deliveryCity)?.name})` : ''}
+            </span>
             <span>{orderDetails.deliveryFee === 0 ? 'FREE' : `₱${orderDetails.deliveryFee}`}</span>
           </div>
           <div className="flex justify-between items-center pt-2 border-t border-red-600">
-            <span className="text-lg font-semibold">Total Amount</span>
-            <span className="text-2xl font-bold">₱{cartTotal.toLocaleString()}</span>
+            <span className="text-lg font-semibold">Total</span>
+            <span className="text-2xl font-bold">₱{(cartTotal + (orderDetails.deliveryFee || 0)).toLocaleString()}</span>
           </div>
         </div>
       </div>
@@ -683,7 +660,7 @@ export default function FoodOrderPage() {
   const canProceed = () => {
     if (step === 1) return cart.length > 0
     if (step === 2) return cart.length > 0
-    if (step === 3) return orderDetails.customerName && orderDetails.customerPhone && orderDetails.addressCity && orderDetails.addressBarangay && orderDetails.addressStreet && orderDetails.deliveryDate
+    if (step === 3) return orderDetails.customerName && orderDetails.customerPhone && orderDetails.deliveryCity && orderDetails.deliveryBarangay && orderDetails.deliveryStreet && orderDetails.deliveryDate
     return true
   }
 
@@ -741,7 +718,7 @@ export default function FoodOrderPage() {
             <ShoppingCart size={20} />
             <span className="font-semibold">View Cart ({cartCount})</span>
             <span className="bg-white text-red-700 px-2 py-1 rounded-full text-sm font-bold">
-              â‚±{cartTotal.toLocaleString()}
+              ₱{cartTotal.toLocaleString()}
             </span>
           </button>
         )}
