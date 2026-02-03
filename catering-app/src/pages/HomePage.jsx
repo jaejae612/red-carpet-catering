@@ -108,11 +108,37 @@ export default function HomePage() {
       <section className="py-16 px-4 bg-white">
         <div className="max-w-4xl mx-auto text-center">
           <h2 className="text-3xl font-bold text-gray-800 mb-8">Contact Us</h2>
-          <div className="bg-gray-50 rounded-2xl p-8">
-            <div className="flex flex-col md:flex-row justify-center gap-8">
-              <div className="flex items-center justify-center gap-3"><Phone className="text-red-700" size={24} /><p className="font-semibold">0917-187-6510</p></div>
-              <div className="flex items-center justify-center gap-3"><Phone className="text-red-700" size={24} /><p className="font-semibold">0926-664-2839</p></div>
-              <div className="flex items-center justify-center gap-3"><Phone className="text-red-700" size={24} /><p className="font-semibold">(032) 383-4122</p></div>
+          <div className="bg-gray-50 rounded-2xl p-8 space-y-6">
+            {/* Phone Numbers */}
+            <div className="flex flex-col md:flex-row justify-center gap-6">
+              <a href="tel:09171876510" className="flex items-center justify-center gap-3 hover:text-red-700 transition-colors"><Phone className="text-red-700" size={22} /><p className="font-semibold">0917-187-6510</p></a>
+              <a href="tel:09266642839" className="flex items-center justify-center gap-3 hover:text-red-700 transition-colors"><Phone className="text-red-700" size={22} /><p className="font-semibold">0926-664-2839</p></a>
+              <a href="tel:0323834122" className="flex items-center justify-center gap-3 hover:text-red-700 transition-colors"><Phone className="text-red-700" size={22} /><p className="font-semibold">(032) 383-4122</p></a>
+            </div>
+
+            <div className="border-t border-gray-200" />
+
+            {/* Social & Email */}
+            <div className="flex flex-wrap justify-center gap-4">
+              <a href="mailto:bookings@ceburedcarpetcatering.com" className="flex items-center gap-2 bg-white border border-gray-200 px-5 py-3 rounded-xl hover:border-red-300 hover:bg-red-50 transition-colors">
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-red-600"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+                <span className="font-medium text-gray-700">bookings@ceburedcarpetcatering.com</span>
+              </a>
+
+              <a href="https://www.facebook.com/ceburedcarpetcatering" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 bg-white border border-gray-200 px-5 py-3 rounded-xl hover:border-blue-300 hover:bg-blue-50 transition-colors">
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="#1877F2"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+                <span className="font-medium text-gray-700">Facebook</span>
+              </a>
+
+              <a href="https://www.instagram.com/ceburedcarpet" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 bg-white border border-gray-200 px-5 py-3 rounded-xl hover:border-pink-300 hover:bg-pink-50 transition-colors">
+                <svg viewBox="0 0 24 24" width="22" height="22" fill="none"><defs><linearGradient id="ig" x1="0%" y1="100%" x2="100%" y2="0%"><stop offset="0%" stopColor="#FFDC80"/><stop offset="25%" stopColor="#F77737"/><stop offset="50%" stopColor="#E1306C"/><stop offset="75%" stopColor="#C13584"/><stop offset="100%" stopColor="#833AB4"/></linearGradient></defs><rect x="2" y="2" width="20" height="20" rx="5" stroke="url(#ig)" strokeWidth="2"/><circle cx="12" cy="12" r="5" stroke="url(#ig)" strokeWidth="2"/><circle cx="17.5" cy="6.5" r="1.5" fill="url(#ig)"/></svg>
+                <span className="font-medium text-gray-700">Instagram</span>
+              </a>
+
+              <a href="https://m.me/ceburedcarpetcatering" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 bg-white border border-gray-200 px-5 py-3 rounded-xl hover:border-blue-300 hover:bg-blue-50 transition-colors">
+                <svg viewBox="0 0 36 36" width="22" height="22" fill="#0084FF"><path d="M18 2C9.163 2 2 8.636 2 16.7c0 4.22 1.726 7.98 4.532 10.56v5.34l4.95-2.72c1.4.39 2.88.6 4.418.6 8.837 0 16-6.636 16-14.78C31.9 8.636 26.837 2 18 2zm1.77 19.876l-4.075-4.35-7.95 4.35 8.74-9.28 4.175 4.35 7.85-4.35-8.74 9.28z"/></svg>
+                <span className="font-medium text-gray-700">Messenger</span>
+              </a>
             </div>
           </div>
         </div>
