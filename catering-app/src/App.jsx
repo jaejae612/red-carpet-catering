@@ -8,6 +8,7 @@ import Footer from './components/Footer'
 import LoadingSpinner from './components/LoadingSpinner'
 import ScrollToTop from './components/ScrollToTop'
 import ErrorBoundary from './components/ErrorBoundary'
+import FloatingButtons from './components/FloatingButtons'
 import SetupGuide from './pages/SetupGuide'
 import HomePage from './pages/HomePage'
 
@@ -102,6 +103,7 @@ function App() {
           </Suspense>
         </main>
         <Footer />
+        <FloatingButtons />
       </div>
     </ErrorBoundary>
   )
