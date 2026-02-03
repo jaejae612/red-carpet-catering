@@ -16,6 +16,33 @@ import {
 } from 'lucide-react'
 import TermsAndConditions from '../components/TermsAndConditions'
 
+// Helper: Get emoji for cocktail menu item
+const getItemEmoji = (item) => {
+  const lower = item.toLowerCase()
+  if (lower.includes('peanut')) return '🥜'
+  if (lower.includes('canape') || lower.includes('cold cut')) return '🧀'
+  if (lower.includes('sausage')) return '🌭'
+  if (lower.includes('pizza')) return '🍕'
+  if (lower.includes('siomai') || lower.includes('pearl ball')) return '🥟'
+  if (lower.includes('chicken')) return '🍗'
+  if (lower.includes('bam-e') || lower.includes('carbonara') || lower.includes('lasagna') || lower.includes('penne') || lower.includes('spaghetti') || lower.includes('tetrazzini') || lower.includes('alfredo') || lower.includes('sotanghon')) return '🍝'
+  if (lower.includes('brownie') || lower.includes('cake') || lower.includes('torte') || lower.includes('pudding') || lower.includes('macaroon') || lower.includes('choco ball') || lower.includes('choco zambo')) return '🍰'
+  if (lower.includes('iced tea') || lower.includes('juice')) return '🥤'
+  if (lower.includes('burger')) return '🍔'
+  if (lower.includes('cabbage') || lower.includes('vegetable') || lower.includes('corn')) return '🥬'
+  if (lower.includes('roll') || lower.includes('bread') || lower.includes('croissant') || lower.includes('sandwich') || lower.includes('pastry') || lower.includes('pate')) return '🥖'
+  if (lower.includes('meatball')) return '🧆'
+  if (lower.includes('kebab') || lower.includes('yakitori') || lower.includes('stick')) return '🍢'
+  if (lower.includes('lumpia') || lower.includes('empanada')) return '🥟'
+  if (lower.includes('squid') || lower.includes('fish') || lower.includes('crab') || lower.includes('camaron') || lower.includes('shrimp')) return '🦐'
+  if (lower.includes('beef') || lower.includes('tapa') || lower.includes('pork')) return '🥩'
+  if (lower.includes('banana') || lower.includes('mango') || lower.includes('pandan') || lower.includes('fruit')) return '🍌'
+  if (lower.includes('burrito')) return '🌯'
+  if (lower.includes('cheese')) return '🧀'
+  if (lower.includes('ngohiong')) return '🥠'
+  return '🍽️'
+}
+
 const STEPS = [
   { id: 1, name: 'Package', icon: Wine },
   { id: 2, name: 'Details', icon: Calendar },
@@ -224,7 +251,7 @@ export default function CocktailBookingPage() {
                     <div>
                       <h3 className="text-lg font-bold text-gray-800">{menu.name}</h3>
                       <p className="text-sm text-gray-500">
-                        {Object.keys(menu.options).length} menu options available
+                        📋 {Object.keys(menu.options).length} menu options available
                       </p>
                     </div>
                   </div>
@@ -273,7 +300,7 @@ export default function CocktailBookingPage() {
                             <li key={idx} className={`text-sm flex items-start gap-2 ${
                               isSelected && booking.selectedOption === key ? 'text-red-100' : 'text-gray-600'
                             }`}>
-                              <span className="mt-1">•</span>
+                              <span className="mt-0.5">{getItemEmoji(item)}</span>
                               {item}
                             </li>
                           ))}
@@ -293,9 +320,9 @@ export default function CocktailBookingPage() {
         <div className="flex items-start gap-3">
           <Info className="text-amber-600 flex-shrink-0 mt-0.5" size={20} />
           <div className="text-sm text-amber-800">
-            <p className="font-medium">Pricing Tiers</p>
+            <p className="font-medium">💰 Pricing Tiers</p>
             <ul className="mt-1 space-y-1">
-              <li>• 60+ guests: Base price</li>
+              <li>• 60+ guests: Base price ✨</li>
               <li>• 50-59 guests: +₱60/head</li>
               <li>• 40-49 guests: +₱90/head</li>
               <li>• 30-39 guests: +₱120/head</li>
@@ -492,8 +519,8 @@ export default function CocktailBookingPage() {
   const renderStep3 = () => (
     <div className="space-y-6">
       <div className="text-center mb-6">
-        <h2 className="text-xl font-bold text-gray-800">Enhance Your Event</h2>
-        <p className="text-gray-600">Add stations and extras to make it special</p>
+        <h2 className="text-xl font-bold text-gray-800">✨ Enhance Your Event</h2>
+        <p className="text-gray-600">Add stations and extras to make it special 🎉</p>
       </div>
 
       <div className="grid md:grid-cols-2 gap-4">
@@ -567,7 +594,7 @@ export default function CocktailBookingPage() {
     return (
       <div className="space-y-6">
         <div className="bg-white rounded-2xl shadow-lg p-6">
-          <h3 className="text-xl font-bold text-gray-800 mb-6">Booking Summary</h3>
+          <h3 className="text-xl font-bold text-gray-800 mb-6">📋 Booking Summary</h3>
 
           {/* Package Info */}
           <div className="border-b border-gray-200 pb-4 mb-4">
@@ -585,10 +612,10 @@ export default function CocktailBookingPage() {
 
           {/* Menu Items */}
           <div className="border-b border-gray-200 pb-4 mb-4">
-            <p className="font-medium text-gray-700 mb-2">Menu Items:</p>
+            <p className="font-medium text-gray-700 mb-2">🍽️ Menu Items:</p>
             <div className="grid grid-cols-2 gap-1">
               {selectedOption?.items.map((item, idx) => (
-                <p key={idx} className="text-sm text-gray-600">• {item}</p>
+                <p key={idx} className="text-sm text-gray-600">{getItemEmoji(item)} {item}</p>
               ))}
             </div>
           </div>
@@ -596,16 +623,16 @@ export default function CocktailBookingPage() {
           {/* Event Details */}
           <div className="border-b border-gray-200 pb-4 mb-4 grid grid-cols-2 gap-4">
             <div>
-              <p className="text-sm text-gray-500">Date & Time</p>
+              <p className="text-sm text-gray-500">📅 Date & Time</p>
               <p className="font-medium">{booking.date} at {booking.time}</p>
             </div>
             <div>
-              <p className="text-sm text-gray-500">Venue</p>
+              <p className="text-sm text-gray-500">📍 Venue</p>
               <p className="font-medium">{booking.venue}</p>
             </div>
             {booking.occasion && (
               <div>
-                <p className="text-sm text-gray-500">Occasion</p>
+                <p className="text-sm text-gray-500">🎉 Occasion</p>
                 <p className="font-medium">
                   {booking.occasion === 'other' ? booking.occasionOther : occasionTypes.find(o => o.id === booking.occasion)?.name}
                 </p>
@@ -616,7 +643,7 @@ export default function CocktailBookingPage() {
           {/* Add-ons */}
           {booking.addOns.length > 0 && (
             <div className="border-b border-gray-200 pb-4 mb-4">
-              <p className="font-medium text-gray-700 mb-2">Add-ons:</p>
+              <p className="font-medium text-gray-700 mb-2">➕ Add-ons:</p>
               {booking.addOns.map((a) => {
                 const addon = cocktailAddOns.find(x => x.id === a.id)
                 return (

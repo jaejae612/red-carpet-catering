@@ -7,7 +7,7 @@
 export const cocktailMenus = {
   cocktail400: {
     id: 'cocktail400',
-    name: 'Cocktail Package',
+    name: 'Cocktail Menu 400',
     pricePerHead: 400,
     pricingTiers: { 60: 400, 50: 460, 40: 490, 30: 520 },
     minPax: 30,
