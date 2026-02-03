@@ -31,7 +31,7 @@ export default function HomePage() {
       '@type': 'City',
       name: 'Cebu'
     },
-    openingHours: 'Mo-Su 08:00-20:00',
+    openingHours: 'Mo-Su 08:00-17:00',
     priceRange: '₱₱',
     servesCuisine: ['Filipino', 'Asian', 'International'],
     hasMenu: {
