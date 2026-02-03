@@ -26,6 +26,7 @@ const BookingPage = lazy(() => import('./pages/BookingPage'))
 const CateringSelectionPage = lazy(() => import('./pages/CateringSelectionPage'))
 const CocktailBookingPage = lazy(() => import('./pages/CocktailBookingPage'))
 const PackedMealOrderPage = lazy(() => import('./pages/PackedMealOrderPage'))
+const NotFoundPage = lazy(() => import('./pages/NotFoundPage'))
 
 // Lazy loaded — admin pages (only loaded for admins)
 const AdminLayout = lazy(() => import('./components/AdminLayout'))
@@ -98,7 +99,7 @@ function App() {
               <Route path="/admin/calendar" element={<ProtectedRoute adminOnly><AdminLayout><BookingCalendar /></AdminLayout></ProtectedRoute>} />
               
               {/* Catch all */}
-              <Route path="*" element={<Navigate to="/" replace />} />
+              <Route path="*" element={<NotFoundPage />} />
             </Routes>
           </Suspense>
         </main>
