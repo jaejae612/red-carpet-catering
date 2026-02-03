@@ -132,7 +132,7 @@ export const emailTemplates = {
             </ul>
             
             <p style="text-align: center;">
-              <a href="https://red-carpet-catering.pages.dev/my-orders" class="btn">View My Bookings</a>
+              <a href="https://ceburedcarpetcatering.com/my-orders" class="btn">View My Bookings</a>
             </p>
           </div>
           <div class="footer">
@@ -184,7 +184,7 @@ export const emailTemplates = {
               <div class="total">Total: ${formatCurrency(booking.total_amount)}</div>
             </div>
             <p style="text-align: center;">
-              <a href="https://red-carpet-catering.pages.dev/admin/bookings" class="btn">View in Admin Panel</a>
+              <a href="https://ceburedcarpetcatering.com/admin/bookings" class="btn">View in Admin Panel</a>
             </p>
           </div>
         </div>
@@ -286,7 +286,7 @@ export const emailTemplates = {
               <div class="total">Total: ${formatCurrency(order.total_amount)}</div>
             </div>
             <p style="text-align: center;">
-              <a href="https://red-carpet-catering.pages.dev/admin/food-orders" class="btn">View in Admin Panel</a>
+              <a href="https://ceburedcarpetcatering.com/admin/food-orders" class="btn">View in Admin Panel</a>
             </p>
           </div>
         </div>
