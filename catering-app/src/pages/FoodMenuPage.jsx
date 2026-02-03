@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
 import { FOOD_CATEGORIES, SERVING_SIZES, FIXED_PRICE_SIZE, BINGCAVA_SIZES, LUMPIA_SIZES, DESSERT_SIZES, getItemPrice, getAvailableSizes, calculateCartTotal, getCategoryInfo } from '../lib/foodOrderData'
 import { ShoppingCart, Plus, Minus, X, Search, ChevronRight, MapPin, Calendar, Clock, User, Phone, Mail, Send, Trash2, AlertCircle } from 'lucide-react'
+import SEO from '../components/SEO'
 
 export default function FoodMenuPage() {
   const { user, profile, isAdmin } = useAuth()
@@ -190,6 +191,11 @@ export default function FoodMenuPage() {
 
   return (
     <div className="py-8 px-4 pb-32">
+      <SEO 
+        title="Food Menu — Order for Delivery"
+        description="Order Filipino food trays, home meals, desserts, and packed meals for delivery in Cebu. Fresh and delicious catering-quality food."
+        path="/food-menu"
+      />
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="text-center mb-8">

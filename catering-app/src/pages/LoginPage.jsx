@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { Mail, Lock, AlertCircle, CheckCircle } from 'lucide-react'
+import SEO from '../components/SEO'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -56,6 +57,7 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-[80vh] flex items-center justify-center px-4 py-12">
+      <SEO title="Login" description="Log in to your Red Carpet Catering account to manage bookings and orders." path="/login" />
       <div className="w-full max-w-md">
         <div className="bg-white rounded-2xl shadow-xl p-8">
           <div className="text-center mb-8">

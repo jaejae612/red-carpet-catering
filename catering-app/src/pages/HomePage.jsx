@@ -3,11 +3,50 @@ import { Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { ChevronRight, Phone, Users, Utensils, Calendar, ShoppingBag, Truck } from 'lucide-react'
 import { menuPackages } from '../lib/menuData'
+import SEO, { StructuredData } from '../components/SEO'
 
 export default function HomePage() {
   const { user } = useAuth()
+
+  const businessData = {
+    '@type': 'CateringBusiness',
+    name: 'Red Carpet Food and Catering Services',
+    description: 'Premium catering services in Cebu for weddings, birthdays, corporate events, and all special occasions. Filipino, Asian, and International cuisines.',
+    url: 'https://ceburedcarpetcatering.com',
+    logo: 'https://ceburedcarpetcatering.com/logo-red.png',
+    image: 'https://ceburedcarpetcatering.com/og-image.jpg',
+    telephone: ['+639171876510', '+639266642839', '+63323834122'],
+    address: {
+      '@type': 'PostalAddress',
+      addressLocality: 'Cebu City',
+      addressRegion: 'Cebu',
+      addressCountry: 'PH'
+    },
+    geo: {
+      '@type': 'GeoCoordinates',
+      latitude: 10.3157,
+      longitude: 123.8854
+    },
+    areaServed: {
+      '@type': 'City',
+      name: 'Cebu'
+    },
+    openingHours: 'Mo-Su 08:00-20:00',
+    priceRange: '₱₱',
+    servesCuisine: ['Filipino', 'Asian', 'International'],
+    hasMenu: {
+      '@type': 'Menu',
+      url: 'https://ceburedcarpetcatering.com/menu'
+    }
+  }
+
   return (
     <div>
+      <SEO 
+        description="Premium catering services in Cebu for weddings, birthdays, corporate events, and all occasions. Book online or order food for delivery."
+        path="/"
+      />
+      <StructuredData data={businessData} />
       <section className="bg-gradient-to-br from-red-700 via-red-800 to-red-900 text-white py-20 px-4">
         <div className="max-w-7xl mx-auto text-center">
           <div className="w-28 h-28 bg-white rounded-full flex items-center justify-center mx-auto mb-6 shadow-xl p-2">

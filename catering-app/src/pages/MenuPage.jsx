@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext'
 import { menuPackages, addOnStations } from '../lib/menuData'
 import { ChevronDown, ChevronUp, Check, ShoppingBag } from 'lucide-react'
 import { supabase } from '../lib/supabase'
+import SEO from '../components/SEO'
 
 // Helper to get icon for menu item
 const getItemIcon = (item) => {
@@ -52,6 +53,11 @@ export default function MenuPage() {
 
   return (
     <div className="py-12 px-4">
+      <SEO 
+        title="Catering Menu & Packages"
+        description="View Red Carpet Catering packages starting at ₱350/head. Filipino, Asian & International cuisines for weddings, birthdays, and corporate events in Cebu."
+        path="/menu"
+      />
       <div className="max-w-5xl mx-auto">
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold text-gray-800 mb-4">Catering Packages</h1>

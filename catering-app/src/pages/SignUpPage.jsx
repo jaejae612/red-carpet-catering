@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { Mail, Lock, User, Phone, AlertCircle, CheckCircle } from 'lucide-react'
+import SEO from '../components/SEO'
 
 export default function SignUpPage() {
   const [formData, setFormData] = useState({ fullName: '', email: '', phone: '', password: '', confirmPassword: '' })
@@ -48,6 +49,7 @@ export default function SignUpPage() {
 
   if (success) return (
     <div className="min-h-[80vh] flex items-center justify-center px-4 py-12">
+      <SEO title="Sign Up" description="Create your Red Carpet Catering account to book catering and order food for delivery in Cebu." path="/signup" />
       <div className="w-full max-w-md bg-white rounded-2xl shadow-xl p-8 text-center">
         <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4"><CheckCircle className="text-green-600" size={32} /></div>
         <h1 className="text-2xl font-bold text-gray-800 mb-2">Account Created!</h1>
