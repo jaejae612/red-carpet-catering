@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import { menuPackages } from '../../lib/menuData'
 import { ArrowLeft, Calendar, MapPin, Users, Phone, Mail, Check, Plus, Minus, X, Save, Search, Edit2, CreditCard, Send, Copy, Filter, ChevronDown, ChevronUp } from 'lucide-react'
@@ -7,18 +7,19 @@ import AdminBookingEdit from '../../components/AdminBookingEdit'
 import { sendBookingNotifications } from '../../lib/emailService'
 
 export default function AdminBookings() {
+  const [searchParams] = useSearchParams()
   const [bookings, setBookings] = useState([])
   const [staff, setStaff] = useState([])
   const [equipment, setEquipment] = useState([])
   const [loading, setLoading] = useState(true)
   const [selectedBooking, setSelectedBooking] = useState(null)
   const [searchTerm, setSearchTerm] = useState('')
-  const [statusFilter, setStatusFilter] = useState('all')
-  const [paymentFilter, setPaymentFilter] = useState('all')
+  const [statusFilter, setStatusFilter] = useState(searchParams.get('status') || 'all')
+  const [paymentFilter, setPaymentFilter] = useState(searchParams.get('payment') || 'all')
   const [dateFrom, setDateFrom] = useState('')
   const [dateTo, setDateTo] = useState('')
   const [sortOrder, setSortOrder] = useState('asc')
-  const [showFilters, setShowFilters] = useState(false)
+  const [showFilters, setShowFilters] = useState(!!(searchParams.get('status') || searchParams.get('payment')))
   const [showStaffPicker, setShowStaffPicker] = useState(null)
   const [showEditModal, setShowEditModal] = useState(false)
   const [saving, setSaving] = useState(false)
@@ -147,7 +148,7 @@ export default function AdminBookings() {
                            b.venue?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                            b.customer_phone?.includes(searchTerm)
       const matchesStatus = statusFilter === 'all' || b.status === statusFilter
-      const matchesPayment = paymentFilter === 'all' || b.payment_status === paymentFilter
+      const matchesPayment = paymentFilter === 'all' || b.payment_status === paymentFilter || (paymentFilter === 'unpaid' && !b.payment_status)
       const matchesDateFrom = !dateFrom || b.event_date >= dateFrom
       const matchesDateTo = !dateTo || b.event_date <= dateTo
       return matchesSearch && matchesStatus && matchesPayment && matchesDateFrom && matchesDateTo
