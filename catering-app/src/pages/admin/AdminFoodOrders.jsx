@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
 import { ORDER_STATUSES, getStatusColor, getStatusName, getCategoryInfo } from '../../lib/foodOrderData'
 import { Package, Search, Calendar, Phone, MapPin, Clock, ChevronDown, ChevronUp, X } from 'lucide-react'
+import { TableSkeleton } from '../../components/SkeletonLoaders'
 
 export default function AdminFoodOrders() {
   const [orders, setOrders] = useState([])
@@ -119,9 +120,7 @@ export default function AdminFoodOrders() {
 
       {/* Orders List */}
       {loading ? (
-        <div className="text-center py-12">
-          <div className="animate-spin w-8 h-8 border-4 border-red-700 border-t-transparent rounded-full mx-auto"></div>
-        </div>
+        <TableSkeleton rows={6} cols={4} />
       ) : filteredOrders.length === 0 ? (
         <div className="text-center py-12 bg-white rounded-xl">
           <Package className="mx-auto text-gray-300" size={48} />

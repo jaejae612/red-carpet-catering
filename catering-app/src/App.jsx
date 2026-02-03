@@ -42,8 +42,20 @@ const BookingCalendar = lazy(() => import('./pages/admin/BookingCalendar'))
 
 // Loading fallback for lazy-loaded pages
 const PageLoader = () => (
-  <div className="min-h-[60vh] flex items-center justify-center">
-    <div className="w-10 h-10 border-4 border-red-200 border-t-red-700 rounded-full animate-spin"></div>
+  <div className="max-w-5xl mx-auto py-12 px-4 space-y-6 animate-pulse">
+    <div className="h-8 bg-gray-200 rounded w-64 mx-auto" />
+    <div className="h-4 bg-gray-200 rounded w-96 mx-auto max-w-full" />
+    <div className="grid md:grid-cols-3 gap-6 mt-8">
+      {[1,2,3].map(i => (
+        <div key={i} className="bg-white rounded-2xl shadow-lg overflow-hidden">
+          <div className="h-32 bg-gray-200" />
+          <div className="p-6 space-y-3">
+            <div className="h-5 bg-gray-200 rounded w-3/4" />
+            <div className="h-4 bg-gray-200 rounded w-1/2" />
+          </div>
+        </div>
+      ))}
+    </div>
   </div>
 )
 

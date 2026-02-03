@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import { TrendingUp, Users, Calendar, Package, Clock, ChevronDown, ChevronRight, Trash2, AlertTriangle, RefreshCw } from 'lucide-react'
+import { DashboardSkeleton } from '../../components/SkeletonLoaders'
 
 // Custom Peso Icon component
 const PesoSign = ({ className, size = 20 }) => (
@@ -233,11 +234,7 @@ export default function AdminDashboardStats() {
   )
 
   if (loading) {
-    return (
-      <div className="min-h-[60vh] flex items-center justify-center">
-        <div className="w-12 h-12 border-4 border-red-200 border-t-red-700 rounded-full animate-spin"></div>
-      </div>
-    )
+    return <DashboardSkeleton />
   }
 
   return (

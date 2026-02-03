@@ -3,6 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import { menuPackages } from '../../lib/menuData'
 import { ArrowLeft, Calendar, MapPin, Users, Phone, Mail, Check, Plus, Minus, X, Save, Search, Edit2, CreditCard, Send, Copy, Filter, ChevronDown, ChevronUp } from 'lucide-react'
+import { TableSkeleton } from '../../components/SkeletonLoaders'
 import AdminBookingEdit from '../../components/AdminBookingEdit'
 import { sendBookingNotifications } from '../../lib/emailService'
 
@@ -159,7 +160,7 @@ export default function AdminBookings() {
       return sortOrder === 'asc' ? dateA - dateB : dateB - dateA
     })
 
-  if (loading) return <div className="min-h-[60vh] flex items-center justify-center"><div className="w-12 h-12 border-4 border-red-200 border-t-red-700 rounded-full animate-spin"></div></div>
+  if (loading) return <TableSkeleton rows={8} cols={5} />
 
   return (
     <div className="py-8 px-4"><div className="max-w-7xl mx-auto">
