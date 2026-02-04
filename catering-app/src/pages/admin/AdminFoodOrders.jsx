@@ -3,6 +3,7 @@ import { supabase } from '../../lib/supabase'
 import { ORDER_STATUSES, getStatusColor, getStatusName, getCategoryInfo } from '../../lib/foodOrderData'
 import { Package, Search, Calendar, Phone, MapPin, Clock, ChevronDown, ChevronUp, X } from 'lucide-react'
 import { TableSkeleton } from '../../components/SkeletonLoaders'
+import { exportFoodOrdersCSV, exportFoodOrdersPDF } from '../../lib/exportUtils'
 
 export default function AdminFoodOrders() {
   const [orders, setOrders] = useState([])
@@ -63,6 +64,16 @@ export default function AdminFoodOrders() {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold text-gray-800">Food Orders</h1>
+        <div className="flex items-center gap-2">
+          <button onClick={() => exportFoodOrdersCSV(filteredOrders)} className="flex items-center gap-1.5 px-3 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 transition-colors">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+            Excel
+          </button>
+          <button onClick={() => exportFoodOrdersPDF(filteredOrders)} className="flex items-center gap-1.5 px-3 py-2 bg-red-700 text-white rounded-lg text-sm font-medium hover:bg-red-800 transition-colors">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+            PDF
+          </button>
+        </div>
       </div>
 
       {/* Stats */}

@@ -4,6 +4,7 @@ import { supabase } from '../../lib/supabase'
 import { menuPackages } from '../../lib/menuData'
 import { ArrowLeft, Calendar, MapPin, Users, Phone, Mail, Check, Plus, Minus, X, Save, Search, Edit2, CreditCard, Send, Copy, Filter, ChevronDown, ChevronUp } from 'lucide-react'
 import { TableSkeleton } from '../../components/SkeletonLoaders'
+import { exportBookingsCSV, exportBookingsPDF } from '../../lib/exportUtils'
 import AdminBookingEdit from '../../components/AdminBookingEdit'
 import { sendBookingNotifications } from '../../lib/emailService'
 
@@ -164,7 +165,19 @@ export default function AdminBookings() {
 
   return (
     <div className="py-8 px-4"><div className="max-w-7xl mx-auto">
-      <div className="flex items-center gap-4 mb-8"><Link to="/admin" className="p-2 hover:bg-gray-100 rounded-lg"><ArrowLeft size={24} /></Link><div><h1 className="text-3xl font-bold text-gray-800">Manage Bookings</h1><p className="text-gray-500">Assign staff and equipment</p></div></div>
+      <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center gap-4"><Link to="/admin" className="p-2 hover:bg-gray-100 rounded-lg"><ArrowLeft size={24} /></Link><div><h1 className="text-3xl font-bold text-gray-800">Manage Bookings</h1><p className="text-gray-500">Assign staff and equipment</p></div></div>
+        <div className="flex items-center gap-2">
+          <button onClick={() => exportBookingsCSV(filtered)} className="flex items-center gap-1.5 px-3 py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 transition-colors">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+            Excel
+          </button>
+          <button onClick={() => exportBookingsPDF(filtered)} className="flex items-center gap-1.5 px-3 py-2 bg-red-700 text-white rounded-lg text-sm font-medium hover:bg-red-800 transition-colors">
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+            PDF
+          </button>
+        </div>
+      </div>
       <div className="grid lg:grid-cols-3 gap-6">
         <div className="lg:col-span-1"><div className="bg-white rounded-2xl shadow-lg p-4 sticky top-24">
           {/* Search */}
