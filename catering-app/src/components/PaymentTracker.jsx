@@ -139,11 +139,17 @@ export default function PaymentTracker({ bookingId, foodOrderId, totalAmount = 0
     }
   }
 
-  const quickAmounts = [
-    { label: 'Full', amount: totalAmount },
-    { label: '50%', amount: Math.round(totalAmount * 0.5) },
-    { label: 'Balance', amount: Math.max(balance, 0) },
-  ].filter(q => q.amount > 0)
+  const halfAmount = Math.round(totalAmount * 0.5)
+  const quickAmounts = totalPaid === 0
+    ? [
+        { label: `Full — ${formatCurrency(totalAmount)}`, amount: totalAmount },
+        { label: `50% — ${formatCurrency(halfAmount)}`, amount: halfAmount },
+      ]
+    : [
+        { label: `Balance — ${formatCurrency(balance)}`, amount: Math.max(balance, 0) },
+        ...(halfAmount < balance ? [{ label: `50% — ${formatCurrency(halfAmount)}`, amount: halfAmount }] : []),
+      ]
+  const filteredQuickAmounts = quickAmounts.filter(q => q.amount > 0)
 
   const statusInfo = getStatusInfo(currentStatus)
 
@@ -277,7 +283,7 @@ export default function PaymentTracker({ bookingId, foodOrderId, totalAmount = 0
             />
             {/* Quick amount buttons */}
             <div className="flex gap-2 mt-2">
-              {quickAmounts.map((q) => (
+              {filteredQuickAmounts.map((q) => (
                 <button
                   key={q.label}
                   onClick={() => setForm({ ...form, amount: String(q.amount) })}

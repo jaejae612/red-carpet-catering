@@ -347,7 +347,7 @@ export default function BookingCalendar() {
                                   <div className="mt-3 pt-3 border-t flex justify-between items-center">
                                     <span className="font-bold text-red-700">₱{booking.total_amount?.toLocaleString()}</span>
                                     <Link to={`/admin/bookings?booking=${booking.id}`} className="text-sm text-red-700 hover:underline">
-                                      View â†’
+                                      View →
                                     </Link>
                                   </div>
                                 </div>
@@ -398,7 +398,7 @@ export default function BookingCalendar() {
                                   <div className="mt-3 pt-3 border-t flex justify-between items-center">
                                     <span className="font-bold text-orange-600">₱{order.total_amount?.toLocaleString()}</span>
                                     <Link to={`/admin/food-orders?order=${order.id}`} className="text-sm text-orange-600 hover:underline">
-                                      View â†’
+                                      View →
                                     </Link>
                                   </div>
                                 </div>
