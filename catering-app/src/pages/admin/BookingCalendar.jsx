@@ -245,7 +245,7 @@ export default function BookingCalendar() {
                                 key={`b-${idx}`}
                                 className="text-xs px-1.5 py-0.5 rounded truncate bg-red-100 text-red-700 border-l-2 border-red-500"
                               >
-                                ðŸ½ï¸ {b.customer_name?.split(' ')[0]}
+                                🍽️ {b.customer_name?.split(' ')[0]}
                               </div>
                             ))}
                             {dayBookingsList.length > 2 && (
@@ -264,7 +264,7 @@ export default function BookingCalendar() {
                                 key={`o-${idx}`}
                                 className="text-xs px-1.5 py-0.5 rounded truncate bg-orange-100 text-orange-700 border-l-2 border-orange-500"
                               >
-                                ðŸ›’ {o.customer_name?.split(' ')[0]}
+                                🛒 {o.customer_name?.split(' ')[0]}
                               </div>
                             ))}
                             {dayFoodOrdersList.length > (hasBookings ? 1 : 2) && (
