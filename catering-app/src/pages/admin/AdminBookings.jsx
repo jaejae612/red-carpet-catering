@@ -31,6 +31,15 @@ export default function AdminBookings() {
 
   useEffect(() => { fetchData() }, [])
 
+  // Auto-select booking from URL param (e.g., from calendar View link)
+  useEffect(() => {
+    const bookingId = searchParams.get('booking')
+    if (bookingId && bookings.length > 0) {
+      const found = bookings.find(b => b.id === bookingId)
+      if (found) setSelectedBooking(found)
+    }
+  }, [bookings, searchParams])
+
   const fetchData = async () => {
     try {
       const [b, s, e] = await Promise.all([

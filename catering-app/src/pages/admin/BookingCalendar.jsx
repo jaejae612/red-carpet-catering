@@ -245,7 +245,7 @@ export default function BookingCalendar() {
                                 key={`b-${idx}`}
                                 className="text-xs px-1.5 py-0.5 rounded truncate bg-red-100 text-red-700 border-l-2 border-red-500"
                               >
-                                🍽️ {b.customer_name?.split(' ')[0]}
+                                ðŸ½ï¸ {b.customer_name?.split(' ')[0]}
                               </div>
                             ))}
                             {dayBookingsList.length > 2 && (
@@ -264,7 +264,7 @@ export default function BookingCalendar() {
                                 key={`o-${idx}`}
                                 className="text-xs px-1.5 py-0.5 rounded truncate bg-orange-100 text-orange-700 border-l-2 border-orange-500"
                               >
-                                🛒 {o.customer_name?.split(' ')[0]}
+                                ðŸ›’ {o.customer_name?.split(' ')[0]}
                               </div>
                             ))}
                             {dayFoodOrdersList.length > (hasBookings ? 1 : 2) && (
@@ -346,8 +346,8 @@ export default function BookingCalendar() {
 
                                   <div className="mt-3 pt-3 border-t flex justify-between items-center">
                                     <span className="font-bold text-red-700">₱{booking.total_amount?.toLocaleString()}</span>
-                                    <Link to="/admin/bookings" className="text-sm text-red-700 hover:underline">
-                                      View →
+                                    <Link to={`/admin/bookings?booking=${booking.id}`} className="text-sm text-red-700 hover:underline">
+                                      View â†’
                                     </Link>
                                   </div>
                                 </div>
@@ -397,8 +397,8 @@ export default function BookingCalendar() {
 
                                   <div className="mt-3 pt-3 border-t flex justify-between items-center">
                                     <span className="font-bold text-orange-600">₱{order.total_amount?.toLocaleString()}</span>
-                                    <Link to="/admin/food-orders" className="text-sm text-orange-600 hover:underline">
-                                      View →
+                                    <Link to={`/admin/food-orders?order=${order.id}`} className="text-sm text-orange-600 hover:underline">
+                                      View â†’
                                     </Link>
                                   </div>
                                 </div>

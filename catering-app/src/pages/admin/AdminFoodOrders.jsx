@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import { ORDER_STATUSES, getStatusColor, getStatusName, getCategoryInfo } from '../../lib/foodOrderData'
 import { Package, Search, Calendar, Phone, MapPin, Clock, ChevronDown, ChevronUp, X } from 'lucide-react'
@@ -7,6 +8,7 @@ import { exportFoodOrdersCSV, exportFoodOrdersPDF } from '../../lib/exportUtils'
 import PaymentTracker from '../../components/PaymentTracker'
 
 export default function AdminFoodOrders() {
+  const [searchParams] = useSearchParams()
   const [orders, setOrders] = useState([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState('all')
@@ -17,6 +19,15 @@ export default function AdminFoodOrders() {
   useEffect(() => {
     fetchOrders()
   }, [])
+
+  // Auto-expand order from URL param (e.g., from calendar View link)
+  useEffect(() => {
+    const orderId = searchParams.get('order')
+    if (orderId && orders.length > 0) {
+      const found = orders.find(o => o.id === orderId)
+      if (found) { setExpandedOrder(orderId); setSelectedOrder(found) }
+    }
+  }, [orders, searchParams])
 
   const fetchOrders = async () => {
     setLoading(true)

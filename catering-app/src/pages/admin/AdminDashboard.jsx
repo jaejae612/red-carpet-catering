@@ -151,25 +151,31 @@ export default function AdminDashboardStats() {
 
       let deletedCount = 0
 
-      // Delete test bookings
+      // Delete test bookings (payments cascade automatically)
       if (testBookings.length > 0) {
         const testBookingIds = testBookings.map(b => b.id)
-        const { error } = await supabase
+        const { error, count } = await supabase
           .from('bookings')
           .delete()
           .in('id', testBookingIds)
-        if (error) throw error
+        if (error) {
+          console.error('Booking delete error:', error)
+          throw new Error(`Bookings: ${error.message}${error.hint ? ' — ' + error.hint : ''}`)
+        }
         deletedCount += testBookingIds.length
       }
 
-      // Delete test food orders
+      // Delete test food orders (payments cascade automatically)
       if (testFoodOrders.length > 0) {
         const testOrderIds = testFoodOrders.map(o => o.id)
         const { error } = await supabase
           .from('food_orders')
           .delete()
           .in('id', testOrderIds)
-        if (error) throw error
+        if (error) {
+          console.error('Food order delete error:', error)
+          throw new Error(`Food orders: ${error.message}${error.hint ? ' — ' + error.hint : ''}`)
+        }
         deletedCount += testOrderIds.length
       }
 
@@ -178,7 +184,7 @@ export default function AdminDashboardStats() {
       setShowDeleteModal(false)
     } catch (error) {
       console.error('Error deleting:', error)
-      alert('Error deleting: ' + error.message)
+      alert('❌ Error deleting: ' + error.message + '\n\nTip: Make sure the DELETE RLS policies are set up. Run fix-delete-policies.sql in Supabase.')
     } finally {
       setDeleting(false)
     }
