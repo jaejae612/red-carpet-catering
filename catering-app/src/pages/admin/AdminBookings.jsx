@@ -8,6 +8,7 @@ import { exportBookingsCSV, exportBookingsPDF } from '../../lib/exportUtils'
 import PaymentTracker from '../../components/PaymentTracker'
 import AdminBookingEdit from '../../components/AdminBookingEdit'
 import { sendBookingNotifications } from '../../lib/emailService'
+import { getDateConflicts, calculateStaffNeeds, calculateEquipmentNeeds, countMenuDishes } from '../../lib/cateringFormulas'
 
 export default function AdminBookings() {
   const [searchParams] = useSearchParams()
@@ -101,7 +102,9 @@ export default function AdminBookings() {
     if (!selectedBooking) return
     const current = selectedBooking.assigned_staff || []
     const exists = current.find(x => x.id === s.id)
-    const newStaff = exists ? current.filter(x => x.id !== s.id) : [...current, { id: s.id, name: s.name, role }]
+    const newStaff = exists 
+      ? current.filter(x => x.id !== s.id) 
+      : [...current, { id: s.id, name: s.name, role, type: s.type || 'regular', daily_rate: s.daily_rate || 0, phone: s.phone }]
     setSelectedBooking({ ...selectedBooking, assigned_staff: newStaff })
   }
 
@@ -110,6 +113,91 @@ export default function AdminBookings() {
     const current = selectedBooking.assigned_equipment || {}
     if (qty <= 0) { const { [id]: _, ...rest } = current; setSelectedBooking({ ...selectedBooking, assigned_equipment: rest }) }
     else setSelectedBooking({ ...selectedBooking, assigned_equipment: { ...current, [id]: qty } })
+  }
+
+  // Date-based availability: what's already assigned to OTHER bookings on the same date
+  const getAvailability = () => {
+    if (!selectedBooking) return { usedEquipment: {}, busyStaffIds: [] }
+    return getDateConflicts(bookings, selectedBooking.event_date, selectedBooking.id)
+  }
+
+  const { usedEquipment, busyStaffIds } = selectedBooking ? getAvailability() : { usedEquipment: {}, busyStaffIds: [] }
+
+  // Same-day bookings count
+  const sameDayBookings = selectedBooking 
+    ? bookings.filter(b => b.event_date === selectedBooking.event_date && b.id !== selectedBooking.id && b.status !== 'cancelled')
+    : []
+
+  // Get available qty for an equipment item today
+  const getAvailableToday = (item) => Math.max((item.quantity || 0) - (usedEquipment[item.id] || 0), 0)
+
+  // Check if staff is busy on the selected booking's date
+  const isStaffBusyToday = (staffId) => busyStaffIds.includes(staffId)
+
+  // Auto-assign handler
+  const handleAutoAssign = () => {
+    if (!selectedBooking) return
+    const pax = selectedBooking.number_of_pax || 60
+    const menuDishes = countMenuDishes(selectedBooking.menu_package)
+    
+    // --- Staff ---
+    const staffNeeds = calculateStaffNeeds(pax)
+    const newStaff = []
+    
+    for (const [role, needed] of Object.entries(staffNeeds)) {
+      // Filter candidates: match role, available, not busy today
+      const candidates = staff.filter(s => {
+        const roleMatch = s.role === role || 
+          (role === 'extra' && s.role === 'student') ||
+          (role === 'student' && s.role === 'extra')
+        return roleMatch && s.available !== false && !isStaffBusyToday(s.id)
+      })
+      // Sort: regular first, then on_call (cheaper first)
+      candidates.sort((a, b) => {
+        if ((a.type || 'regular') === 'regular' && (b.type || 'regular') !== 'regular') return -1
+        if ((a.type || 'regular') !== 'regular' && (b.type || 'regular') === 'regular') return 1
+        return (a.daily_rate || 0) - (b.daily_rate || 0)
+      })
+      candidates.slice(0, needed).forEach(s => {
+        newStaff.push({ id: s.id, name: s.name, role, type: s.type || 'regular', daily_rate: s.daily_rate || 0, phone: s.phone })
+      })
+    }
+
+    // --- Equipment ---
+    const eqNeeds = calculateEquipmentNeeds(pax, menuDishes)
+    const newEquip = {}
+    
+    equipment.forEach(item => {
+      const itemName = (item.name || '').toLowerCase().trim()
+      // Find matching formula
+      for (const [needName, qty] of Object.entries(eqNeeds)) {
+        if (itemName.includes(needName) || needName.includes(itemName) ||
+            (itemName.includes('goblet') && needName.includes('glass')) ||
+            (itemName.includes('flatware') && (needName.includes('spoon') || needName.includes('fork')))) {
+          const avail = getAvailableToday(item)
+          const assign = Math.min(qty, avail)
+          if (assign > 0) newEquip[item.id] = assign
+          break
+        }
+      }
+    })
+
+    setSelectedBooking({ ...selectedBooking, assigned_staff: newStaff, assigned_equipment: newEquip })
+    
+    // Summary alert
+    const totalOnCall = newStaff.filter(s => s.type === 'on_call').length
+    const onCallCost = newStaff.filter(s => s.type === 'on_call').reduce((sum, s) => sum + (s.daily_rate || 0), 0)
+    const rentalItems = equipment.filter(item => (item.type || 'owned') === 'rental' && newEquip[item.id])
+    const rentalCost = rentalItems.reduce((sum, item) => sum + (newEquip[item.id] || 0) * (item.rental_cost || 0), 0)
+    
+    let msg = `✅ Auto-assigned for ${pax} guests:\n\n`
+    msg += `👥 Staff: ${newStaff.length} total`
+    if (totalOnCall > 0) msg += ` (${totalOnCall} on-call = ₱${onCallCost.toLocaleString()})`
+    msg += `\n📦 Equipment: ${Object.keys(newEquip).length} items`
+    if (rentalCost > 0) msg += ` (rentals = ₱${rentalCost.toLocaleString()})`
+    if (sameDayBookings.length > 0) msg += `\n\n⚠️ ${sameDayBookings.length} other booking(s) on same date — availability adjusted`
+    msg += `\n\nReview below and click Save when ready.`
+    alert(msg)
   }
 
   const getStatusColor = (status) => ({ pending: 'bg-amber-100 text-amber-700', confirmed: 'bg-blue-100 text-blue-700', completed: 'bg-green-100 text-green-700', cancelled: 'bg-red-100 text-red-700' }[status] || 'bg-gray-100 text-gray-700')
@@ -334,18 +422,147 @@ export default function AdminBookings() {
                     </div>
                   )
                 })()}
-                <div className="bg-gray-50 rounded-xl p-4"><h3 className="font-semibold text-gray-700 mb-3">Assign Staff</h3>
-                  <div className="mb-3"><label className="text-sm text-gray-500 mb-2 block">Head Waiter</label><button onClick={() => setShowStaffPicker('head_waiter')} className="w-full p-3 border-2 border-dashed border-gray-300 rounded-lg text-left hover:border-red-400 hover:bg-red-50">{(selectedBooking.assigned_staff || []).filter(s => s.role === 'head_waiter').length > 0 ? <div className="flex flex-wrap gap-2">{(selectedBooking.assigned_staff || []).filter(s => s.role === 'head_waiter').map(s => <span key={s.id} className="px-3 py-1 bg-red-100 text-red-700 rounded-full text-sm">{s.name}</span>)}</div> : <span className="text-gray-400">+ Select Head Waiter</span>}</button></div>
-                  <div><label className="text-sm text-gray-500 mb-2 block">Service Staff</label><button onClick={() => setShowStaffPicker('service')} className="w-full p-3 border-2 border-dashed border-gray-300 rounded-lg text-left hover:border-red-400 hover:bg-red-50">{(selectedBooking.assigned_staff || []).filter(s => s.role === 'service').length > 0 ? <div className="flex flex-wrap gap-2">{(selectedBooking.assigned_staff || []).filter(s => s.role === 'service').map(s => <span key={s.id} className="px-3 py-1 bg-pink-100 text-pink-700 rounded-full text-sm">{s.name}</span>)}</div> : <span className="text-gray-400">+ Select Service Staff</span>}</button></div>
+                <div className="bg-gray-50 rounded-xl p-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="font-semibold text-gray-700">Assign Staff & Equipment</h3>
+                    <button onClick={handleAutoAssign} className="px-3 py-1.5 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 flex items-center gap-1.5">⚡ Auto-Assign ({selectedBooking.number_of_pax} pax)</button>
+                  </div>
+
+                  {/* Same-day warning */}
+                  {sameDayBookings.length > 0 && (
+                    <div className="bg-amber-50 border border-amber-200 rounded-lg p-2.5 mb-3 text-xs">
+                      <p className="font-medium text-amber-800">📅 {sameDayBookings.length} other booking(s) on {selectedBooking.event_date}:</p>
+                      {sameDayBookings.map(b => <p key={b.id} className="text-amber-600 ml-4">• {b.customer_name} — {b.number_of_pax} pax ({b.status})</p>)}
+                    </div>
+                  )}
+
+                  {/* Staff Assignment */}
+                  <div className="mb-4">
+                    <label className="text-sm text-gray-500 mb-2 block font-medium">👥 Staff ({(selectedBooking.assigned_staff || []).length} assigned)</label>
+                    {['head_waiter', 'service', 'extra', 'student'].map(role => {
+                      const roleStaff = (selectedBooking.assigned_staff || []).filter(s => s.role === role)
+                      const roleLabels = { head_waiter: 'Head Waiter', service: 'Service', extra: 'Extra', student: 'Student' }
+                      const recommended = calculateStaffNeeds(selectedBooking.number_of_pax || 60)[role] || 0
+                      if (recommended === 0 && roleStaff.length === 0) return null
+                      return (
+                        <div key={role} className="mb-2">
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="text-xs text-gray-400">{roleLabels[role]} (need {recommended})</span>
+                            <span className={`text-xs font-medium ${roleStaff.length >= recommended ? 'text-green-600' : 'text-amber-600'}`}>{roleStaff.length}/{recommended}</span>
+                          </div>
+                          <button onClick={() => setShowStaffPicker(role)} className="w-full p-2.5 border-2 border-dashed border-gray-300 rounded-lg text-left hover:border-red-400 hover:bg-red-50">
+                            {roleStaff.length > 0 ? (
+                              <div className="flex flex-wrap gap-1.5">{roleStaff.map(s => (
+                                <span key={s.id} className={`px-2 py-0.5 rounded-full text-xs font-medium ${(s.type || 'regular') === 'on_call' ? 'bg-orange-100 text-orange-700' : 'bg-red-100 text-red-700'}`}>
+                                  {s.name} {(s.type || 'regular') === 'on_call' && `📞`}
+                                </span>
+                              ))}</div>
+                            ) : <span className="text-gray-400 text-sm">+ Select {roleLabels[role]}</span>}
+                          </button>
+                        </div>
+                      )
+                    })}
+                  </div>
+
+                  {/* Equipment Assignment */}
+                  <div className="mb-4">
+                    <label className="text-sm text-gray-500 mb-2 block font-medium">📦 Equipment</label>
+                    <div className="space-y-1.5 max-h-60 overflow-y-auto">
+                      {equipment.map(item => {
+                        const qty = (selectedBooking.assigned_equipment || {})[item.id] || 0
+                        const availToday = getAvailableToday(item)
+                        const isRental = (item.type || 'owned') === 'rental'
+                        const usedByOthers = usedEquipment[item.id] || 0
+                        return (
+                          <div key={item.id} className="flex items-center justify-between py-1.5 border-b border-gray-100">
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-1.5">
+                                <p className="font-medium text-gray-800 text-sm truncate">{item.name}</p>
+                                {isRental && <span className="px-1.5 py-0.5 bg-orange-100 text-orange-600 rounded text-[10px] font-medium shrink-0">Rental</span>}
+                              </div>
+                              <p className="text-[11px] text-gray-400">
+                                {isRental ? `${item.supplier || 'Supplier'} • ₱${(item.rental_cost || 0).toLocaleString()}/unit` : `${availToday} free today${usedByOthers > 0 ? ` (${usedByOthers} on other events)` : ''}`}
+                              </p>
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                              <button onClick={() => updateEquipQty(item.id, qty - 1)} className="w-7 h-7 rounded-full bg-gray-200 flex items-center justify-center hover:bg-gray-300 text-xs"><Minus size={12} /></button>
+                              <span className={`w-7 text-center font-medium text-sm ${qty > availToday && !isRental ? 'text-red-600' : ''}`}>{qty}</span>
+                              <button onClick={() => updateEquipQty(item.id, qty + 1)} disabled={!isRental && qty >= availToday} className="w-7 h-7 rounded-full bg-red-700 text-white flex items-center justify-center hover:bg-red-800 disabled:opacity-30 text-xs"><Plus size={12} /></button>
+                            </div>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Cost Summary */}
+                  {(() => {
+                    const assignedStaff = selectedBooking.assigned_staff || []
+                    const assignedEquip = selectedBooking.assigned_equipment || {}
+                    const onCallStaff = assignedStaff.filter(s => (s.type || 'regular') === 'on_call')
+                    const onCallCost = onCallStaff.reduce((sum, s) => sum + (s.daily_rate || 0), 0)
+                    const rentalCost = equipment
+                      .filter(e => (e.type || 'owned') === 'rental' && assignedEquip[e.id])
+                      .reduce((sum, e) => sum + (assignedEquip[e.id] || 0) * (e.rental_cost || 0), 0)
+                    const totalExtra = onCallCost + rentalCost
+                    if (totalExtra === 0) return null
+                    return (
+                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-3">
+                        <p className="text-sm font-semibold text-blue-800 mb-1">💰 Extra Costs</p>
+                        {onCallCost > 0 && <p className="text-xs text-blue-600">📞 On-Call Staff ({onCallStaff.length}): ₱{onCallCost.toLocaleString()}</p>}
+                        {rentalCost > 0 && <p className="text-xs text-blue-600">🏷️ Equipment Rental: ₱{rentalCost.toLocaleString()}</p>}
+                        <p className="text-sm font-bold text-blue-800 mt-1 pt-1 border-t border-blue-200">Total Additional: ₱{totalExtra.toLocaleString()}</p>
+                      </div>
+                    )
+                  })()}
+
+                  <button onClick={saveAssignment} disabled={saving} className="w-full py-3 bg-red-700 text-white rounded-xl font-medium hover:bg-red-800 disabled:opacity-50 flex items-center justify-center gap-2"><Save size={20} /> {saving ? 'Saving...' : 'Save Assignment'}</button>
                 </div>
-                <div className="bg-gray-50 rounded-xl p-4"><h3 className="font-semibold text-gray-700 mb-3">Assign Tables & Chairs</h3><div className="space-y-2">{equipment.map(item => { const qty = (selectedBooking.assigned_equipment || {})[item.id] || 0; return (<div key={item.id} className="flex items-center justify-between py-2 border-b border-gray-100"><div><p className="font-medium text-gray-800">{item.name}</p><p className="text-xs text-gray-500">{item.quantity} available</p></div><div className="flex items-center gap-2"><button onClick={() => updateEquipQty(item.id, qty - 1)} className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center hover:bg-gray-300"><Minus size={14} /></button><span className="w-8 text-center font-medium">{qty}</span><button onClick={() => updateEquipQty(item.id, qty + 1)} disabled={qty >= item.quantity} className="w-8 h-8 rounded-full bg-red-700 text-white flex items-center justify-center hover:bg-red-800 disabled:opacity-50"><Plus size={14} /></button></div></div>) })}</div></div>
-                <button onClick={saveAssignment} disabled={saving} className="w-full py-3 bg-red-700 text-white rounded-xl font-medium hover:bg-red-800 disabled:opacity-50 flex items-center justify-center gap-2"><Save size={20} /> {saving ? 'Saving...' : 'Save Assignment'}</button>
               </div>
             </div>
           ) : (<div className="bg-white rounded-2xl shadow-lg p-12 text-center"><div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4"><Calendar size={40} className="text-gray-400" /></div><h2 className="text-xl font-semibold text-gray-800 mb-2">Select a Booking</h2><p className="text-gray-500">Click on a booking to view and assign</p></div>)}
         </div>
       </div>
-      {showStaffPicker && (<div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"><div className="bg-white rounded-2xl w-full max-w-md max-h-[80vh] overflow-hidden"><div className="bg-red-700 text-white p-4 flex items-center justify-between"><h3 className="font-semibold">Select {showStaffPicker === 'head_waiter' ? 'Head Waiter' : 'Service Staff'}</h3><button onClick={() => setShowStaffPicker(null)} className="p-1 hover:bg-red-800 rounded-full"><X size={24} /></button></div><div className="overflow-y-auto max-h-[60vh]">{staff.filter(s => showStaffPicker === 'head_waiter' ? s.role === 'head_waiter' : s.role !== 'head_waiter').map(s => { const isSel = (selectedBooking?.assigned_staff || []).some(x => x.id === s.id); return (<button key={s.id} onClick={() => toggleStaff(s, showStaffPicker)} disabled={!s.available} className={`w-full p-4 flex items-center justify-between border-b border-gray-100 ${!s.available ? 'opacity-50' : 'hover:bg-red-50'} ${isSel ? 'bg-red-100' : ''}`}><div className="text-left"><p className="font-medium text-gray-800">{s.name}</p>{s.note && <p className="text-xs text-gray-500">{s.note}</p>}{!s.available && <p className="text-xs text-red-500">Unavailable</p>}</div>{isSel && <Check size={20} className="text-red-700" />}</button>) })}</div><div className="p-4 border-t"><button onClick={() => setShowStaffPicker(null)} className="w-full py-2 bg-red-700 text-white rounded-lg font-medium">Done</button></div></div></div>)}
+      {showStaffPicker && (<div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"><div className="bg-white rounded-2xl w-full max-w-md max-h-[80vh] overflow-hidden"><div className="bg-red-700 text-white p-4 flex items-center justify-between"><h3 className="font-semibold">Select {{ head_waiter: 'Head Waiter', service: 'Service Staff', extra: 'Extra Staff', student: 'Students' }[showStaffPicker] || 'Staff'}</h3><button onClick={() => setShowStaffPicker(null)} className="p-1 hover:bg-red-800 rounded-full"><X size={24} /></button></div>
+        <div className="overflow-y-auto max-h-[60vh]">
+          {staff.filter(s => {
+            if (showStaffPicker === 'head_waiter') return s.role === 'head_waiter'
+            if (showStaffPicker === 'service') return s.role === 'service' || s.role === 'extra'
+            if (showStaffPicker === 'extra') return s.role === 'extra' || s.role === 'student'
+            if (showStaffPicker === 'student') return s.role === 'student' || s.role === 'extra'
+            return true
+          }).sort((a, b) => {
+            // Regular first, then on-call
+            if ((a.type || 'regular') === 'regular' && (b.type || 'regular') !== 'regular') return -1
+            if ((a.type || 'regular') !== 'regular' && (b.type || 'regular') === 'regular') return 1
+            return a.name.localeCompare(b.name)
+          }).map(s => {
+            const isSel = (selectedBooking?.assigned_staff || []).some(x => x.id === s.id)
+            const isBusy = isStaffBusyToday(s.id) && !isSel
+            const isOnCall = (s.type || 'regular') === 'on_call'
+            const disabled = !s.available || isBusy
+            return (
+              <button key={s.id} onClick={() => toggleStaff(s, showStaffPicker)} disabled={disabled} className={`w-full p-4 flex items-center justify-between border-b border-gray-100 ${disabled ? 'opacity-40 cursor-not-allowed' : 'hover:bg-red-50'} ${isSel ? 'bg-red-50' : ''}`}>
+                <div className="text-left">
+                  <div className="flex items-center gap-2">
+                    <p className="font-medium text-gray-800">{s.name}</p>
+                    {isOnCall && <span className="px-1.5 py-0.5 bg-orange-100 text-orange-600 rounded text-[10px] font-medium">📞 On-Call</span>}
+                    {!isOnCall && <span className="px-1.5 py-0.5 bg-green-100 text-green-600 rounded text-[10px] font-medium">Regular</span>}
+                  </div>
+                  <div className="flex items-center gap-2 mt-0.5">
+                    {s.note && <p className="text-xs text-gray-500">{s.note}</p>}
+                    {isOnCall && s.daily_rate > 0 && <p className="text-xs text-orange-500">₱{s.daily_rate.toLocaleString()}/day</p>}
+                    {isOnCall && s.phone && <p className="text-xs text-gray-400">{s.phone}</p>}
+                  </div>
+                  {isBusy && <p className="text-xs text-red-500 mt-0.5">📅 Busy on {selectedBooking?.event_date}</p>}
+                  {!s.available && !isBusy && <p className="text-xs text-red-500 mt-0.5">Unavailable</p>}
+                </div>
+                {isSel && <Check size={20} className="text-red-700" />}
+              </button>
+            )
+          })}
+        </div>
+        <div className="p-4 border-t"><button onClick={() => setShowStaffPicker(null)} className="w-full py-2 bg-red-700 text-white rounded-lg font-medium">Done</button></div></div></div>)}
       {showEditModal && selectedBooking && (<AdminBookingEdit booking={selectedBooking} onClose={() => setShowEditModal(false)} onSave={handleEditSave} />)}
     </div></div>
   )
