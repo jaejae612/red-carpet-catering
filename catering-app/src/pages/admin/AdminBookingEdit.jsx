@@ -54,6 +54,32 @@ export default function AdminBookingEdit({ booking, onClose, onSave }) {
     setSuccess('')
 
     try {
+      // Validate status vs payment
+      if (formData.status === 'completed' && booking.status !== 'completed') {
+        if (!booking.payment_status || booking.payment_status === 'unpaid') {
+          const proceed = window.confirm(
+            '⚠️ This booking has NO payments recorded.\n\n' +
+            'Are you sure you want to mark it as completed without any payment?'
+          )
+          if (!proceed) { setLoading(false); return }
+        } else if (booking.payment_status === 'deposit_paid') {
+          const balance = (formData.total_amount || 0) - (formData.amount_paid || 0)
+          const proceed = window.confirm(
+            `⚠️ This booking still has a balance of ₱${balance.toLocaleString()}.\n\n` +
+            'Are you sure you want to mark it as completed?'
+          )
+          if (!proceed) { setLoading(false); return }
+        }
+      }
+
+      if (formData.status === 'cancelled' && booking.status !== 'cancelled') {
+        const hasPayments = (booking.amount_paid || 0) > 0
+        const msg = hasPayments
+          ? '⚠️ This booking has payments. Cancelling will set payment to "Refund Pending".\n\nContinue?'
+          : 'Are you sure you want to cancel this booking?'
+        if (!window.confirm(msg)) { setLoading(false); return }
+      }
+
       const updateData = {
         customer_name: formData.customer_name,
         customer_phone: formData.customer_phone,

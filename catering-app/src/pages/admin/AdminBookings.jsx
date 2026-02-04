@@ -43,9 +43,48 @@ export default function AdminBookings() {
     } catch (error) { console.error('Error:', error) } finally { setLoading(false) }
   }
 
-  const updateStatus = async (id, status) => {
-    await supabase.from('bookings').update({ status }).eq('id', id)
-    setBookings(prev => prev.map(b => b.id === id ? { ...b, status } : b))
+  const updateStatus = async (id, newStatus) => {
+    const booking = bookings.find(b => b.id === id)
+    if (!booking) return
+
+    // Prevent completing if unpaid
+    if (newStatus === 'completed' && (!booking.payment_status || booking.payment_status === 'unpaid')) {
+      const proceed = window.confirm(
+        '⚠️ This booking has NO payments recorded.\n\n' +
+        'Are you sure you want to mark it as completed without any payment?\n\n' +
+        'Tip: Record a payment first using the Payment section below.'
+      )
+      if (!proceed) return
+    }
+
+    // Warn if completing with only partial payment
+    if (newStatus === 'completed' && booking.payment_status === 'deposit_paid') {
+      const balance = (booking.total_amount || 0) - (booking.amount_paid || 0)
+      const proceed = window.confirm(
+        `⚠️ This booking still has a balance of ₱${balance.toLocaleString()}.\n\n` +
+        'Are you sure you want to mark it as completed?\n\n' +
+        'The balance will still be tracked in the payment section.'
+      )
+      if (!proceed) return
+    }
+
+    // Confirm cancellation
+    if (newStatus === 'cancelled' && booking.status !== 'cancelled') {
+      const hasPayments = booking.amount_paid > 0 || booking.payment_status === 'deposit_paid' || booking.payment_status === 'fully_paid'
+      const msg = hasPayments 
+        ? '⚠️ This booking has payments recorded.\n\nCancelling will change payment status to "Refund Pending".\n\nAre you sure?'
+        : 'Are you sure you want to cancel this booking?'
+      if (!window.confirm(msg)) return
+    }
+
+    await supabase.from('bookings').update({ status: newStatus }).eq('id', id)
+    
+    // Refetch to get trigger-updated payment_status
+    const { data } = await supabase.from('bookings').select('*').eq('id', id).single()
+    if (data) {
+      setBookings(prev => prev.map(b => b.id === id ? data : b))
+      if (selectedBooking?.id === id) setSelectedBooking(data)
+    }
   }
 
   const saveAssignment = async () => {
@@ -216,13 +255,33 @@ export default function AdminBookings() {
           {/* Results count */}
           <p className="text-xs text-gray-500 mb-2">{filtered.length} booking{filtered.length !== 1 ? 's' : ''} found</p>
           
-          <div className="space-y-2 max-h-[60vh] overflow-y-auto">{filtered.map(b => (<button key={b.id} onClick={() => setSelectedBooking(b)} className={`w-full p-3 rounded-xl text-left ${selectedBooking?.id === b.id ? 'bg-red-50 border-2 border-red-700' : 'bg-gray-50 hover:bg-gray-100 border-2 border-transparent'}`}><div className="flex justify-between items-start mb-1"><span className="font-medium text-gray-800 truncate">{b.customer_name}</span><span className={`px-2 py-0.5 rounded-full text-xs font-medium ${getStatusColor(b.status)}`}>{b.status}</span></div><p className="text-sm text-gray-500">{b.event_date}</p><div className="flex items-center justify-between mt-1"><span className="text-sm text-gray-500">{b.number_of_pax} pax • ₱{b.total_amount?.toLocaleString()}</span><span className={`px-2 py-0.5 rounded-full text-xs font-medium ${getPaymentStatusColor(b.payment_status)}`}>{getPaymentStatusLabel(b.payment_status)}</span></div></button>))}{filtered.length === 0 && <p className="text-center text-gray-500 py-4">No bookings found</p>}</div>
+          <div className="space-y-2 max-h-[60vh] overflow-y-auto">{filtered.map(b => (<button key={b.id} onClick={() => setSelectedBooking(b)} className={`w-full p-3 rounded-xl text-left ${selectedBooking?.id === b.id ? 'bg-red-50 border-2 border-red-700' : 'bg-gray-50 hover:bg-gray-100 border-2 border-transparent'}`}><div className="flex justify-between items-start mb-1"><span className="font-medium text-gray-800 truncate">{b.customer_name}</span><div className="flex items-center gap-1">{b.status === 'completed' && (!b.payment_status || b.payment_status === 'unpaid') && <span title="Completed but unpaid" className="text-red-500 text-xs">⚠️</span>}<span className={`px-2 py-0.5 rounded-full text-xs font-medium ${getStatusColor(b.status)}`}>{b.status}</span></div></div><p className="text-sm text-gray-500">{b.event_date}</p><div className="flex items-center justify-between mt-1"><span className="text-sm text-gray-500">{b.number_of_pax} pax • ₱{b.total_amount?.toLocaleString()}</span><span className={`px-2 py-0.5 rounded-full text-xs font-medium ${getPaymentStatusColor(b.payment_status)}`}>{getPaymentStatusLabel(b.payment_status)}</span></div></button>))}{filtered.length === 0 && <p className="text-center text-gray-500 py-4">No bookings found</p>}</div>
         </div></div>
         <div className="lg:col-span-2">
           {selectedBooking ? (
             <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
-              <div className="bg-gradient-to-r from-red-700 to-red-800 text-white p-6"><div className="flex justify-between items-start"><div><h2 className="text-xl font-bold">{selectedBooking.customer_name}</h2><p className="text-red-200">{menuPackages[selectedBooking.menu_package]?.name} • {selectedBooking.menu_option}</p></div><div className="flex items-center gap-2 flex-wrap justify-end"><button onClick={handleDuplicate} className="bg-white/20 hover:bg-white/30 px-3 py-1 rounded-lg text-sm flex items-center gap-1"><Copy size={14} /> Duplicate</button><button onClick={handleSendEmail} disabled={sendingEmail} className="bg-white/20 hover:bg-white/30 px-3 py-1 rounded-lg text-sm flex items-center gap-1 disabled:opacity-50"><Send size={14} /> {sendingEmail ? 'Sending...' : 'Email'}</button><button onClick={() => setShowEditModal(true)} className="bg-white/20 hover:bg-white/30 px-3 py-1 rounded-lg text-sm flex items-center gap-1"><Edit2 size={14} /> Edit</button><select value={selectedBooking.status} onChange={(e) => { updateStatus(selectedBooking.id, e.target.value); setSelectedBooking({ ...selectedBooking, status: e.target.value }) }} className="bg-white/20 text-white border-0 rounded-lg px-3 py-1 text-sm"><option value="pending" className="text-gray-800">Pending</option><option value="confirmed" className="text-gray-800">Confirmed</option><option value="completed" className="text-gray-800">Completed</option><option value="cancelled" className="text-gray-800">Cancelled</option></select></div></div></div>
+              <div className="bg-gradient-to-r from-red-700 to-red-800 text-white p-6"><div className="flex justify-between items-start"><div><h2 className="text-xl font-bold">{selectedBooking.customer_name}</h2><p className="text-red-200">{menuPackages[selectedBooking.menu_package]?.name} • {selectedBooking.menu_option}</p></div><div className="flex items-center gap-2 flex-wrap justify-end"><button onClick={handleDuplicate} className="bg-white/20 hover:bg-white/30 px-3 py-1 rounded-lg text-sm flex items-center gap-1"><Copy size={14} /> Duplicate</button><button onClick={handleSendEmail} disabled={sendingEmail} className="bg-white/20 hover:bg-white/30 px-3 py-1 rounded-lg text-sm flex items-center gap-1 disabled:opacity-50"><Send size={14} /> {sendingEmail ? 'Sending...' : 'Email'}</button><button onClick={() => setShowEditModal(true)} className="bg-white/20 hover:bg-white/30 px-3 py-1 rounded-lg text-sm flex items-center gap-1"><Edit2 size={14} /> Edit</button><select value={selectedBooking.status} onChange={(e) => updateStatus(selectedBooking.id, e.target.value)} className="bg-white/20 text-white border-0 rounded-lg px-3 py-1 text-sm"><option value="pending" className="text-gray-800">Pending</option><option value="confirmed" className="text-gray-800">Confirmed</option><option value="completed" className="text-gray-800">Completed</option><option value="cancelled" className="text-gray-800">Cancelled</option></select></div></div></div>
               <div className="p-6 space-y-6">
+                {/* Warning: Completed but unpaid */}
+                {selectedBooking.status === 'completed' && (!selectedBooking.payment_status || selectedBooking.payment_status === 'unpaid') && (
+                  <div className="bg-red-50 border border-red-200 rounded-xl p-3 flex items-center gap-3">
+                    <span className="text-xl">⚠️</span>
+                    <div>
+                      <p className="text-sm font-semibold text-red-800">Completed but Unpaid</p>
+                      <p className="text-xs text-red-600">This booking is marked as completed but has no payments recorded. Record a payment below.</p>
+                    </div>
+                  </div>
+                )}
+                {/* Warning: Completed but partial payment */}
+                {selectedBooking.status === 'completed' && selectedBooking.payment_status === 'deposit_paid' && (
+                  <div className="bg-amber-50 border border-amber-200 rounded-xl p-3 flex items-center gap-3">
+                    <span className="text-xl">💰</span>
+                    <div>
+                      <p className="text-sm font-semibold text-amber-800">Balance Remaining</p>
+                      <p className="text-xs text-amber-600">Event completed with ₱{Math.max((selectedBooking.total_amount || 0) - (selectedBooking.amount_paid || 0), 0).toLocaleString()} balance outstanding.</p>
+                    </div>
+                  </div>
+                )}
                 <div className="grid md:grid-cols-2 gap-4">
                   <div className="bg-gray-50 rounded-xl p-4"><h3 className="font-semibold text-gray-700 mb-3">Event</h3><div className="space-y-2 text-sm"><p className="flex items-start gap-2"><Calendar size={16} className="text-gray-400 mt-0.5" />{selectedBooking.event_date} at {selectedBooking.event_time}</p><p className="flex items-start gap-2"><MapPin size={16} className="text-gray-400 mt-0.5" />{selectedBooking.venue}</p><p className="flex items-center gap-2"><Users size={16} className="text-gray-400" />{selectedBooking.number_of_pax} guests</p>{selectedBooking.motif && <p>🎨 {selectedBooking.motif}</p>}</div></div>
                   <div className="bg-gray-50 rounded-xl p-4"><h3 className="font-semibold text-gray-700 mb-3">Contact</h3><div className="space-y-2 text-sm"><p className="flex items-center gap-2"><Phone size={16} className="text-gray-400" />{selectedBooking.customer_phone}</p><p className="flex items-center gap-2"><Mail size={16} className="text-gray-400" />{selectedBooking.customer_email}</p></div></div>

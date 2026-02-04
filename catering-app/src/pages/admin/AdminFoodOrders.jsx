@@ -32,13 +32,49 @@ export default function AdminFoodOrders() {
   }
 
   const updateOrderStatus = async (orderId, newStatus) => {
+    const order = orders.find(o => o.id === orderId)
+    if (!order) return
+
+    // Prevent marking delivered if unpaid
+    if (newStatus === 'delivered' && (!order.payment_status || order.payment_status === 'unpaid')) {
+      const proceed = window.confirm(
+        '⚠️ This order has NO payments recorded.\n\n' +
+        'Are you sure you want to mark it as delivered without any payment?\n\n' +
+        'Tip: Record a payment first using the Payment section below.'
+      )
+      if (!proceed) return
+    }
+
+    // Warn on partial payment
+    if (newStatus === 'delivered' && order.payment_status === 'deposit_paid') {
+      const balance = (order.total_amount || 0) - (order.amount_paid || 0)
+      const proceed = window.confirm(
+        `⚠️ This order still has a balance of ₱${balance.toLocaleString()}.\n\n` +
+        'Are you sure you want to mark it as delivered?'
+      )
+      if (!proceed) return
+    }
+
+    // Confirm cancellation
+    if (newStatus === 'cancelled' && order.status !== 'cancelled') {
+      const hasPayments = (order.amount_paid || 0) > 0
+      const msg = hasPayments
+        ? '⚠️ This order has payments. Cancelling will set payment to "Refund Pending".\n\nContinue?'
+        : 'Are you sure you want to cancel this order?'
+      if (!window.confirm(msg)) return
+    }
+
     const { error } = await supabase
       .from('food_orders')
       .update({ status: newStatus, updated_at: new Date().toISOString() })
       .eq('id', orderId)
     
     if (!error) {
-      setOrders(orders.map(o => o.id === orderId ? { ...o, status: newStatus } : o))
+      // Refetch to get trigger-updated payment_status
+      const { data } = await supabase.from('food_orders').select('*').eq('id', orderId).single()
+      if (data) {
+        setOrders(prev => prev.map(o => o.id === orderId ? data : o))
+      }
     }
   }
 
