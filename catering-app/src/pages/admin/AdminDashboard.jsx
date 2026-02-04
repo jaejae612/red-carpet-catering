@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import { TrendingUp, Users, Calendar, Package, Clock, ChevronDown, ChevronRight, Trash2, AlertTriangle, RefreshCw } from 'lucide-react'
 import { DashboardSkeleton } from '../../components/SkeletonLoaders'
+import RevenueCharts from '../../components/RevenueCharts'
 
 // Custom Peso Icon component
 const PesoSign = ({ className, size = 20 }) => (
@@ -92,36 +93,6 @@ export default function AdminDashboardStats() {
   const goToBookings = (filterType, filterValue) => {
     navigate(`/admin/bookings?${filterType}=${filterValue}`)
   }
-
-  // Group bookings by month for chart
-  const getMonthlyData = () => {
-    const months = {}
-    const now = new Date()
-    
-    for (let i = 5; i >= 0; i--) {
-      const date = new Date(now.getFullYear(), now.getMonth() - i, 1)
-      const key = date.toLocaleDateString('en-US', { month: 'short', year: '2-digit' })
-      months[key] = { bookings: 0, revenue: 0, guests: 0 }
-    }
-    
-    // Fill in data - only count paid bookings for revenue
-    bookings.forEach(b => {
-      const date = new Date(b.event_date || b.created_at)
-      const key = date.toLocaleDateString('en-US', { month: 'short', year: '2-digit' })
-      if (months[key]) {
-        months[key].bookings++
-        if (b.payment_status === 'deposit_paid' || b.payment_status === 'fully_paid') {
-          months[key].revenue += b.total_amount || 0
-        }
-        months[key].guests += b.number_of_pax || 0
-      }
-    })
-    
-    return Object.entries(months).map(([month, data]) => ({ month, ...data }))
-  }
-
-  const monthlyData = getMonthlyData()
-  const maxRevenue = Math.max(...monthlyData.map(d => d.revenue), 1)
 
   // Top customers
   const getTopCustomers = () => {
@@ -335,36 +306,10 @@ export default function AdminDashboardStats() {
           </Link>
         </div>
 
-        <div className="grid lg:grid-cols-3 gap-6">
-          {/* Revenue Chart */}
-          <div className="lg:col-span-2 bg-white rounded-2xl shadow-lg p-6">
-            <h2 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
-              <TrendingUp size={20} className="text-green-600" />
-              Monthly Revenue
-            </h2>
-            <div className="space-y-3">
-              {monthlyData.map((data, i) => (
-                <div key={i} className="flex items-center gap-3">
-                  <span className="w-16 text-sm text-gray-500">{data.month}</span>
-                  <div className="flex-1 h-8 bg-gray-100 rounded-full overflow-hidden">
-                    <div 
-                      className="h-full bg-gradient-to-r from-red-500 to-red-700 rounded-full flex items-center justify-end pr-2"
-                      style={{ width: `${Math.max((data.revenue / maxRevenue) * 100, 5)}%` }}
-                    >
-                      {data.revenue > 0 && (
-                        <span className="text-xs text-white font-medium">₱{(data.revenue / 1000).toFixed(0)}k</span>
-                      )}
-                    </div>
-                  </div>
-                  <span className="w-12 text-sm text-gray-600 text-right">{data.bookings}</span>
-                </div>
-              ))}
-            </div>
-            <div className="flex justify-end mt-2 text-xs text-gray-400">
-              <span>Bookings count →</span>
-            </div>
-          </div>
+        {/* Revenue Charts */}
+        <RevenueCharts bookings={bookings} foodOrders={foodOrders} />
 
+        <div className="grid lg:grid-cols-3 gap-6">
           {/* Booking & Payment Status - CLICKABLE */}
           <div className="bg-white rounded-2xl shadow-lg p-6">
             <h2 className="text-lg font-bold text-gray-800 mb-2">📋 Booking Status</h2>
@@ -433,10 +378,7 @@ export default function AdminDashboardStats() {
               />
             </div>
           </div>
-        </div>
 
-        {/* Bottom Row */}
-        <div className="grid lg:grid-cols-2 gap-6 mt-6">
           {/* Top Customers */}
           <div className="bg-white rounded-2xl shadow-lg p-6">
             <h2 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
