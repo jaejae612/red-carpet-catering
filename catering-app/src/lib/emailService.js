@@ -14,10 +14,14 @@ export const sendEmail = async ({ to, subject, html }) => {
   }
   
   try {
+    // Get current session token for auth
+    const { data: { session } } = await supabase.auth.getSession()
+    
     const response = await fetch('https://uitplgqukaxrribgrpvv.supabase.co/functions/v1/send-email', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'Authorization': `Bearer ${session?.access_token || ''}`,
       },
       body: JSON.stringify({ to, subject, html })
     })
