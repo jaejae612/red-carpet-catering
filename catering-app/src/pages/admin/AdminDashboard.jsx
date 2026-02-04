@@ -88,6 +88,8 @@ export default function AdminDashboardStats() {
   const unpaidBookings = filteredBookings.filter(b => b.payment_status === 'unpaid' || !b.payment_status).length
   const depositPaid = filteredBookings.filter(b => b.payment_status === 'deposit_paid').length
   const fullyPaid = filteredBookings.filter(b => b.payment_status === 'fully_paid').length
+  const refundPending = filteredBookings.filter(b => b.payment_status === 'refund_pending').length
+  const refundedBookings = filteredBookings.filter(b => b.payment_status === 'refunded').length
 
   // Navigate to filtered bookings
   const goToBookings = (filterType, filterValue) => {
@@ -376,6 +378,26 @@ export default function AdminDashboardStats() {
                 bgColor="bg-green-500"
                 onClick={() => goToBookings('payment', 'fully_paid')}
               />
+              {refundPending > 0 && (
+                <StatusBar 
+                  label="🟠 Refund Pending" 
+                  count={refundPending} 
+                  total={filteredBookings.length}
+                  color="text-orange-600"
+                  bgColor="bg-orange-500"
+                  onClick={() => goToBookings('payment', 'refund_pending')}
+                />
+              )}
+              {refundedBookings > 0 && (
+                <StatusBar 
+                  label="⚪ Refunded" 
+                  count={refundedBookings} 
+                  total={filteredBookings.length}
+                  color="text-gray-500"
+                  bgColor="bg-gray-400"
+                  onClick={() => goToBookings('payment', 'refunded')}
+                />
+              )}
             </div>
           </div>
 

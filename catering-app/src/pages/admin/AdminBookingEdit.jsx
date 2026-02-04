@@ -17,6 +17,7 @@ export default function AdminBookingEdit({ booking, onClose, onSave }) {
     status: 'pending',
     payment_status: 'unpaid',
     deposit_amount: 0,
+    amount_paid: 0,
     payment_notes: '',
     total_amount: 0
   })
@@ -39,6 +40,7 @@ export default function AdminBookingEdit({ booking, onClose, onSave }) {
         status: booking.status || 'pending',
         payment_status: booking.payment_status || 'unpaid',
         deposit_amount: booking.deposit_amount || 0,
+        amount_paid: booking.amount_paid || 0,
         payment_notes: booking.payment_notes || '',
         total_amount: booking.total_amount || 0
       })
@@ -63,18 +65,8 @@ export default function AdminBookingEdit({ booking, onClose, onSave }) {
         motif: formData.motif,
         special_requests: formData.special_requests,
         status: formData.status,
-        payment_status: formData.payment_status,
-        deposit_amount: formData.deposit_amount,
         payment_notes: formData.payment_notes,
         total_amount: formData.total_amount
-      }
-
-      // Add payment timestamps
-      if (formData.payment_status === 'deposit_paid' && !booking.deposit_paid_at) {
-        updateData.deposit_paid_at = new Date().toISOString()
-      }
-      if (formData.payment_status === 'fully_paid' && !booking.balance_paid_at) {
-        updateData.balance_paid_at = new Date().toISOString()
       }
 
       const { error: updateError } = await supabase
@@ -258,36 +250,28 @@ export default function AdminBookingEdit({ booking, onClose, onSave }) {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Payment Status</label>
-                <div className="relative">
-                  <CreditCard className="absolute left-3 top-2.5 text-gray-400" size={18} />
-                  <select
-                    value={formData.payment_status}
-                    onChange={(e) => setFormData({ ...formData, payment_status: e.target.value })}
-                    className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 appearance-none bg-white"
-                  >
-                    <option value="unpaid">Unpaid</option>
-                    <option value="deposit_paid">Deposit Paid</option>
-                    <option value="fully_paid">Fully Paid</option>
-                    <option value="refunded">Refunded</option>
-                  </select>
+                <div className="px-4 py-2 bg-gray-100 rounded-lg flex items-center gap-2">
+                  <CreditCard size={16} className="text-gray-400" />
+                  <span className="font-medium text-gray-700">
+                    {{ unpaid: '🔴 Unpaid', deposit_paid: '🟡 Deposit Paid', fully_paid: '🟢 Fully Paid', refund_pending: '🟠 Refund Pending', refunded: '⚪ Refunded' }[formData.payment_status] || 'Unknown'}
+                  </span>
+                  <span className="text-xs text-gray-400 ml-auto">Auto-managed</span>
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Deposit Amount (₱)</label>
-                <input
-                  type="number"
-                  value={formData.deposit_amount}
-                  onChange={(e) => setFormData({ ...formData, deposit_amount: parseInt(e.target.value) || 0 })}
-                  className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
-                />
+                <label className="block text-sm font-medium text-gray-700 mb-1">Amount Paid</label>
+                <div className="px-4 py-2 bg-gray-100 rounded-lg font-semibold text-green-700">
+                  ₱{(formData.amount_paid || 0).toLocaleString()}
+                </div>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Balance Due</label>
                 <div className="px-4 py-2 bg-gray-100 rounded-lg font-semibold text-red-700">
-                  ₱{(formData.total_amount - formData.deposit_amount).toLocaleString()}
+                  ₱{Math.max((formData.total_amount || 0) - (formData.amount_paid || 0), 0).toLocaleString()}
                 </div>
               </div>
             </div>
+            <p className="text-xs text-gray-400 mt-2">💡 Payment status updates automatically when you record payments in the booking detail view.</p>
           </div>
 
           {/* Other Details */}

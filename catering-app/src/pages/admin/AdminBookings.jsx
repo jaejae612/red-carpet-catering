@@ -5,6 +5,7 @@ import { menuPackages } from '../../lib/menuData'
 import { ArrowLeft, Calendar, MapPin, Users, Phone, Mail, Check, Plus, Minus, X, Save, Search, Edit2, CreditCard, Send, Copy, Filter, ChevronDown, ChevronUp } from 'lucide-react'
 import { TableSkeleton } from '../../components/SkeletonLoaders'
 import { exportBookingsCSV, exportBookingsPDF } from '../../lib/exportUtils'
+import PaymentTracker from '../../components/PaymentTracker'
 import AdminBookingEdit from '../../components/AdminBookingEdit'
 import { sendBookingNotifications } from '../../lib/emailService'
 
@@ -74,9 +75,9 @@ export default function AdminBookings() {
 
   const getStatusColor = (status) => ({ pending: 'bg-amber-100 text-amber-700', confirmed: 'bg-blue-100 text-blue-700', completed: 'bg-green-100 text-green-700', cancelled: 'bg-red-100 text-red-700' }[status] || 'bg-gray-100 text-gray-700')
 
-  const getPaymentStatusColor = (status) => ({ unpaid: 'bg-red-100 text-red-700', deposit_paid: 'bg-amber-100 text-amber-700', fully_paid: 'bg-green-100 text-green-700', refunded: 'bg-gray-100 text-gray-700' }[status] || 'bg-gray-100 text-gray-700')
+  const getPaymentStatusColor = (status) => ({ unpaid: 'bg-red-100 text-red-700', deposit_paid: 'bg-amber-100 text-amber-700', fully_paid: 'bg-green-100 text-green-700', refund_pending: 'bg-orange-100 text-orange-700', refunded: 'bg-gray-100 text-gray-700' }[status] || 'bg-gray-100 text-gray-700')
 
-  const getPaymentStatusLabel = (status) => ({ unpaid: 'Unpaid', deposit_paid: 'Deposit Paid', fully_paid: 'Fully Paid', refunded: 'Refunded' }[status] || 'Unknown')
+  const getPaymentStatusLabel = (status) => ({ unpaid: 'Unpaid', deposit_paid: 'Deposit Paid', fully_paid: 'Fully Paid', refund_pending: 'Refund Pending', refunded: 'Refunded' }[status] || 'Unknown')
 
   const handleEditSave = () => {
     fetchData()
@@ -195,7 +196,7 @@ export default function AdminBookings() {
               <div className="mt-3 p-3 bg-gray-50 rounded-lg space-y-3">
                 <div className="grid grid-cols-2 gap-2">
                   <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)} className="px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white"><option value="all">All Status</option><option value="pending">Pending</option><option value="confirmed">Confirmed</option><option value="completed">Completed</option><option value="cancelled">Cancelled</option></select>
-                  <select value={paymentFilter} onChange={(e) => setPaymentFilter(e.target.value)} className="px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white"><option value="all">All Payment</option><option value="unpaid">Unpaid</option><option value="deposit_paid">Deposit Paid</option><option value="fully_paid">Fully Paid</option></select>
+                  <select value={paymentFilter} onChange={(e) => setPaymentFilter(e.target.value)} className="px-3 py-2 border border-gray-200 rounded-lg text-sm bg-white"><option value="all">All Payment</option><option value="unpaid">Unpaid</option><option value="deposit_paid">Deposit Paid</option><option value="fully_paid">Fully Paid</option><option value="refund_pending">Refund Pending</option><option value="refunded">Refunded</option></select>
                 </div>
                 <div>
                   <label className="text-xs text-gray-500 mb-1 block">Date Range</label>
@@ -226,17 +227,22 @@ export default function AdminBookings() {
                   <div className="bg-gray-50 rounded-xl p-4"><h3 className="font-semibold text-gray-700 mb-3">Event</h3><div className="space-y-2 text-sm"><p className="flex items-start gap-2"><Calendar size={16} className="text-gray-400 mt-0.5" />{selectedBooking.event_date} at {selectedBooking.event_time}</p><p className="flex items-start gap-2"><MapPin size={16} className="text-gray-400 mt-0.5" />{selectedBooking.venue}</p><p className="flex items-center gap-2"><Users size={16} className="text-gray-400" />{selectedBooking.number_of_pax} guests</p>{selectedBooking.motif && <p>🎨 {selectedBooking.motif}</p>}</div></div>
                   <div className="bg-gray-50 rounded-xl p-4"><h3 className="font-semibold text-gray-700 mb-3">Contact</h3><div className="space-y-2 text-sm"><p className="flex items-center gap-2"><Phone size={16} className="text-gray-400" />{selectedBooking.customer_phone}</p><p className="flex items-center gap-2"><Mail size={16} className="text-gray-400" />{selectedBooking.customer_email}</p></div></div>
                 </div>
-                {/* Payment Status */}
-                <div className="bg-gray-50 rounded-xl p-4">
-                  <h3 className="font-semibold text-gray-700 mb-3 flex items-center gap-2"><CreditCard size={18} /> Payment</h3>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
-                    <div><p className="text-sm text-gray-500">Total</p><p className="text-lg font-bold text-red-700">₱{selectedBooking.total_amount?.toLocaleString()}</p></div>
-                    <div><p className="text-sm text-gray-500">Deposit</p><p className="text-lg font-bold text-green-600">₱{(selectedBooking.deposit_amount || 0).toLocaleString()}</p></div>
-                    <div><p className="text-sm text-gray-500">Balance</p><p className="text-lg font-bold text-amber-600">₱{((selectedBooking.total_amount || 0) - (selectedBooking.deposit_amount || 0)).toLocaleString()}</p></div>
-                    <div><p className="text-sm text-gray-500">Status</p><span className={`px-3 py-1 rounded-full text-sm font-medium ${getPaymentStatusColor(selectedBooking.payment_status)}`}>{getPaymentStatusLabel(selectedBooking.payment_status)}</span></div>
-                  </div>
-                  {selectedBooking.payment_notes && <p className="mt-3 text-sm text-gray-600 bg-white rounded-lg p-2">📝 {selectedBooking.payment_notes}</p>}
-                </div>
+                {/* Payment Tracker */}
+                <PaymentTracker 
+                  bookingId={selectedBooking.id}
+                  totalAmount={selectedBooking.total_amount || 0}
+                  currentStatus={selectedBooking.payment_status}
+                  onStatusChange={() => {
+                    // Refresh booking data to get updated payment_status
+                    supabase.from('bookings').select('*').eq('id', selectedBooking.id).single()
+                      .then(({ data }) => {
+                        if (data) {
+                          setSelectedBooking(data)
+                          setBookings(prev => prev.map(b => b.id === data.id ? data : b))
+                        }
+                      })
+                  }}
+                />
                 {/* Customer History */}
                 {(() => {
                   const customerBookings = bookings.filter(b => 

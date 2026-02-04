@@ -6,6 +6,72 @@ import { menuPackages } from '../lib/menuData'
 import { Calendar, MapPin, Users, Clock, ChevronDown, ChevronUp, Plus, ShoppingBag, ClipboardList, Truck, Package, FileText } from 'lucide-react'
 import BookingReceipt from '../components/BookingReceipt'
 
+// Read-only payment view for customers
+function CustomerPaymentSummary({ bookingId, foodOrderId, totalAmount, paymentStatus }) {
+  const [payments, setPayments] = useState([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchPayments = async () => {
+      let query = supabase.from('payments').select('*').order('payment_date', { ascending: true })
+      if (bookingId) query = query.eq('booking_id', bookingId)
+      if (foodOrderId) query = query.eq('food_order_id', foodOrderId)
+      const { data } = await query
+      setPayments(data || [])
+      setLoading(false)
+    }
+    fetchPayments()
+  }, [bookingId, foodOrderId])
+
+  const totalPaid = payments.reduce((sum, p) => sum + Number(p.amount || 0), 0)
+  const balance = (totalAmount || 0) - totalPaid
+
+  const statusLabel = { unpaid: '🔴 Unpaid', deposit_paid: '🟡 Deposit Paid', fully_paid: '🟢 Fully Paid', refund_pending: '🟠 Refund Pending', refunded: '⚪ Refunded' }
+  const methodLabel = { gcash: '📱 GCash', maya: '📱 Maya', bank_transfer: '🏦 Bank Transfer', cash: '💵 Cash', card: '💳 Card', check: '🧾 Check' }
+
+  if (loading) return null
+
+  return (
+    <div className="mt-4 pt-4 border-t border-gray-200">
+      <h4 className="font-semibold text-gray-700 mb-3">💰 Payment</h4>
+      <div className="grid grid-cols-3 gap-3 mb-3">
+        <div className="bg-white rounded-lg p-2 text-center">
+          <p className="text-xs text-gray-500">Total</p>
+          <p className="font-bold text-gray-800">₱{(totalAmount || 0).toLocaleString()}</p>
+        </div>
+        <div className="bg-white rounded-lg p-2 text-center">
+          <p className="text-xs text-gray-500">Paid</p>
+          <p className="font-bold text-green-600">₱{totalPaid.toLocaleString()}</p>
+        </div>
+        <div className="bg-white rounded-lg p-2 text-center">
+          <p className="text-xs text-gray-500">{balance > 0 ? 'Balance' : 'Status'}</p>
+          <p className={`font-bold ${balance > 0 ? 'text-red-600' : 'text-green-600'}`}>
+            {balance > 0 ? `₱${balance.toLocaleString()}` : (statusLabel[paymentStatus] || '—')}
+          </p>
+        </div>
+      </div>
+      {payments.length > 0 && (
+        <div className="space-y-1.5">
+          {payments.map((p) => (
+            <div key={p.id} className="flex items-center justify-between bg-white rounded-lg px-3 py-2 text-sm">
+              <div className="flex items-center gap-2">
+                <span className="text-gray-500">{new Date(p.payment_date).toLocaleDateString('en-PH', { month: 'short', day: 'numeric' })}</span>
+                <span className="text-gray-400">•</span>
+                <span>{methodLabel[p.method] || p.method}</span>
+                {p.notes && <span className="text-gray-400 text-xs">— {p.notes}</span>}
+              </div>
+              <span className="font-medium text-green-700">₱{Number(p.amount).toLocaleString()}</span>
+            </div>
+          ))}
+        </div>
+      )}
+      {payments.length === 0 && (
+        <p className="text-sm text-gray-400 text-center py-2">No payments recorded yet</p>
+      )}
+    </div>
+  )
+}
+
 export default function MyOrdersPage() {
   const { user } = useAuth()
   const [searchParams, setSearchParams] = useSearchParams()
@@ -103,6 +169,8 @@ export default function MyOrdersPage() {
                       <p className="text-sm text-gray-600">{order.special_requests}</p>
                     </div>
                   )}
+                  {/* Payment Summary */}
+                  <CustomerPaymentSummary bookingId={order.id} totalAmount={order.total_amount} paymentStatus={order.payment_status} />
                   <div className="mt-4 pt-4 border-t border-gray-200">
                     <button
                       onClick={(e) => { e.stopPropagation(); setReceiptBooking(order) }}
@@ -179,6 +247,8 @@ export default function MyOrdersPage() {
                       <p className="text-sm text-gray-600">{order.special_instructions}</p>
                     </div>
                   )}
+                  {/* Payment Summary */}
+                  <CustomerPaymentSummary foodOrderId={order.id} totalAmount={order.total_amount} paymentStatus={order.payment_status} />
                 </div>
               )}
             </div>

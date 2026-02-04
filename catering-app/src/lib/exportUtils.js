@@ -43,7 +43,7 @@ const formatTime = (t) => {
   return `${hr > 12 ? hr - 12 : hr || 12}:${m} ${hr >= 12 ? 'PM' : 'AM'}`
 }
 const formatCurrency = (n) => n != null ? `₱${Number(n).toLocaleString()}` : ''
-const capitalize = (s) => s ? s.charAt(0).toUpperCase() + s.slice(1) : ''
+const capitalize = (s) => s ? s.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ') : ''
 const today = () => new Date().toISOString().split('T')[0]
 
 // ---- Bookings CSV ----
@@ -51,7 +51,7 @@ export const exportBookingsCSV = (bookings, filename) => {
   const headers = [
     'Date', 'Time', 'Customer', 'Phone', 'Email',
     'Venue', 'Package', 'Menu Option', 'Guests',
-    'Total (₱)', 'Deposit (₱)', 'Balance (₱)',
+    'Total (₱)', 'Paid (₱)', 'Balance (₱)',
     'Status', 'Payment', 'Motif', 'Special Requests', 'Created'
   ]
 
@@ -66,8 +66,8 @@ export const exportBookingsCSV = (bookings, filename) => {
     b.menu_option || '',
     b.number_of_pax,
     b.total_amount,
-    b.deposit_amount || 0,
-    (b.total_amount || 0) - (b.deposit_amount || 0),
+    b.amount_paid || 0,
+    Math.max((b.total_amount || 0) - (b.amount_paid || 0), 0),
     capitalize(b.status),
     capitalize(b.payment_status || 'unpaid'),
     b.motif || '',
@@ -144,6 +144,12 @@ const openPrintWindow = (title, tableHTML, summaryHTML = '') => {
         .status-preparing { background: #e0e7ff; color: #3730a3; }
         .status-ready { background: #d1fae5; color: #065f46; }
         .status-delivered { background: #dbeafe; color: #1e40af; }
+        .status-unpaid { background: #fee2e2; color: #991b1b; }
+        .status-deposit_paid { background: #fef3c7; color: #92400e; }
+        .status-fully_paid { background: #d1fae5; color: #065f46; }
+        .status-refund_pending { background: #ffedd5; color: #9a3412; }
+        .status-refunded { background: #f3f4f6; color: #4b5563; }
+        .status-paid { background: #d1fae5; color: #065f46; }
         .text-right { text-align: right; }
         .footer { margin-top: 20px; text-align: center; color: #999; font-size: 10px; border-top: 1px solid #e5e7eb; padding-top: 10px; }
         @media print { 
@@ -179,7 +185,7 @@ const statusBadge = (status) => `<span class="status status-${status || 'pending
 // ---- Bookings PDF ----
 export const exportBookingsPDF = (bookings, title) => {
   const totalRevenue = bookings.reduce((s, b) => s + (b.total_amount || 0), 0)
-  const totalDeposits = bookings.reduce((s, b) => s + (b.deposit_amount || 0), 0)
+  const totalPaid = bookings.reduce((s, b) => s + (b.amount_paid || 0), 0)
   const totalGuests = bookings.reduce((s, b) => s + (b.number_of_pax || 0), 0)
 
   const summaryHTML = `
@@ -187,8 +193,8 @@ export const exportBookingsPDF = (bookings, title) => {
       <div class="summary-card"><div class="label">Bookings</div><div class="value">${bookings.length}</div></div>
       <div class="summary-card"><div class="label">Total Guests</div><div class="value">${totalGuests.toLocaleString()}</div></div>
       <div class="summary-card"><div class="label">Total Revenue</div><div class="value">${formatCurrency(totalRevenue)}</div></div>
-      <div class="summary-card"><div class="label">Deposits Received</div><div class="value">${formatCurrency(totalDeposits)}</div></div>
-      <div class="summary-card"><div class="label">Balance Due</div><div class="value">${formatCurrency(totalRevenue - totalDeposits)}</div></div>
+      <div class="summary-card"><div class="label">Amount Paid</div><div class="value">${formatCurrency(totalPaid)}</div></div>
+      <div class="summary-card"><div class="label">Balance Due</div><div class="value">${formatCurrency(totalRevenue - totalPaid)}</div></div>
     </div>
   `
 
@@ -202,7 +208,7 @@ export const exportBookingsPDF = (bookings, title) => {
           <th>Package</th>
           <th>Pax</th>
           <th class="text-right">Total</th>
-          <th class="text-right">Deposit</th>
+          <th class="text-right">Paid</th>
           <th>Status</th>
           <th>Payment</th>
         </tr>
@@ -216,7 +222,7 @@ export const exportBookingsPDF = (bookings, title) => {
             <td>${b.menu_package || ''}<br/><span style="color:#666;font-size:10px">${b.menu_option || ''}</span></td>
             <td>${b.number_of_pax}</td>
             <td class="text-right">${formatCurrency(b.total_amount)}</td>
-            <td class="text-right">${formatCurrency(b.deposit_amount)}</td>
+            <td class="text-right">${formatCurrency(b.amount_paid)}</td>
             <td>${statusBadge(b.status)}</td>
             <td>${statusBadge(b.payment_status || 'unpaid')}</td>
           </tr>

@@ -4,6 +4,7 @@ import { ORDER_STATUSES, getStatusColor, getStatusName, getCategoryInfo } from '
 import { Package, Search, Calendar, Phone, MapPin, Clock, ChevronDown, ChevronUp, X } from 'lucide-react'
 import { TableSkeleton } from '../../components/SkeletonLoaders'
 import { exportFoodOrdersCSV, exportFoodOrdersPDF } from '../../lib/exportUtils'
+import PaymentTracker from '../../components/PaymentTracker'
 
 export default function AdminFoodOrders() {
   const [orders, setOrders] = useState([])
@@ -169,7 +170,14 @@ export default function AdminFoodOrders() {
                   </div>
                   <div className="text-right">
                     <p className="font-bold text-red-700">₱{order.total_amount.toLocaleString()}</p>
-                    <p className="text-sm text-gray-500">{order.items?.length || 0} items</p>
+                    <p className="text-sm text-gray-500">
+                      {order.items?.length || 0} items
+                      <span className={`ml-2 px-1.5 py-0.5 rounded text-[10px] font-medium ${
+                        { unpaid: 'bg-red-100 text-red-700', deposit_paid: 'bg-amber-100 text-amber-700', fully_paid: 'bg-green-100 text-green-700', refund_pending: 'bg-orange-100 text-orange-700', refunded: 'bg-gray-100 text-gray-600' }[order.payment_status] || 'bg-red-100 text-red-700'
+                      }`}>
+                        {{ unpaid: 'Unpaid', deposit_paid: 'Partial', fully_paid: 'Paid', refund_pending: 'Refund', refunded: 'Refunded' }[order.payment_status] || 'Unpaid'}
+                      </span>
+                    </p>
                     {expandedOrder === order.id ? <ChevronUp className="inline" size={20} /> : <ChevronDown className="inline" size={20} />}
                   </div>
                 </div>
@@ -227,6 +235,23 @@ export default function AdminFoodOrders() {
                       <p className="text-amber-800">{order.special_instructions}</p>
                     </div>
                   )}
+
+                  {/* Payment Tracker */}
+                  <div className="mt-4">
+                    <PaymentTracker
+                      foodOrderId={order.id}
+                      totalAmount={order.total_amount || 0}
+                      currentStatus={order.payment_status}
+                      onStatusChange={() => {
+                        supabase.from('food_orders').select('*').eq('id', order.id).single()
+                          .then(({ data }) => {
+                            if (data) {
+                              setOrders(prev => prev.map(o => o.id === data.id ? data : o))
+                            }
+                          })
+                      }}
+                    />
+                  </div>}
 
                   {/* Order Info */}
                   <div className="mt-4 pt-4 border-t text-sm text-gray-500">
