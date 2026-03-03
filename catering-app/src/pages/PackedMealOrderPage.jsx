@@ -63,7 +63,7 @@ export default function PackedMealOrderPage() {
         menuName: menu.name,
         optionName: menu.options[optionKey].name,
         items: menu.options[optionKey].items,
-        price: menu.pricePerPack || menu.pricePerPack,
+        price: menu.pricePerPack,
         includeSoda,
         sodaPrice: menu.sodaUpgrade || 0,
         quantity: MIN_ITEM_QUANTITY,
