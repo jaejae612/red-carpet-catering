@@ -532,7 +532,7 @@ INSERT INTO food_orders (
 ) VALUES (
   'Test - Gemma Navarro', '09175554321', 'gemma.n@test.com',
   'packed_meal', 'pickup',
-  NULL,
+  'Pickup at Red Carpet Catering Office',
   CURRENT_DATE + INTERVAL '4 days', '09:00',
   '[{"menu":"Packed Snack A","option":"Option 1","items":["Chicken Sandwich","Juice Box","Cookie"],"quantity":50,"includeSoda":false,"unitPrice":85,"subtotal":4250}]'::jsonb,
   4250.00,

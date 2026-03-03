@@ -83,6 +83,8 @@ DO $$ BEGIN
     ALTER TABLE food_orders ADD COLUMN IF NOT EXISTS payment_status TEXT DEFAULT 'unpaid';
     ALTER TABLE food_orders ADD COLUMN IF NOT EXISTS special_instructions TEXT;
     ALTER TABLE food_orders ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();
+    -- Allow NULL delivery_address for pickup orders
+    ALTER TABLE food_orders ALTER COLUMN delivery_address DROP NOT NULL;
   END IF;
 END $$;
 
