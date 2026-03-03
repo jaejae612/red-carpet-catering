@@ -1,9 +1,49 @@
 // =====================================================
 // RED CARPET CATERING - AUTO-ASSIGN FORMULAS
 // Computes required staff & equipment based on guest count
+// Based on official "Equipment to Persons" document
 // =====================================================
 
-const BUFFER = 1.1 // 10% buffer for utensils/chairs
+/**
+ * Tier-based equipment lookup table from the business reference sheet.
+ * Handwritten corrections applied (rounded-up practical numbers).
+ * Tiers: 60, 80, 100, 150 pax. Interpolates for in-between values.
+ */
+const EQUIPMENT_TIERS = [
+  { maxPax: 60,  tier: '60' },
+  { maxPax: 80,  tier: '80' },
+  { maxPax: 100, tier: '100' },
+  { maxPax: Infinity, tier: '150' },
+]
+
+const EQUIPMENT_TABLE = {
+  // Utensils (per guest + buffer, using handwritten corrected values)
+  'dinner plate':   { '60': 80,  '80': 100, '100': 120, '150': 170 },
+  'dessert plate':  { '60': 80,  '80': 100, '100': 120, '150': 170 },
+  'soup bowl':      { '60': 60,  '80': 80,  '100': 100, '150': 150 },
+  'spoon & fork':   { '60': 80,  '80': 100, '100': 120, '150': 170 },
+  'water glass':    { '60': 66,  '80': 88,  '100': 110, '150': 165 },
+  'teaspoon':       { '60': 40,  '80': 40,  '100': 40,  '150': 80 },
+  'goblet':         { '60': 50,  '80': 50,  '100': 75,  '150': 100 },
+
+  // Serving
+  'serving spoon':  { '60': 7,   '80': 7,   '100': 7,   '150': 7 },
+  'pitcher':        { '60': 2,   '80': 3,   '100': 3,   '150': 4 },
+  'ice bucket':     { '60': 4,   '80': 6,   '100': 6,   '150': 8 },
+  'ice tong':       { '60': 8,   '80': 8,   '100': 8,   '150': 12 },
+  'serving tray':   { '60': 3,   '80': 3,   '100': 4,   '150': 6 },
+  'lechon tray':    { '60': 1,   '80': 1,   '100': 1,   '150': 1 },
+}
+
+/**
+ * Get the tier key for a given pax count
+ */
+const getTier = (pax) => {
+  for (const t of EQUIPMENT_TIERS) {
+    if (pax <= t.maxPax) return t.tier
+  }
+  return '150'
+}
 
 /**
  * Calculate required equipment quantities for a given guest count
@@ -12,13 +52,23 @@ const BUFFER = 1.1 // 10% buffer for utensils/chairs
  * @returns {Object} - Equipment requirements by name (lowercase, normalized)
  */
 export const calculateEquipmentNeeds = (pax, menuDishes = 8) => {
+  const tier = getTier(pax)
   const guestTables = Math.ceil(pax / 10) // 10-seater round tables
   const buffetTables = pax <= 80 ? 2 : pax <= 120 ? 3 : 4
   const totalTables = guestTables + buffetTables
-  const chairs = Math.ceil(pax * BUFFER)
-  const chafingDishes = Math.min(Math.max(menuDishes, 6), 12) // min 6, max 12
+  const chairs = Math.ceil(pax * 1.1)
+  const chafingDishes = Math.min(Math.max(menuDishes, 6), 12)
 
+  // Start with lookup table values
+  const needs = {}
+  for (const [name, tiers] of Object.entries(EQUIPMENT_TABLE)) {
+    needs[name] = tiers[tier] || 0
+  }
+
+  // Add calculated items (tables, chairs, linens, chafing)
   return {
+    ...needs,
+
     // Seating
     'round table': guestTables,
     'guest chair': chairs,
@@ -27,23 +77,12 @@ export const calculateEquipmentNeeds = (pax, menuDishes = 8) => {
     // Buffet
     'buffet table': buffetTables,
     'chafing dish': chafingDishes,
-    'serving spoon': chafingDishes,
     'serving tong': chafingDishes,
-    'water pitcher': Math.ceil(guestTables / 2),
 
     // Linens
     'table cloth': totalTables,
     'table napkin': pax,
     'table skirting': buffetTables,
-
-    // Utensils
-    'dinner plate': chairs,
-    'dessert plate': pax,
-    'soup bowl': pax,
-    'spoon': chairs,
-    'fork': chairs,
-    'spoon & fork': chairs,
-    'water glass': chairs,
   }
 }
 
@@ -76,7 +115,7 @@ export const autoAssignEquipment = (pax, allEquipment, usedOnDate = {}, menuDish
   // For each equipment item in DB, check if it matches any need
   allEquipment.forEach(item => {
     const itemName = item.name.toLowerCase().trim()
-    
+
     // Find matching need (fuzzy match)
     let matchedNeed = null
     let neededQty = 0
@@ -182,7 +221,7 @@ export const autoAssignStaff = (pax, allStaff, busyStaffIds = []) => {
   for (const [role, needed] of Object.entries(needs)) {
     // Get available staff for this role
     const available = allStaff.filter(s => {
-      const matchesRole = s.role === role || 
+      const matchesRole = s.role === role ||
         (role === 'service' && (s.role === 'service' || s.role === 'extra')) ||
         (role === 'extra' && (s.role === 'extra' || s.role === 'student'))
       return matchesRole && s.available && !busyStaffIds.includes(s.id)
@@ -265,11 +304,10 @@ export const getDateConflicts = (allBookings, eventDate, excludeBookingId) => {
  * Count menu dishes from booking data to size chafing dishes
  */
 export const countMenuDishes = (menuPackage, menuOption) => {
-  // Default estimates by package tier
   const defaults = {
-    menu470: 7,  // 1 salad + 2 mains + 2 sides + 2 rice
-    menu510: 9,  // 4 mains + 1 side + 2 rice + 2 dessert
-    menu560: 10, // Full buffet
+    menu470: 7,
+    menu510: 9,
+    menu560: 10,
     menu620: 11,
     menu680: 12,
     cocktail: 8,

@@ -11,6 +11,7 @@ import {
   formatAddress 
 } from '../lib/cebuAreas'
 import { ShoppingCart, Plus, Minus, X, Search, ChevronRight, ChevronLeft, MapPin, Calendar, Clock, User, Phone, Mail, Send, Trash2, Truck, Info } from 'lucide-react'
+import TermsAndConditions from '../components/TermsAndConditions'
 
 export default function FoodOrderPage() {
   const { user, profile } = useAuth()
@@ -19,6 +20,7 @@ export default function FoodOrderPage() {
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState('')
+  const [termsAccepted, setTermsAccepted] = useState(false)
   const [foodItems, setFoodItems] = useState([])
   const [selectedCategory, setSelectedCategory] = useState('all')
   const [searchQuery, setSearchQuery] = useState('')
@@ -648,6 +650,8 @@ export default function FoodOrderPage() {
         </div>
       </div>
 
+      <TermsAndConditions compact accepted={termsAccepted} onAccept={setTermsAccepted} />
+
       {error && (
         <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
           {error}
@@ -702,7 +706,7 @@ export default function FoodOrderPage() {
             ) : (
               <button
                 onClick={handleSubmit}
-                disabled={submitting}
+                disabled={submitting || !termsAccepted}
                 className="flex-1 py-3 bg-red-700 text-white rounded-xl font-medium hover:bg-red-800 disabled:opacity-50 flex items-center justify-center gap-2"
               >
                 <Send size={20} /> {submitting ? 'Submitting...' : 'Place Order'}

@@ -22,6 +22,7 @@ import {
   requiresQuotation
 } from '../lib/cebuAreas'
 import { Calendar, Clock, MapPin, Check, Plus, Minus, Send, Palette, Info, ChevronRight, ChevronLeft, User, Phone, Mail, UtensilsCrossed, AlertCircle, PartyPopper, Droplets, Gift, Fuel } from 'lucide-react'
+import TermsAndConditions from '../components/TermsAndConditions'
 
 const BASE_DISH_CATEGORIES = [
   { id: 'salad', name: 'Salad', pick: 1, color: 'bg-green-100 text-green-800' },
@@ -52,6 +53,7 @@ export default function BookingPage() {
   const [step, setStep] = useState(1)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [termsAccepted, setTermsAccepted] = useState(false)
   const [dishes, setDishes] = useState([])
   
   // Check for duplicate booking data
@@ -1887,6 +1889,8 @@ export default function BookingPage() {
           <p className="text-red-200 text-sm mt-1">Deposit: ₱5,000</p>
         </div>
         
+        <TermsAndConditions compact accepted={termsAccepted} onAccept={setTermsAccepted} />
+
         {error && <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">{error}</div>}
       </div>
     )
@@ -1943,7 +1947,7 @@ export default function BookingPage() {
                 Continue <ChevronRight size={20} />
               </button>
             ) : (
-              <button onClick={handleSubmit} disabled={loading} className="flex-1 py-3 bg-red-700 text-white rounded-xl font-medium hover:bg-red-800 disabled:opacity-50 flex items-center justify-center gap-2">
+              <button onClick={handleSubmit} disabled={loading || !termsAccepted} className="flex-1 py-3 bg-red-700 text-white rounded-xl font-medium hover:bg-red-800 disabled:opacity-50 flex items-center justify-center gap-2">
                 <Send size={20} /> {loading ? 'Submitting...' : 'Submit Order'}
               </button>
             )}

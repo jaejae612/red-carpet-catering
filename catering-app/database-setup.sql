@@ -191,16 +191,35 @@ ON CONFLICT DO NOTHING;
 
 -- Insert default equipment
 INSERT INTO public.equipment (name, category, quantity) VALUES
-  ('Oval Table (Buffet)', 'Buffet', 10),
-  ('Table Good for 10', 'Buffet', 20),
-  ('Table Good for 4', 'Buffet', 15),
-  ('Bar Table (10 pax)', 'Bar', 8),
-  ('Round Tables', 'Seating', 30),
-  ('Chairs', 'Seating', 300),
-  ('Chair Covers', 'Seating', 300),
-  ('Cocktail Tables', 'Others', 12),
-  ('Kiddie Tables', 'Others', 10),
-  ('Kiddie Chairs', 'Others', 50)
+  -- Tables & Seating
+  ('Round Table', 'Seating', 30),
+  ('Guest Chair', 'Seating', 300),
+  ('Chair Cover', 'Linens', 300),
+  ('Buffet Table', 'Buffet', 10),
+  ('Cocktail Table', 'Others', 12),
+  ('Kiddie Table', 'Others', 10),
+  ('Kiddie Chair', 'Others', 50),
+  -- Utensils (per-guest items)
+  ('Dinner Plate', 'Utensils', 200),
+  ('Dessert Plate', 'Utensils', 200),
+  ('Soup Bowl', 'Utensils', 180),
+  ('Spoon & Fork', 'Utensils', 200),
+  ('Water Glass', 'Utensils', 200),
+  ('Teaspoon', 'Utensils', 100),
+  ('Goblet', 'Utensils', 120),
+  -- Serving
+  ('Serving Spoon', 'Serving', 20),
+  ('Pitcher', 'Serving', 10),
+  ('Ice Bucket', 'Serving', 12),
+  ('Ice Tong', 'Serving', 15),
+  ('Serving Tray', 'Serving', 10),
+  ('Lechon Tray', 'Serving', 4),
+  ('Chafing Dish', 'Buffet', 24),
+  ('Serving Tong', 'Serving', 24),
+  -- Linens
+  ('Table Cloth', 'Linens', 40),
+  ('Table Napkin', 'Linens', 200),
+  ('Table Skirting', 'Linens', 10)
 ON CONFLICT DO NOTHING;
 
 -- =====================================================

@@ -8,11 +8,12 @@ import {
   calculatePackedMealTotal,
   calculatePackedSnackTotal
 } from '../lib/cocktailPackedData'
-import { 
+import {
   ArrowLeft, Package, Coffee, Plus, Minus, Check, ShoppingCart,
   Calendar, Clock, MapPin, User, Phone, Mail, Truck, Store,
   ChevronDown, ChevronUp, AlertCircle, Info, X
 } from 'lucide-react'
+import TermsAndConditions from '../components/TermsAndConditions'
 
 export default function PackedMealOrderPage() {
   const { user, profile, isAdmin } = useAuth()
@@ -23,6 +24,7 @@ export default function PackedMealOrderPage() {
   const [expandedMenu, setExpandedMenu] = useState(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [termsAccepted, setTermsAccepted] = useState(false)
 
   const [orderDetails, setOrderDetails] = useState({
     deliveryType: 'delivery', // 'delivery' or 'pickup'
@@ -518,9 +520,13 @@ export default function PackedMealOrderPage() {
                       <span className="text-2xl font-bold text-red-700">₱{cartTotal.toLocaleString()}</span>
                     </div>
 
+                    <div className="mb-4">
+                      <TermsAndConditions compact accepted={termsAccepted} onAccept={setTermsAccepted} />
+                    </div>
+
                     <button
                       onClick={handleSubmit}
-                      disabled={loading || cart.length === 0 || cartCount < MIN_ORDER_QUANTITY}
+                      disabled={loading || cart.length === 0 || cartCount < MIN_ORDER_QUANTITY || !termsAccepted}
                       className="w-full py-3 bg-red-700 text-white rounded-xl font-bold hover:bg-red-800 disabled:opacity-50 flex items-center justify-center gap-2"
                     >
                       {loading ? 'Submitting...' : cartCount < MIN_ORDER_QUANTITY ? `Need ${MIN_ORDER_QUANTITY - cartCount} more packs` : 'Place Order'}
