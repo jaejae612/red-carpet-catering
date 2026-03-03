@@ -67,7 +67,53 @@ ALTER TABLE equipment ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NO
 
 
 -- =====================================================
--- 4. CREATE MISSING TABLES
+-- 3b. ADD MISSING COLUMNS TO FOOD_ORDERS (if table already exists)
+-- =====================================================
+DO $$ BEGIN
+  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'food_orders') THEN
+    ALTER TABLE food_orders ADD COLUMN IF NOT EXISTS order_type TEXT;
+    ALTER TABLE food_orders ADD COLUMN IF NOT EXISTS customer_email TEXT;
+    ALTER TABLE food_orders ADD COLUMN IF NOT EXISTS delivery_type TEXT;
+    ALTER TABLE food_orders ADD COLUMN IF NOT EXISTS delivery_city TEXT;
+    ALTER TABLE food_orders ADD COLUMN IF NOT EXISTS delivery_barangay TEXT;
+    ALTER TABLE food_orders ADD COLUMN IF NOT EXISTS delivery_street TEXT;
+    ALTER TABLE food_orders ADD COLUMN IF NOT EXISTS delivery_landmark TEXT;
+    ALTER TABLE food_orders ADD COLUMN IF NOT EXISTS subtotal DECIMAL(10,2);
+    ALTER TABLE food_orders ADD COLUMN IF NOT EXISTS delivery_fee DECIMAL(10,2) DEFAULT 0;
+    ALTER TABLE food_orders ADD COLUMN IF NOT EXISTS payment_status TEXT DEFAULT 'unpaid';
+    ALTER TABLE food_orders ADD COLUMN IF NOT EXISTS special_instructions TEXT;
+    ALTER TABLE food_orders ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();
+  END IF;
+END $$;
+
+-- =====================================================
+-- 3c. ADD MISSING COLUMNS TO FOOD_ITEMS (if table already exists)
+-- =====================================================
+DO $$ BEGIN
+  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'food_items') THEN
+    ALTER TABLE food_items ADD COLUMN IF NOT EXISTS price_home DECIMAL(10,2);
+    ALTER TABLE food_items ADD COLUMN IF NOT EXISTS price_tray DECIMAL(10,2);
+    ALTER TABLE food_items ADD COLUMN IF NOT EXISTS price_xs DECIMAL(10,2);
+    ALTER TABLE food_items ADD COLUMN IF NOT EXISTS price_small DECIMAL(10,2);
+    ALTER TABLE food_items ADD COLUMN IF NOT EXISTS price_medium DECIMAL(10,2);
+    ALTER TABLE food_items ADD COLUMN IF NOT EXISTS price_large DECIMAL(10,2);
+  END IF;
+END $$;
+
+-- =====================================================
+-- 3d. ADD MISSING COLUMNS TO PAYMENTS (if table already exists)
+-- =====================================================
+DO $$ BEGIN
+  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'payments') THEN
+    ALTER TABLE payments ADD COLUMN IF NOT EXISTS food_order_id UUID;
+    ALTER TABLE payments ADD COLUMN IF NOT EXISTS reference_number TEXT;
+    ALTER TABLE payments ADD COLUMN IF NOT EXISTS recorded_by UUID;
+  END IF;
+END $$;
+
+
+-- =====================================================
+-- 4. CREATE MISSING TABLES (if they don't exist at all)
 -- =====================================================
 
 -- FOOD ITEMS TABLE (a la carte menu)
