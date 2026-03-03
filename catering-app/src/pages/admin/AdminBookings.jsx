@@ -103,7 +103,11 @@ export default function AdminBookings() {
     if (!selectedBooking) return
     setSaving(true)
     try {
-      await supabase.from('bookings').update({ assigned_staff: selectedBooking.assigned_staff, assigned_equipment: selectedBooking.assigned_equipment, status: 'confirmed' }).eq('id', selectedBooking.id)
+      const updateData = { assigned_staff: selectedBooking.assigned_staff, assigned_equipment: selectedBooking.assigned_equipment }
+      // Only auto-confirm if currently pending — don't overwrite completed/cancelled
+      if (selectedBooking.status === 'pending') updateData.status = 'confirmed'
+      await supabase.from('bookings').update(updateData).eq('id', selectedBooking.id)
+      if (selectedBooking.status === 'pending') selectedBooking.status = 'confirmed'
       setBookings(prev => prev.map(b => b.id === selectedBooking.id ? selectedBooking : b))
       setHasUnsavedAssignment(false)
       alert('Saved!')
@@ -199,13 +203,29 @@ export default function AdminBookings() {
     const onCallCost = newStaff.filter(s => s.type === 'on_call').reduce((sum, s) => sum + (s.daily_rate || 0), 0)
     const rentalItems = equipment.filter(item => (item.type || 'owned') === 'rental' && newEquip[item.id])
     const rentalCost = rentalItems.reduce((sum, item) => sum + (newEquip[item.id] || 0) * (item.rental_cost || 0), 0)
-    
+
+    // Check for shortages
+    const roleLabels = { head_waiter: 'Head Waiter', service: 'Service', extra: 'Extra', student: 'Student' }
+    const staffShortages = []
+    for (const [role, needed] of Object.entries(staffNeeds)) {
+      const assigned = newStaff.filter(s => s.role === role).length
+      if (assigned < needed) staffShortages.push(`${roleLabels[role]}: ${assigned}/${needed}`)
+    }
+    const equipShortages = []
+    for (const [needName, qty] of Object.entries(eqNeeds)) {
+      const matchedItem = equipment.find(e => (e.name || '').toLowerCase().trim() === needName)
+      const assigned = matchedItem ? (newEquip[matchedItem.id] || 0) : 0
+      if (assigned < qty) equipShortages.push(`${needName}: ${assigned}/${qty}`)
+    }
+
     let msg = `✅ Auto-assigned for ${pax} guests:\n\n`
     msg += `👥 Staff: ${newStaff.length} total`
     if (totalOnCall > 0) msg += ` (${totalOnCall} on-call = ₱${onCallCost.toLocaleString()})`
     msg += `\n📦 Equipment: ${Object.keys(newEquip).length} items`
     if (rentalCost > 0) msg += ` (rentals = ₱${rentalCost.toLocaleString()})`
-    if (sameDayBookings.length > 0) msg += `\n\n⚠️ ${sameDayBookings.length} other booking(s) on same date — availability adjusted`
+    if (staffShortages.length > 0) msg += `\n\n⚠️ Staff shortages:\n${staffShortages.join('\n')}`
+    if (equipShortages.length > 0) msg += `\n\n⚠️ Equipment shortages:\n${equipShortages.join('\n')}`
+    if (sameDayBookings.length > 0) msg += `\n\n📅 ${sameDayBookings.length} other booking(s) on same date — availability adjusted`
     msg += `\n\nReview below and click Save when ready.`
     alert(msg)
   }

@@ -52,6 +52,7 @@ const getTier = (pax) => {
  * @returns {Object} - Equipment requirements by name (lowercase, normalized)
  */
 export const calculateEquipmentNeeds = (pax, menuDishes = 8) => {
+  pax = Math.max(pax || 0, 30) // minimum 30 pax for sensible equipment
   const tier = getTier(pax)
   const guestTables = Math.ceil(pax / 10) // 10-seater round tables
   const buffetTables = pax <= 80 ? 2 : pax <= 120 ? 3 : 4
@@ -92,6 +93,7 @@ export const calculateEquipmentNeeds = (pax, menuDishes = 8) => {
  * @returns {Object} - Staff requirements by role
  */
 export const calculateStaffNeeds = (pax) => {
+  pax = Math.max(pax || 0, 30) // minimum 30 pax
   return {
     head_waiter: pax >= 150 ? 2 : 1,
     service: Math.max(Math.ceil(pax / 10), 3), // min 3

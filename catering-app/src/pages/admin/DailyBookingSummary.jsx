@@ -268,19 +268,13 @@ export default function DailyBookingSummary() {
                     </div>
                   </div>
 
-                  {/* Selected Dishes */}
-                  {booking.selected_dishes && Object.keys(booking.selected_dishes).length > 0 && (
+                  {/* Menu Items */}
+                  {Array.isArray(booking.menu_items) && booking.menu_items.length > 0 && (
                     <div className="mt-4 ml-11 p-3 bg-gray-50 rounded-lg print:bg-gray-100">
                       <strong className="text-gray-700 text-sm">Menu Items:</strong>
-                      <div className="mt-1 text-sm text-gray-600">
-                        {Object.entries(booking.selected_dishes).map(([category, dishes]) => (
-                          dishes && dishes.length > 0 && (
-                            <span key={category} className="mr-4">
-                              <strong className="capitalize">{category}:</strong> {dishes.map(d => d.name).join(', ')}
-                            </span>
-                          )
-                        ))}
-                      </div>
+                      <p className="mt-1 text-sm text-gray-600">
+                        {booking.menu_items.map(item => typeof item === 'string' ? item : item.name).join(', ')}
+                      </p>
                     </div>
                   )}
                 </div>
