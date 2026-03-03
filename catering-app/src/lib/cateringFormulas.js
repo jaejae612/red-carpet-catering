@@ -116,17 +116,13 @@ export const autoAssignEquipment = (pax, allEquipment, usedOnDate = {}, menuDish
   allEquipment.forEach(item => {
     const itemName = item.name.toLowerCase().trim()
 
-    // Find matching need (fuzzy match)
+    // Exact match against formula names (names are standardized in seed data)
     let matchedNeed = null
     let neededQty = 0
 
-    for (const [needName, qty] of Object.entries(needs)) {
-      if (itemName.includes(needName) || needName.includes(itemName) ||
-          fuzzyMatch(itemName, needName)) {
-        matchedNeed = needName
-        neededQty = qty
-        break
-      }
+    if (needs[itemName] !== undefined) {
+      matchedNeed = itemName
+      neededQty = needs[itemName]
     }
 
     if (!matchedNeed) return // No formula match for this item
@@ -301,15 +297,31 @@ export const getDateConflicts = (allBookings, eventDate, excludeBookingId) => {
 }
 
 /**
- * Count menu dishes from booking data to size chafing dishes
+ * Count menu dishes from booking data to size chafing dishes.
+ * Uses actual booking data (menu_items, add_ons, custom_dishes) when available,
+ * falls back to package-based defaults.
  */
-export const countMenuDishes = (menuPackage, menuOption) => {
+export const countMenuDishes = (menuPackage, booking) => {
+  // Try to count from actual booking data
+  if (booking) {
+    let count = 0
+    // menu_items: array of dish objects from the selected package
+    if (Array.isArray(booking.menu_items)) count += booking.menu_items.length
+    // custom_dishes: array of custom additions
+    if (Array.isArray(booking.custom_dishes)) count += booking.custom_dishes.length
+    // If we got a real count, use it (min 6 for practical reasons)
+    if (count > 0) return Math.max(count, 6)
+  }
+
+  // Fallback: estimate from package name
   const defaults = {
     menu470: 7,
     menu510: 9,
     menu560: 10,
     menu620: 11,
+    menu660: 11,
     menu680: 12,
+    menu810: 12,
     cocktail: 8,
   }
   return defaults[menuPackage] || 8

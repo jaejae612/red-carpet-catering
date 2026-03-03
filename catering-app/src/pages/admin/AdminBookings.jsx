@@ -29,6 +29,7 @@ export default function AdminBookings() {
   const [showEditModal, setShowEditModal] = useState(false)
   const [saving, setSaving] = useState(false)
   const [sendingEmail, setSendingEmail] = useState(false)
+  const [hasUnsavedAssignment, setHasUnsavedAssignment] = useState(false)
 
   useEffect(() => { fetchData() }, [])
 
@@ -104,6 +105,7 @@ export default function AdminBookings() {
     try {
       await supabase.from('bookings').update({ assigned_staff: selectedBooking.assigned_staff, assigned_equipment: selectedBooking.assigned_equipment, status: 'confirmed' }).eq('id', selectedBooking.id)
       setBookings(prev => prev.map(b => b.id === selectedBooking.id ? selectedBooking : b))
+      setHasUnsavedAssignment(false)
       alert('Saved!')
     } catch (error) { alert('Error saving') } finally { setSaving(false) }
   }
@@ -112,10 +114,11 @@ export default function AdminBookings() {
     if (!selectedBooking) return
     const current = selectedBooking.assigned_staff || []
     const exists = current.find(x => x.id === s.id)
-    const newStaff = exists 
-      ? current.filter(x => x.id !== s.id) 
+    const newStaff = exists
+      ? current.filter(x => x.id !== s.id)
       : [...current, { id: s.id, name: s.name, role, type: s.type || 'regular', daily_rate: s.daily_rate || 0, phone: s.phone }]
     setSelectedBooking({ ...selectedBooking, assigned_staff: newStaff })
+    setHasUnsavedAssignment(true)
   }
 
   const updateEquipQty = (id, qty) => {
@@ -123,6 +126,7 @@ export default function AdminBookings() {
     const current = selectedBooking.assigned_equipment || {}
     if (qty <= 0) { const { [id]: _, ...rest } = current; setSelectedBooking({ ...selectedBooking, assigned_equipment: rest }) }
     else setSelectedBooking({ ...selectedBooking, assigned_equipment: { ...current, [id]: qty } })
+    setHasUnsavedAssignment(true)
   }
 
   // Date-based availability: what's already assigned to OTHER bookings on the same date
@@ -148,7 +152,7 @@ export default function AdminBookings() {
   const handleAutoAssign = () => {
     if (!selectedBooking) return
     const pax = selectedBooking.number_of_pax || 60
-    const menuDishes = countMenuDishes(selectedBooking.menu_package)
+    const menuDishes = countMenuDishes(selectedBooking.menu_package, selectedBooking)
     
     // --- Staff ---
     const staffNeeds = calculateStaffNeeds(pax)
@@ -179,21 +183,17 @@ export default function AdminBookings() {
     
     equipment.forEach(item => {
       const itemName = (item.name || '').toLowerCase().trim()
-      // Find matching formula
-      for (const [needName, qty] of Object.entries(eqNeeds)) {
-        if (itemName.includes(needName) || needName.includes(itemName) ||
-            (itemName.includes('goblet') && needName.includes('glass')) ||
-            (itemName.includes('flatware') && (needName.includes('spoon') || needName.includes('fork')))) {
-          const avail = getAvailableToday(item)
-          const assign = Math.min(qty, avail)
-          if (assign > 0) newEquip[item.id] = assign
-          break
-        }
+      // Exact match against formula names (standardized in seed data)
+      if (eqNeeds[itemName] !== undefined) {
+        const avail = getAvailableToday(item)
+        const assign = Math.min(eqNeeds[itemName], avail)
+        if (assign > 0) newEquip[item.id] = assign
       }
     })
 
     setSelectedBooking({ ...selectedBooking, assigned_staff: newStaff, assigned_equipment: newEquip })
-    
+    setHasUnsavedAssignment(true)
+
     // Summary alert
     const totalOnCall = newStaff.filter(s => s.type === 'on_call').length
     const onCallCost = newStaff.filter(s => s.type === 'on_call').reduce((sum, s) => sum + (s.daily_rate || 0), 0)
@@ -353,7 +353,7 @@ export default function AdminBookings() {
           {/* Results count */}
           <p className="text-xs text-gray-500 mb-2">{filtered.length} booking{filtered.length !== 1 ? 's' : ''} found</p>
           
-          <div className="space-y-2 max-h-[60vh] overflow-y-auto">{filtered.map(b => (<button key={b.id} onClick={() => setSelectedBooking(b)} className={`w-full p-3 rounded-xl text-left ${selectedBooking?.id === b.id ? 'bg-red-50 border-2 border-red-700' : 'bg-gray-50 hover:bg-gray-100 border-2 border-transparent'}`}><div className="flex justify-between items-start mb-1"><span className="font-medium text-gray-800 truncate">{b.customer_name}</span><div className="flex items-center gap-1">{b.status === 'completed' && (!b.payment_status || b.payment_status === 'unpaid') && <span title="Completed but unpaid" className="text-red-500 text-xs">⚠️</span>}<span className={`px-2 py-0.5 rounded-full text-xs font-medium ${getStatusColor(b.status)}`}>{b.status}</span></div></div><p className="text-sm text-gray-500">{b.event_date}</p><div className="flex items-center justify-between mt-1"><span className="text-sm text-gray-500">{b.number_of_pax} pax • ₱{b.total_amount?.toLocaleString()}</span><span className={`px-2 py-0.5 rounded-full text-xs font-medium ${getPaymentStatusColor(b.payment_status)}`}>{getPaymentStatusLabel(b.payment_status)}</span></div></button>))}{filtered.length === 0 && <p className="text-center text-gray-500 py-4">No bookings found</p>}</div>
+          <div className="space-y-2 max-h-[60vh] overflow-y-auto">{filtered.map(b => (<button key={b.id} onClick={() => { setSelectedBooking(b); setHasUnsavedAssignment(false) }} className={`w-full p-3 rounded-xl text-left ${selectedBooking?.id === b.id ? 'bg-red-50 border-2 border-red-700' : 'bg-gray-50 hover:bg-gray-100 border-2 border-transparent'}`}><div className="flex justify-between items-start mb-1"><span className="font-medium text-gray-800 truncate">{b.customer_name}</span><div className="flex items-center gap-1">{b.status === 'completed' && (!b.payment_status || b.payment_status === 'unpaid') && <span title="Completed but unpaid" className="text-red-500 text-xs">⚠️</span>}<span className={`px-2 py-0.5 rounded-full text-xs font-medium ${getStatusColor(b.status)}`}>{b.status}</span></div></div><p className="text-sm text-gray-500">{b.event_date}</p><div className="flex items-center justify-between mt-1"><span className="text-sm text-gray-500">{b.number_of_pax} pax • ₱{b.total_amount?.toLocaleString()}</span><span className={`px-2 py-0.5 rounded-full text-xs font-medium ${getPaymentStatusColor(b.payment_status)}`}>{getPaymentStatusLabel(b.payment_status)}</span></div></button>))}{filtered.length === 0 && <p className="text-center text-gray-500 py-4">No bookings found</p>}</div>
         </div></div>
         <div className="lg:col-span-2">
           {selectedBooking ? (
@@ -526,7 +526,12 @@ export default function AdminBookings() {
                     )
                   })()}
 
-                  <button onClick={saveAssignment} disabled={saving} className="w-full py-3 bg-red-700 text-white rounded-xl font-medium hover:bg-red-800 disabled:opacity-50 flex items-center justify-center gap-2"><Save size={20} /> {saving ? 'Saving...' : 'Save Assignment'}</button>
+                  {hasUnsavedAssignment && (
+                    <div className="bg-amber-50 border border-amber-300 rounded-lg p-2 mb-3 text-center">
+                      <p className="text-sm font-medium text-amber-800">Unsaved changes — click Save below</p>
+                    </div>
+                  )}
+                  <button onClick={saveAssignment} disabled={saving} className={`w-full py-3 text-white rounded-xl font-medium disabled:opacity-50 flex items-center justify-center gap-2 ${hasUnsavedAssignment ? 'bg-amber-600 hover:bg-amber-700 animate-pulse' : 'bg-red-700 hover:bg-red-800'}`}><Save size={20} /> {saving ? 'Saving...' : hasUnsavedAssignment ? 'Save Assignment *' : 'Save Assignment'}</button>
                 </div>
               </div>
             </div>
