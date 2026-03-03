@@ -107,7 +107,7 @@ function App() {
               <Route path="/admin/staff" element={<ProtectedRoute adminOnly><AdminLayout><AdminStaff /></AdminLayout></ProtectedRoute>} />
               <Route path="/admin/equipment" element={<ProtectedRoute adminOnly><AdminLayout><AdminEquipment /></AdminLayout></ProtectedRoute>} />
               <Route path="/admin/menu" element={<ProtectedRoute adminOnly><AdminLayout><AdminMenu /></AdminLayout></ProtectedRoute>} />
-              <Route path="/admin/daily-summary" element={<ProtectedRoute adminOnly><DailyBookingSummary /></ProtectedRoute>} />
+              <Route path="/admin/daily-summary" element={<ProtectedRoute adminOnly><AdminLayout><DailyBookingSummary /></AdminLayout></ProtectedRoute>} />
               <Route path="/admin/calendar" element={<ProtectedRoute adminOnly><AdminLayout><BookingCalendar /></AdminLayout></ProtectedRoute>} />
               
               {/* Catch all */}

@@ -89,7 +89,7 @@ export function AuthProvider({ children }) {
 
   return (
     <AuthContext.Provider value={{
-      user, userProfile: profile, loading,
+      user, profile, userProfile: profile, loading,
       isAdmin: profile?.role === 'admin',
       isConfigured: isConfigured(),
       signUp, signIn, signOut, signInWithGoogle, signInWithFacebook, resetPassword

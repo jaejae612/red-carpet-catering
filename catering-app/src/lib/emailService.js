@@ -6,10 +6,7 @@
 import { supabase } from './supabase'
 
 export const sendEmail = async ({ to, subject, html }) => {
-  console.log('Sending email:', { to, subject, htmlLength: html?.length })
-  
   if (!to || !subject || !html) {
-    console.error('Missing email fields:', { to: !!to, subject: !!subject, html: !!html })
     return { success: false, error: 'Missing required fields' }
   }
   

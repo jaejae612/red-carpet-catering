@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Link, useSearchParams } from 'react-router-dom'
+import { Link, useSearchParams, useNavigate } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import { menuPackages } from '../../lib/menuData'
 import { ArrowLeft, Calendar, MapPin, Users, Phone, Mail, Check, Plus, Minus, X, Save, Search, Edit2, CreditCard, Send, Copy, Filter, ChevronDown, ChevronUp } from 'lucide-react'
@@ -12,6 +12,7 @@ import { getDateConflicts, calculateStaffNeeds, calculateEquipmentNeeds, countMe
 
 export default function AdminBookings() {
   const [searchParams] = useSearchParams()
+  const navigate = useNavigate()
   const [bookings, setBookings] = useState([])
   const [staff, setStaff] = useState([])
   const [equipment, setEquipment] = useState([])
@@ -263,7 +264,7 @@ export default function AdminBookings() {
       deposit_amount: 0
     }
     sessionStorage.setItem('duplicateBooking', JSON.stringify(duplicateData))
-    window.location.href = '/book?duplicate=true'
+    navigate('/book?duplicate=true')
   }
 
   const clearFilters = () => {

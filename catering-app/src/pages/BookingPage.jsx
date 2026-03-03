@@ -534,7 +534,7 @@ export default function BookingPage() {
   }
 
   const handleSubmit = async () => {
-    if (!isValidDate(booking.date)) {
+    if (!isValidDate(booking.date, booking.time)) {
       setError('Cannot book for past dates. Please select a future date.')
       return
     }
@@ -717,7 +717,7 @@ export default function BookingPage() {
 
       {/* Venue Address - Cebu Only */}
       <div className="space-y-3">
-        <label className="block text-sm font-medium text-gray-700 flex items-center gap-2">
+        <label className="flex text-sm font-medium text-gray-700 items-center gap-2">
           <MapPin size={18} className="text-red-600" /> Venue Address (Cebu Only) *
         </label>
         
@@ -1413,7 +1413,7 @@ export default function BookingPage() {
 
       {/* Free Drinks Selection */}
       <div className="bg-blue-50 rounded-xl p-4 border border-blue-100">
-        <label className="block text-sm font-semibold text-blue-700 mb-3 flex items-center gap-2">
+        <label className="flex text-sm font-semibold text-blue-700 mb-3 items-center gap-2">
           <Droplets size={18} /> Free Drinks (1 Round Included)
         </label>
         <div className="grid grid-cols-2 gap-3">
@@ -1436,7 +1436,7 @@ export default function BookingPage() {
 
       {/* Additional Drinks */}
       <div>
-        <label className="block text-sm font-semibold text-gray-700 mb-3 flex items-center gap-2">
+        <label className="flex text-sm font-semibold text-gray-700 mb-3 items-center gap-2">
           <Droplets size={18} /> Additional Drinks (Optional)
         </label>
         <div className="space-y-2">

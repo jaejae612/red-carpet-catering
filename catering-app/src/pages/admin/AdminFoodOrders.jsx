@@ -91,8 +91,8 @@ export default function AdminFoodOrders() {
 
   const filteredOrders = orders.filter(order => {
     const matchesFilter = filter === 'all' || order.status === filter
-    const matchesSearch = order.customer_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          order.customer_phone.includes(searchQuery)
+    const matchesSearch = order.customer_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                          order.customer_phone?.includes(searchQuery)
     return matchesFilter && matchesSearch
   })
 

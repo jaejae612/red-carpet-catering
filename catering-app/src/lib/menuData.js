@@ -146,28 +146,28 @@ export const getPricePerHead = (packageId, pax) => {
 // Alias for backwards compatibility
 export const calculatePricePerHead = getPricePerHead
 
-export const calculateTotal = (packageId, pax, addOns = [], dessertAddOns = [], drinkAddOns = []) => {
+export const calculateTotal = (packageId, pax, addOns = [], desserts = [], drinkAddOns = []) => {
   const pricePerHead = getPricePerHead(packageId, pax)
   const menuTotal = pricePerHead * pax
-  
+
   // Station add-ons
   const addOnsTotal = addOns.reduce((sum, a) => {
     const item = addOnStations.find(s => s.id === a.id)
     return sum + (item ? item.price * (a.quantity || 1) : 0)
   }, 0)
-  
+
   // Dessert add-ons
-  const dessertTotal = dessertAddOns.reduce((sum, d) => {
+  const dessertTotal = desserts.reduce((sum, d) => {
     const item = dessertAddOns.find(s => s.id === d.id)
     return sum + (item ? item.price * (d.quantity || 1) : 0)
   }, 0)
-  
+
   // Drink add-ons (free drink doesn't add cost)
   const drinkTotal = drinkAddOns.reduce((sum, d) => {
     const item = additionalDrinks.find(s => s.id === d.id)
     return sum + (item ? item.price * (d.quantity || 1) : 0)
   }, 0)
-  
+
   return menuTotal + addOnsTotal + dessertTotal + drinkTotal
 }
 

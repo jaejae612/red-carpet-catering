@@ -140,16 +140,16 @@ export default function Navbar() {
           {/* Mobile Catering Options */}
           <div className="border-t border-red-600 pt-3 mt-3">
             <p className="text-red-300 text-sm mb-2">Book Catering:</p>
-            <Link to="/catering" onClick={() => setIsOpen(false)} className="block py-2 pl-4 flex items-center gap-2">
+            <Link to="/catering" onClick={() => setIsOpen(false)} className="flex py-2 pl-4 items-center gap-2">
               <UtensilsCrossed size={16} /> All Options
             </Link>
-            <Link to="/book" onClick={() => setIsOpen(false)} className="block py-2 pl-4 flex items-center gap-2">
+            <Link to="/book" onClick={() => setIsOpen(false)} className="flex py-2 pl-4 items-center gap-2">
               <UtensilsCrossed size={16} /> Buffet Catering
             </Link>
-            <Link to="/book/cocktail" onClick={() => setIsOpen(false)} className="block py-2 pl-4 flex items-center gap-2">
+            <Link to="/book/cocktail" onClick={() => setIsOpen(false)} className="flex py-2 pl-4 items-center gap-2">
               <Wine size={16} /> Cocktail Party
             </Link>
-            <Link to="/order/packed-meals" onClick={() => setIsOpen(false)} className="block py-2 pl-4 flex items-center gap-2">
+            <Link to="/order/packed-meals" onClick={() => setIsOpen(false)} className="flex py-2 pl-4 items-center gap-2">
               <Package size={16} /> Packed Meals
             </Link>
           </div>

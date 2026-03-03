@@ -169,7 +169,8 @@ export default function FoodOrderPage() {
         delivery_fee: orderDetails.deliveryFee || 0,
         total_amount: total + (orderDetails.deliveryFee || 0),
         special_instructions: orderDetails.specialInstructions,
-        status: 'pending'
+        status: 'pending',
+        payment_status: 'unpaid'
       }])
 
       if (insertError) throw insertError
@@ -437,7 +438,7 @@ export default function FoodOrderPage() {
 
         {/* Delivery Address - Cebu Only */}
         <div className="space-y-3">
-          <label className="block text-sm font-medium text-gray-700 flex items-center gap-2">
+          <label className="flex text-sm font-medium text-gray-700 items-center gap-2">
             <Truck size={18} className="text-red-600" /> Delivery Address (Cebu Only) *
           </label>
           
