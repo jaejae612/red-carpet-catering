@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
+import { useAuth } from '../context/AuthContext'
 import { Lock, CheckCircle, AlertCircle } from 'lucide-react'
 
 export default function ResetPasswordPage() {
@@ -10,6 +11,7 @@ export default function ResetPasswordPage() {
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
   const navigate = useNavigate()
+  const { isAdmin } = useAuth()
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -30,7 +32,7 @@ export default function ResetPasswordPage() {
       const { error } = await supabase.auth.updateUser({ password })
       if (error) throw error
       setSuccess(true)
-      setTimeout(() => navigate('/login'), 3000)
+      setTimeout(() => navigate(isAdmin ? '/admin' : '/'), 3000)
     } catch (err) {
       setError(err.message || 'Failed to reset password')
     } finally {
@@ -60,7 +62,7 @@ export default function ResetPasswordPage() {
             <div className="text-center py-6">
               <CheckCircle size={48} className="text-green-500 mx-auto mb-4" />
               <h3 className="text-lg font-semibold text-gray-800 mb-2">Password Updated!</h3>
-              <p className="text-gray-600">Redirecting to login...</p>
+              <p className="text-gray-600">Redirecting...</p>
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-6">
