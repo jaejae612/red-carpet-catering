@@ -139,7 +139,7 @@ export default function BookingCalendar() {
             </div>
           </div>
           <Link
-            to="/admin/daily-summary"
+            to={`/admin/daily-summary?date=${selectedDay || formatDayDate(new Date().getDate())}`}
             className="flex items-center gap-2 bg-red-700 text-white px-4 py-2 rounded-xl font-medium hover:bg-red-800"
           >
             <Printer size={20} />

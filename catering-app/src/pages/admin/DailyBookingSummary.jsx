@@ -1,14 +1,15 @@
 import React, { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import { menuPackages } from '../../lib/menuData'
 import { ArrowLeft, Printer, Calendar, MapPin, Users, Phone, Clock, ChevronLeft, ChevronRight } from 'lucide-react'
 
 export default function DailyBookingSummary() {
+  const [searchParams] = useSearchParams()
   const [bookings, setBookings] = useState([])
   const [equipment, setEquipment] = useState([])
   const [loading, setLoading] = useState(true)
-  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0])
+  const [selectedDate, setSelectedDate] = useState(searchParams.get('date') || new Date().toISOString().split('T')[0])
 
   useEffect(() => {
     fetchData()
