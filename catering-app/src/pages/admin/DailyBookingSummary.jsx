@@ -2,11 +2,12 @@ import React, { useState, useEffect } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import { menuPackages } from '../../lib/menuData'
-import { ArrowLeft, Printer, Calendar, MapPin, Users, Phone, Clock, ChevronLeft, ChevronRight } from 'lucide-react'
+import { ArrowLeft, Printer, Calendar, MapPin, Users, Phone, Clock, ChevronLeft, ChevronRight, ShoppingBag, UtensilsCrossed } from 'lucide-react'
 
 export default function DailyBookingSummary() {
   const [searchParams] = useSearchParams()
   const [bookings, setBookings] = useState([])
+  const [foodOrders, setFoodOrders] = useState([])
   const [equipment, setEquipment] = useState([])
   const [loading, setLoading] = useState(true)
   const [selectedDate, setSelectedDate] = useState(searchParams.get('date') || new Date().toISOString().split('T')[0])
@@ -18,7 +19,7 @@ export default function DailyBookingSummary() {
   const fetchData = async () => {
     setLoading(true)
     try {
-      const [bookingsRes, equipmentRes] = await Promise.all([
+      const [bookingsRes, foodOrdersRes, equipmentRes] = await Promise.all([
         supabase
           .from('bookings')
           .select('*')
@@ -26,10 +27,17 @@ export default function DailyBookingSummary() {
           .neq('status', 'cancelled')
           .order('event_time', { ascending: true }),
         supabase
+          .from('food_orders')
+          .select('*')
+          .eq('delivery_date', selectedDate)
+          .neq('status', 'cancelled')
+          .order('delivery_time', { ascending: true }),
+        supabase
           .from('equipment')
           .select('*')
       ])
       setBookings(bookingsRes.data || [])
+      setFoodOrders(foodOrdersRes.data || [])
       setEquipment(equipmentRes.data || [])
     } catch (error) {
       console.error('Error:', error)
@@ -66,13 +74,19 @@ export default function DailyBookingSummary() {
     const styles = {
       pending: 'bg-amber-100 text-amber-700',
       confirmed: 'bg-green-100 text-green-700',
-      completed: 'bg-blue-100 text-blue-700'
+      completed: 'bg-blue-100 text-blue-700',
+      preparing: 'bg-purple-100 text-purple-700',
+      ready: 'bg-teal-100 text-teal-700',
+      delivered: 'bg-green-100 text-green-700'
     }
     return styles[status] || 'bg-gray-100 text-gray-700'
   }
 
   const totalPax = bookings.reduce((sum, b) => sum + (b.number_of_pax || 0), 0)
-  const totalRevenue = bookings.reduce((sum, b) => sum + (b.total_amount || 0), 0)
+  const cateringRevenue = bookings.reduce((sum, b) => sum + (b.total_amount || 0), 0)
+  const foodRevenue = foodOrders.reduce((sum, o) => sum + (o.total_amount || 0), 0)
+  const totalRevenue = cateringRevenue + foodRevenue
+  const hasAnything = bookings.length > 0 || foodOrders.length > 0
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -81,11 +95,11 @@ export default function DailyBookingSummary() {
         <div className="max-w-5xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <Link to="/admin" className="p-2 hover:bg-gray-100 rounded-lg">
+              <Link to="/admin/calendar" className="p-2 hover:bg-gray-100 rounded-lg">
                 <ArrowLeft size={24} />
               </Link>
               <div>
-                <h1 className="text-2xl font-bold text-gray-800">Daily Booking Summary</h1>
+                <h1 className="text-2xl font-bold text-gray-800">Daily Summary</h1>
                 <p className="text-gray-500">Print-ready format</p>
               </div>
             </div>
@@ -128,7 +142,7 @@ export default function DailyBookingSummary() {
       {/* Printable Content */}
       <div className="max-w-5xl mx-auto p-4 print:p-0 print:max-w-none">
         <div className="bg-white rounded-2xl shadow-lg print:shadow-none print:rounded-none">
-          
+
           {/* Print Header */}
           <div className="p-6 border-b print:border-b-2 print:border-black">
             <div className="flex items-center justify-between">
@@ -136,7 +150,7 @@ export default function DailyBookingSummary() {
                 <img src="/logo-red.png" alt="Red Carpet" className="h-16 w-auto print:h-12" />
                 <div>
                   <h1 className="text-2xl font-bold text-red-700 print:text-black">Red Carpet Catering</h1>
-                  <p className="text-gray-500">Daily Booking Summary</p>
+                  <p className="text-gray-500">Daily Summary</p>
                 </div>
               </div>
               <div className="text-right">
@@ -147,134 +161,223 @@ export default function DailyBookingSummary() {
           </div>
 
           {/* Summary Stats */}
-          <div className="grid grid-cols-3 gap-4 p-6 bg-gray-50 print:bg-white border-b print:border-b">
+          <div className="grid grid-cols-4 gap-4 p-6 bg-gray-50 print:bg-white border-b print:border-b">
             <div className="text-center">
               <p className="text-3xl font-bold text-red-700 print:text-black">{bookings.length}</p>
-              <p className="text-gray-600">Total Bookings</p>
+              <p className="text-gray-600 text-sm">Catering</p>
+            </div>
+            <div className="text-center">
+              <p className="text-3xl font-bold text-red-700 print:text-black">{foodOrders.length}</p>
+              <p className="text-gray-600 text-sm">Food Orders</p>
             </div>
             <div className="text-center">
               <p className="text-3xl font-bold text-red-700 print:text-black">{totalPax.toLocaleString()}</p>
-              <p className="text-gray-600">Total Guests</p>
+              <p className="text-gray-600 text-sm">Total Guests</p>
             </div>
             <div className="text-center">
               <p className="text-3xl font-bold text-red-700 print:text-black">₱{totalRevenue.toLocaleString()}</p>
-              <p className="text-gray-600">Total Revenue</p>
+              <p className="text-gray-600 text-sm">Total Revenue</p>
             </div>
           </div>
 
-          {/* Bookings List */}
           {loading ? (
             <div className="p-12 text-center">
               <div className="w-12 h-12 border-4 border-red-200 border-t-red-700 rounded-full animate-spin mx-auto"></div>
             </div>
-          ) : bookings.length === 0 ? (
+          ) : !hasAnything ? (
             <div className="p-12 text-center">
               <Calendar size={48} className="text-gray-300 mx-auto mb-4" />
-              <p className="text-gray-500 text-lg">No bookings for this date</p>
+              <p className="text-gray-500 text-lg">No bookings or orders for this date</p>
             </div>
           ) : (
-            <div className="divide-y print:divide-gray-400">
-              {bookings.map((booking, index) => (
-                <div key={booking.id} className="p-6 print:p-4 print:break-inside-avoid">
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="flex items-center gap-3">
-                      <span className="w-8 h-8 bg-red-700 text-white rounded-full flex items-center justify-center font-bold print:bg-black">
-                        {index + 1}
-                      </span>
-                      <div>
-                        <h3 className="text-xl font-bold text-gray-800">{booking.customer_name}</h3>
-                        <p className="text-red-700 font-medium print:text-black">
-                          {menuPackages[booking.menu_package]?.name || booking.menu_package}
-                          {booking.menu_option && ` • ${booking.menu_option}`}
-                        </p>
+            <>
+              {/* Catering Bookings */}
+              {bookings.length > 0 && (
+                <div>
+                  <div className="px-6 pt-4 pb-2 flex items-center gap-2 border-b bg-red-50 print:bg-white">
+                    <UtensilsCrossed size={18} className="text-red-700 print:text-black" />
+                    <h2 className="font-bold text-red-700 print:text-black">Catering Bookings ({bookings.length})</h2>
+                  </div>
+                  <div className="divide-y print:divide-gray-400">
+                    {bookings.map((booking, index) => (
+                      <div key={booking.id} className="p-6 print:p-4 print:break-inside-avoid">
+                        <div className="flex items-start justify-between mb-4">
+                          <div className="flex items-center gap-3">
+                            <span className="w-8 h-8 bg-red-700 text-white rounded-full flex items-center justify-center font-bold print:bg-black">
+                              {index + 1}
+                            </span>
+                            <div>
+                              <h3 className="text-xl font-bold text-gray-800">{booking.customer_name}</h3>
+                              <p className="text-red-700 font-medium print:text-black">
+                                {menuPackages[booking.menu_package]?.name || booking.menu_package}
+                                {booking.menu_option && ` • ${booking.menu_option}`}
+                              </p>
+                            </div>
+                          </div>
+                          <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusBadge(booking.status)}`}>
+                            {booking.status}
+                          </span>
+                        </div>
+
+                        <div className="grid md:grid-cols-2 print:grid-cols-2 gap-4 ml-11">
+                          <div className="space-y-2">
+                            <p className="flex items-center gap-2 text-gray-700">
+                              <Clock size={16} className="text-gray-400" />
+                              <strong>Time:</strong> {formatTime(booking.event_time)}
+                            </p>
+                            <p className="flex items-center gap-2 text-gray-700">
+                              <MapPin size={16} className="text-gray-400" />
+                              <strong>Venue:</strong> {booking.venue}
+                            </p>
+                            <p className="flex items-center gap-2 text-gray-700">
+                              <Users size={16} className="text-gray-400" />
+                              <strong>Guests:</strong> {booking.number_of_pax} pax
+                            </p>
+                            <p className="flex items-center gap-2 text-gray-700">
+                              <Phone size={16} className="text-gray-400" />
+                              <strong>Contact:</strong> {booking.customer_phone}
+                            </p>
+                          </div>
+
+                          <div className="space-y-2">
+                            {booking.motif && (
+                              <p className="text-gray-700">
+                                <strong>Motif:</strong> {booking.motif}
+                              </p>
+                            )}
+                            {booking.special_requests && (
+                              <p className="text-gray-700">
+                                <strong>Special Requests:</strong> {booking.special_requests}
+                              </p>
+                            )}
+
+                            {/* Assigned Staff */}
+                            {booking.assigned_staff && booking.assigned_staff.length > 0 && (
+                              <div>
+                                <strong className="text-gray-700">Staff:</strong>
+                                <div className="flex flex-wrap gap-1 mt-1">
+                                  {booking.assigned_staff.map((s, i) => (
+                                    <span key={i} className="px-2 py-0.5 bg-gray-100 rounded text-sm print:bg-transparent print:border print:border-gray-400">
+                                      {s.name} ({s.role === 'head_waiter' ? 'HW' : 'S'})
+                                    </span>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Assigned Equipment */}
+                            {booking.assigned_equipment && Object.keys(booking.assigned_equipment).length > 0 && (
+                              <div>
+                                <strong className="text-gray-700">Equipment:</strong>
+                                <div className="flex flex-wrap gap-1 mt-1">
+                                  {Object.entries(booking.assigned_equipment).map(([equipId, qty]) => {
+                                    const equip = equipment.find(e => e.id === equipId)
+                                    return equip && qty > 0 ? (
+                                      <span key={equipId} className="px-2 py-0.5 bg-blue-100 text-blue-700 rounded text-sm print:bg-transparent print:text-black print:border print:border-gray-400">
+                                        {equip.name}: {qty}
+                                      </span>
+                                    ) : null
+                                  })}
+                                </div>
+                              </div>
+                            )}
+
+                            <p className="text-xl font-bold text-red-700 print:text-black mt-2">
+                              Total: ₱{booking.total_amount?.toLocaleString()}
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Menu Items */}
+                        {Array.isArray(booking.menu_items) && booking.menu_items.length > 0 && (
+                          <div className="mt-4 ml-11 p-3 bg-gray-50 rounded-lg print:bg-gray-100">
+                            <strong className="text-gray-700 text-sm">Menu Items:</strong>
+                            <p className="mt-1 text-sm text-gray-600">
+                              {booking.menu_items.map(item => typeof item === 'string' ? item : item.name).join(', ')}
+                            </p>
+                          </div>
+                        )}
                       </div>
-                    </div>
-                    <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusBadge(booking.status)}`}>
-                      {booking.status}
-                    </span>
+                    ))}
                   </div>
-
-                  <div className="grid md:grid-cols-2 print:grid-cols-2 gap-4 ml-11">
-                    <div className="space-y-2">
-                      <p className="flex items-center gap-2 text-gray-700">
-                        <Clock size={16} className="text-gray-400" />
-                        <strong>Time:</strong> {formatTime(booking.event_time)}
-                      </p>
-                      <p className="flex items-center gap-2 text-gray-700">
-                        <MapPin size={16} className="text-gray-400" />
-                        <strong>Venue:</strong> {booking.venue}
-                      </p>
-                      <p className="flex items-center gap-2 text-gray-700">
-                        <Users size={16} className="text-gray-400" />
-                        <strong>Guests:</strong> {booking.number_of_pax} pax
-                      </p>
-                      <p className="flex items-center gap-2 text-gray-700">
-                        <Phone size={16} className="text-gray-400" />
-                        <strong>Contact:</strong> {booking.customer_phone}
-                      </p>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      {booking.motif && (
-                        <p className="text-gray-700">
-                          <strong>Motif:</strong> {booking.motif}
-                        </p>
-                      )}
-                      {booking.special_requests && (
-                        <p className="text-gray-700">
-                          <strong>Special Requests:</strong> {booking.special_requests}
-                        </p>
-                      )}
-                      
-                      {/* Assigned Staff */}
-                      {booking.assigned_staff && booking.assigned_staff.length > 0 && (
-                        <div>
-                          <strong className="text-gray-700">Staff:</strong>
-                          <div className="flex flex-wrap gap-1 mt-1">
-                            {booking.assigned_staff.map((s, i) => (
-                              <span key={i} className="px-2 py-0.5 bg-gray-100 rounded text-sm print:bg-transparent print:border print:border-gray-400">
-                                {s.name} ({s.role === 'head_waiter' ? 'HW' : 'S'})
-                              </span>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Assigned Equipment */}
-                      {booking.assigned_equipment && Object.keys(booking.assigned_equipment).length > 0 && (
-                        <div>
-                          <strong className="text-gray-700">Equipment:</strong>
-                          <div className="flex flex-wrap gap-1 mt-1">
-                            {Object.entries(booking.assigned_equipment).map(([equipId, qty]) => {
-                              const equip = equipment.find(e => e.id === equipId)
-                              return equip && qty > 0 ? (
-                                <span key={equipId} className="px-2 py-0.5 bg-blue-100 text-blue-700 rounded text-sm print:bg-transparent print:text-black print:border print:border-gray-400">
-                                  {equip.name}: {qty}
-                                </span>
-                              ) : null
-                            })}
-                          </div>
-                        </div>
-                      )}
-                      
-                      <p className="text-xl font-bold text-red-700 print:text-black mt-2">
-                        Total: ₱{booking.total_amount?.toLocaleString()}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Menu Items */}
-                  {Array.isArray(booking.menu_items) && booking.menu_items.length > 0 && (
-                    <div className="mt-4 ml-11 p-3 bg-gray-50 rounded-lg print:bg-gray-100">
-                      <strong className="text-gray-700 text-sm">Menu Items:</strong>
-                      <p className="mt-1 text-sm text-gray-600">
-                        {booking.menu_items.map(item => typeof item === 'string' ? item : item.name).join(', ')}
-                      </p>
-                    </div>
-                  )}
                 </div>
-              ))}
-            </div>
+              )}
+
+              {/* Food Orders */}
+              {foodOrders.length > 0 && (
+                <div>
+                  <div className="px-6 pt-4 pb-2 flex items-center gap-2 border-b bg-orange-50 print:bg-white">
+                    <ShoppingBag size={18} className="text-orange-600 print:text-black" />
+                    <h2 className="font-bold text-orange-600 print:text-black">Food Orders ({foodOrders.length})</h2>
+                  </div>
+                  <div className="divide-y print:divide-gray-400">
+                    {foodOrders.map((order, index) => (
+                      <div key={order.id} className="p-6 print:p-4 print:break-inside-avoid">
+                        <div className="flex items-start justify-between mb-3">
+                          <div className="flex items-center gap-3">
+                            <span className="w-8 h-8 bg-orange-500 text-white rounded-full flex items-center justify-center font-bold print:bg-black">
+                              {index + 1}
+                            </span>
+                            <div>
+                              <h3 className="text-lg font-bold text-gray-800">{order.customer_name}</h3>
+                              <p className="text-orange-600 text-sm font-medium print:text-black">
+                                {order.order_type === 'packed_meal' ? 'Packed Meal' : 'A La Carte'}
+                                {order.delivery_type && ` • ${order.delivery_type === 'pickup' ? 'Pickup' : 'Delivery'}`}
+                              </p>
+                            </div>
+                          </div>
+                          <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusBadge(order.status)}`}>
+                            {order.status}
+                          </span>
+                        </div>
+
+                        <div className="grid md:grid-cols-2 print:grid-cols-2 gap-4 ml-11">
+                          <div className="space-y-1.5 text-sm">
+                            {order.delivery_time && (
+                              <p className="flex items-center gap-2 text-gray-700">
+                                <Clock size={14} className="text-gray-400" />
+                                <strong>Time:</strong> {formatTime(order.delivery_time)}
+                              </p>
+                            )}
+                            {order.delivery_address && (
+                              <p className="flex items-center gap-2 text-gray-700">
+                                <MapPin size={14} className="text-gray-400" />
+                                <strong>Address:</strong> {order.delivery_address}
+                              </p>
+                            )}
+                            <p className="flex items-center gap-2 text-gray-700">
+                              <Phone size={14} className="text-gray-400" />
+                              <strong>Contact:</strong> {order.customer_phone}
+                            </p>
+                          </div>
+                          <div className="space-y-1.5 text-sm">
+                            {/* Order Items */}
+                            {Array.isArray(order.items) && order.items.length > 0 && (
+                              <div>
+                                <strong className="text-gray-700">Items:</strong>
+                                <div className="mt-1">
+                                  {order.items.map((item, i) => (
+                                    <p key={i} className="text-gray-600">
+                                      {item.quantity || 1}x {item.name} {item.size ? `(${item.size})` : ''} — ₱{(item.price * (item.quantity || 1)).toLocaleString()}
+                                    </p>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                            {order.special_instructions && (
+                              <p className="text-gray-700"><strong>Notes:</strong> {order.special_instructions}</p>
+                            )}
+                            <p className="text-lg font-bold text-orange-600 print:text-black mt-2">
+                              Total: ₱{order.total_amount?.toLocaleString()}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </>
           )}
 
           {/* Footer */}
@@ -284,8 +387,9 @@ export default function DailyBookingSummary() {
                 <p>Red Carpet Food and Catering Services</p>
                 <p>Contact: 0917-187-6510 | 0926-664-2839 | (032) 383-4122</p>
               </div>
-              <div className="text-right">
-                <p className="text-sm text-gray-500">{bookings.length} booking{bookings.length !== 1 ? 's' : ''} for {formatDate(selectedDate)}</p>
+              <div className="text-right text-sm text-gray-500">
+                <p>{bookings.length} catering, {foodOrders.length} food order{foodOrders.length !== 1 ? 's' : ''}</p>
+                <p>{formatDate(selectedDate)}</p>
               </div>
             </div>
           </div>
