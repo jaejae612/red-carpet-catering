@@ -172,7 +172,8 @@ export default function FoodOrderPage() {
         total_amount: total + (orderDetails.deliveryFee || 0),
         special_instructions: orderDetails.specialInstructions,
         status: 'pending',
-        payment_status: 'unpaid'
+        payment_status: 'unpaid',
+        created_by: user?.id || null
       }])
 
       if (insertError) throw insertError

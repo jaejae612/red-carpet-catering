@@ -39,6 +39,7 @@ const AdminStaff = lazy(() => import('./pages/admin/AdminStaff'))
 const AdminEquipment = lazy(() => import('./pages/admin/AdminEquipment'))
 const DailyBookingSummary = lazy(() => import('./pages/admin/DailyBookingSummary'))
 const BookingCalendar = lazy(() => import('./pages/admin/BookingCalendar'))
+const AdminAuditLog = lazy(() => import('./pages/admin/AdminAuditLog'))
 
 // Loading fallback for lazy-loaded pages
 const PageLoader = () => (
@@ -109,7 +110,8 @@ function App() {
               <Route path="/admin/menu" element={<ProtectedRoute adminOnly><AdminLayout><AdminMenu /></AdminLayout></ProtectedRoute>} />
               <Route path="/admin/daily-summary" element={<ProtectedRoute adminOnly><AdminLayout><DailyBookingSummary /></AdminLayout></ProtectedRoute>} />
               <Route path="/admin/calendar" element={<ProtectedRoute adminOnly><AdminLayout><BookingCalendar /></AdminLayout></ProtectedRoute>} />
-              
+              <Route path="/admin/audit-log" element={<ProtectedRoute adminOnly><AdminLayout><AdminAuditLog /></AdminLayout></ProtectedRoute>} />
+
               {/* Catch all */}
               <Route path="*" element={<NotFoundPage />} />
             </Routes>

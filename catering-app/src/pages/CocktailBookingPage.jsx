@@ -161,7 +161,8 @@ export default function CocktailBookingPage() {
         price_per_head: pricePerHead,
         total_amount: total,
         status: 'pending',
-        payment_status: 'unpaid'
+        payment_status: 'unpaid',
+        created_by: user?.id || null
       }
 
       const { error: insertError } = await supabase

@@ -2,8 +2,11 @@ import React, { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 import { menuPackages } from '../lib/menuData'
 import { X, Save, Calendar, Clock, MapPin, Users, CreditCard, AlertCircle, CheckCircle } from 'lucide-react'
+import { useAuth } from '../context/AuthContext'
+import { logAudit, computeChangedFields } from '../lib/auditLog'
 
 export default function AdminBookingEdit({ booking, onClose, onSave }) {
+  const { user, profile } = useAuth()
   const [formData, setFormData] = useState({
     customer_name: '',
     customer_phone: '',
@@ -77,12 +80,31 @@ export default function AdminBookingEdit({ booking, onClose, onSave }) {
         updateData.balance_paid_at = new Date().toISOString()
       }
 
+      updateData.modified_by = user?.id
+
       const { error: updateError } = await supabase
         .from('bookings')
         .update(updateData)
         .eq('id', booking.id)
 
       if (updateError) throw updateError
+
+      const changes = computeChangedFields(booking, updateData, [
+        'customer_name', 'customer_phone', 'customer_email', 'venue',
+        'event_date', 'event_time', 'number_of_pax', 'motif',
+        'special_requests', 'status', 'payment_status', 'deposit_amount',
+        'payment_notes', 'total_amount'
+      ])
+      if (changes.length > 0) {
+        logAudit({
+          entityType: 'booking',
+          entityId: booking.id,
+          action: changes.some(c => c.field === 'status') ? 'status_changed' : 'updated',
+          adminId: user?.id,
+          adminName: profile?.full_name,
+          changedFields: changes,
+        })
+      }
 
       setSuccess('Booking updated successfully!')
       setTimeout(() => {

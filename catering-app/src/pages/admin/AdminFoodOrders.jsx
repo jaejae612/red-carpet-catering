@@ -6,8 +6,12 @@ import { Package, Search, Calendar, Phone, MapPin, Clock, ChevronDown, ChevronUp
 import { TableSkeleton } from '../../components/SkeletonLoaders'
 import { exportFoodOrdersCSV, exportFoodOrdersPDF } from '../../lib/exportUtils'
 import PaymentTracker from '../../components/PaymentTracker'
+import AuditTimeline from '../../components/AuditTimeline'
+import { useAuth } from '../../context/AuthContext'
+import { logAudit } from '../../lib/auditLog'
 
 export default function AdminFoodOrders() {
+  const { user, profile } = useAuth()
   const [searchParams] = useSearchParams()
   const [orders, setOrders] = useState([])
   const [loading, setLoading] = useState(true)
@@ -77,17 +81,27 @@ export default function AdminFoodOrders() {
       if (!window.confirm(msg)) return
     }
 
+    const oldStatus = order.status
     const { error } = await supabase
       .from('food_orders')
-      .update({ status: newStatus, updated_at: new Date().toISOString() })
+      .update({ status: newStatus, modified_by: user?.id, updated_at: new Date().toISOString() })
       .eq('id', orderId)
-    
+
     if (!error) {
       // Refetch to get trigger-updated payment_status
       const { data } = await supabase.from('food_orders').select('*').eq('id', orderId).single()
       if (data) {
         setOrders(prev => prev.map(o => o.id === orderId ? data : o))
       }
+
+      logAudit({
+        entityType: 'food_order',
+        entityId: orderId,
+        action: 'status_changed',
+        adminId: user?.id,
+        adminName: profile?.full_name,
+        changedFields: [{ field: 'status', old: oldStatus, new: newStatus }],
+      })
     }
   }
 
@@ -109,11 +123,23 @@ export default function AdminFoodOrders() {
     if (!window.confirm(`Update ${selectedIds.size} order(s) to "${newStatus}"?`)) return
     setBulkUpdating(true)
     try {
+      const idsArray = Array.from(selectedIds)
       const { error } = await supabase
         .from('food_orders')
-        .update({ status: newStatus, updated_at: new Date().toISOString() })
-        .in('id', Array.from(selectedIds))
+        .update({ status: newStatus, modified_by: user?.id, updated_at: new Date().toISOString() })
+        .in('id', idsArray)
       if (!error) {
+        for (const id of idsArray) {
+          const order = orders.find(o => o.id === id)
+          logAudit({
+            entityType: 'food_order',
+            entityId: id,
+            action: 'status_changed',
+            adminId: user?.id,
+            adminName: profile?.full_name,
+            changedFields: [{ field: 'status', old: order?.status, new: newStatus }],
+          })
+        }
         await fetchOrders()
         setSelectedIds(new Set())
       }
@@ -355,6 +381,9 @@ export default function AdminFoodOrders() {
                       }}
                     />
                   </div>
+
+                  {/* Activity Log */}
+                  <AuditTimeline entityType="food_order" entityId={order.id} />
 
                   {/* Order Info */}
                   <div className="mt-4 pt-4 border-t text-sm text-gray-500">

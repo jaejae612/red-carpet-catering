@@ -577,9 +577,10 @@ export default function BookingPage() {
         free_drink: booking.freeDrink,
         drink_add_ons: booking.drinkAddOns,
         swapped_dishes: booking.swappedDishes,
-        special_requests: booking.specialRequests, 
-        total_amount: calculateTotal(), 
-        status: 'pending'
+        special_requests: booking.specialRequests,
+        total_amount: calculateTotal(),
+        status: 'pending',
+        created_by: user?.id || null
       }
 
       const { data, error: insertError } = await supabase.from('bookings').insert([bookingData]).select().single()

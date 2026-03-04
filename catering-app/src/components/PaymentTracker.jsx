@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../context/AuthContext'
+import { logAudit } from '../lib/auditLog'
 import { Plus, Trash2, X, CreditCard, AlertTriangle } from 'lucide-react'
 
 const PAYMENT_METHODS = [
@@ -27,7 +28,7 @@ const formatCurrency = (n) => `₱${Number(n || 0).toLocaleString()}`
 const formatDate = (d) => d ? new Date(d).toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' }) : ''
 
 export default function PaymentTracker({ bookingId, foodOrderId, totalAmount = 0, currentStatus, onStatusChange }) {
-  const { user } = useAuth()
+  const { user, profile } = useAuth()
   const [payments, setPayments] = useState([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
@@ -94,6 +95,19 @@ export default function PaymentTracker({ bookingId, foodOrderId, totalAmount = 0
       const { error: insertError } = await supabase.from('payments').insert([paymentData])
       if (insertError) throw insertError
 
+      logAudit({
+        entityType: bookingId ? 'booking' : 'food_order',
+        entityId: bookingId || foodOrderId,
+        action: 'payment_recorded',
+        adminId: user?.id,
+        adminName: profile?.full_name,
+        changedFields: [
+          { field: 'amount', old: null, new: amount },
+          { field: 'method', old: null, new: form.method },
+        ],
+        description: `Payment of ₱${amount.toLocaleString()} recorded via ${getMethodInfo(form.method).label}`,
+      })
+
       // Reset form
       setForm({ amount: '', method: 'gcash', reference_number: '', payment_date: new Date().toISOString().split('T')[0], notes: '' })
       setShowForm(false)
@@ -115,11 +129,21 @@ export default function PaymentTracker({ bookingId, foodOrderId, totalAmount = 0
 
   const handleDelete = async (paymentId) => {
     try {
+      const deletedPayment = payments.find(p => p.id === paymentId)
       const { error } = await supabase.from('payments').delete().eq('id', paymentId)
       if (error) throw error
       setShowDeleteConfirm(null)
       await fetchPayments()
       if (onStatusChange) setTimeout(() => onStatusChange(), 500)
+
+      logAudit({
+        entityType: bookingId ? 'booking' : 'food_order',
+        entityId: bookingId || foodOrderId,
+        action: 'updated',
+        adminId: user?.id,
+        adminName: profile?.full_name,
+        description: `Payment of ₱${Number(deletedPayment?.amount || 0).toLocaleString()} deleted`,
+      })
     } catch (err) {
       alert('Error deleting payment: ' + err.message)
     }
@@ -134,6 +158,15 @@ export default function PaymentTracker({ bookingId, foodOrderId, totalAmount = 0
         await supabase.from('food_orders').update({ payment_status: 'refunded' }).eq('id', foodOrderId)
       }
       if (onStatusChange) onStatusChange()
+
+      logAudit({
+        entityType: bookingId ? 'booking' : 'food_order',
+        entityId: bookingId || foodOrderId,
+        action: 'status_changed',
+        adminId: user?.id,
+        adminName: profile?.full_name,
+        changedFields: [{ field: 'payment_status', old: 'refund_pending', new: 'refunded' }],
+      })
     } catch (err) {
       alert('Error: ' + err.message)
     }

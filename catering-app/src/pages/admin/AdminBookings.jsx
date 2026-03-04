@@ -7,12 +7,16 @@ import { TableSkeleton } from '../../components/SkeletonLoaders'
 import { exportBookingsCSV, exportBookingsPDF } from '../../lib/exportUtils'
 import PaymentTracker from '../../components/PaymentTracker'
 import AdminBookingEdit from '../../components/AdminBookingEdit'
+import AuditTimeline from '../../components/AuditTimeline'
 import { sendBookingNotifications, sendEventReminder } from '../../lib/emailService'
 import { getDateConflicts, calculateStaffNeeds, calculateEquipmentNeeds, countMenuDishes } from '../../lib/cateringFormulas'
+import { useAuth } from '../../context/AuthContext'
+import { logAudit } from '../../lib/auditLog'
 
 export default function AdminBookings() {
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
+  const { user, profile } = useAuth()
   const [bookings, setBookings] = useState([])
   const [staff, setStaff] = useState([])
   const [equipment, setEquipment] = useState([])
@@ -92,21 +96,31 @@ export default function AdminBookings() {
       if (!window.confirm(msg)) return
     }
 
-    await supabase.from('bookings').update({ status: newStatus }).eq('id', id)
-    
+    const oldStatus = booking.status
+    await supabase.from('bookings').update({ status: newStatus, modified_by: user?.id }).eq('id', id)
+
     // Refetch to get trigger-updated payment_status
     const { data } = await supabase.from('bookings').select('*').eq('id', id).single()
     if (data) {
       setBookings(prev => prev.map(b => b.id === id ? data : b))
       if (selectedBooking?.id === id) setSelectedBooking(data)
     }
+
+    logAudit({
+      entityType: 'booking',
+      entityId: id,
+      action: 'status_changed',
+      adminId: user?.id,
+      adminName: profile?.full_name,
+      changedFields: [{ field: 'status', old: oldStatus, new: newStatus }],
+    })
   }
 
   const saveAssignment = async () => {
     if (!selectedBooking) return
     setSaving(true)
     try {
-      const updateData = { assigned_staff: selectedBooking.assigned_staff, assigned_equipment: selectedBooking.assigned_equipment }
+      const updateData = { assigned_staff: selectedBooking.assigned_staff, assigned_equipment: selectedBooking.assigned_equipment, modified_by: user?.id }
       // Only auto-confirm if currently pending — don't overwrite completed/cancelled
       if (selectedBooking.status === 'pending') updateData.status = 'confirmed'
       await supabase.from('bookings').update(updateData).eq('id', selectedBooking.id)
@@ -114,6 +128,15 @@ export default function AdminBookings() {
       setBookings(prev => prev.map(b => b.id === selectedBooking.id ? selectedBooking : b))
       setHasUnsavedAssignment(false)
       alert('Saved!')
+
+      logAudit({
+        entityType: 'booking',
+        entityId: selectedBooking.id,
+        action: 'updated',
+        adminId: user?.id,
+        adminName: profile?.full_name,
+        description: 'Staff and equipment assignment updated',
+      })
     } catch (error) { alert('Error saving') } finally { setSaving(false) }
   }
 
@@ -306,10 +329,19 @@ export default function AdminBookings() {
 
   const handleSaveExpenses = async (expenses) => {
     if (!selectedBooking) return
-    await supabase.from('bookings').update({ expenses }).eq('id', selectedBooking.id)
+    await supabase.from('bookings').update({ expenses, modified_by: user?.id }).eq('id', selectedBooking.id)
     const updated = { ...selectedBooking, expenses }
     setSelectedBooking(updated)
     setBookings(prev => prev.map(b => b.id === updated.id ? updated : b))
+
+    logAudit({
+      entityType: 'booking',
+      entityId: selectedBooking.id,
+      action: 'updated',
+      adminId: user?.id,
+      adminName: profile?.full_name,
+      changedFields: [{ field: 'expenses', old: selectedBooking.expenses, new: expenses }],
+    })
   }
 
   const handleDeleteBooking = async () => {
@@ -319,10 +351,20 @@ export default function AdminBookings() {
       ? `⚠️ "${selectedBooking.customer_name}" has ₱${selectedBooking.amount_paid.toLocaleString()} in payments.\n\nThis will permanently delete the booking and all payment records.\n\nAre you sure?`
       : `Delete booking for "${selectedBooking.customer_name}" on ${selectedBooking.event_date}?\n\nThis action cannot be undone.`
     if (!window.confirm(msg)) return
+    const deletedBooking = { ...selectedBooking }
     const { error } = await supabase.from('bookings').delete().eq('id', selectedBooking.id)
     if (!error) {
       setBookings(prev => prev.filter(b => b.id !== selectedBooking.id))
       setSelectedBooking(null)
+
+      logAudit({
+        entityType: 'booking',
+        entityId: deletedBooking.id,
+        action: 'deleted',
+        adminId: user?.id,
+        adminName: profile?.full_name,
+        description: `Booking for "${deletedBooking.customer_name}" on ${deletedBooking.event_date} deleted`,
+      })
     } else {
       alert('Error deleting booking: ' + error.message)
     }
@@ -545,10 +587,13 @@ export default function AdminBookings() {
                   </div>
                 )}
 
+                {/* Activity Log */}
+                <AuditTimeline entityType="booking" entityId={selectedBooking.id} />
+
                 {/* Customer History */}
                 {(() => {
-                  const customerBookings = bookings.filter(b => 
-                    b.id !== selectedBooking.id && 
+                  const customerBookings = bookings.filter(b =>
+                    b.id !== selectedBooking.id &&
                     (b.customer_name === selectedBooking.customer_name || b.customer_phone === selectedBooking.customer_phone)
                   )
                   if (customerBookings.length === 0) return null

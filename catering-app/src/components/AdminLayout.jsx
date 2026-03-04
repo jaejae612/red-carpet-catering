@@ -11,7 +11,8 @@ import {
   ChevronLeft,
   ChevronRight,
   Menu,
-  CalendarDays
+  CalendarDays,
+  ScrollText
 } from 'lucide-react'
 
 const navItems = [
@@ -23,6 +24,7 @@ const navItems = [
   { path: '/admin/menu', label: 'Catering Menu', icon: ChefHat },
   { path: '/admin/staff', label: 'Staff', icon: Users },
   { path: '/admin/equipment', label: 'Equipment', icon: Package },
+  { path: '/admin/audit-log', label: 'Audit Log', icon: ScrollText },
 ]
 
 export default function AdminLayout({ children }) {

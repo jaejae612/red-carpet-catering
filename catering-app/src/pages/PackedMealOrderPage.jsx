@@ -143,7 +143,8 @@ export default function PackedMealOrderPage() {
         special_instructions: orderDetails.specialInstructions,
         total_amount: cartTotal,
         status: 'pending',
-        payment_status: 'unpaid'
+        payment_status: 'unpaid',
+        created_by: user?.id || null
       }
 
       const { error: insertError } = await supabase
