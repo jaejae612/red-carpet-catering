@@ -2,13 +2,12 @@ import React, { useState, useEffect } from 'react'
 import { Link, useSearchParams, useNavigate } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import { menuPackages } from '../../lib/menuData'
-import { ArrowLeft, Calendar, MapPin, Users, Phone, Mail, Check, Plus, Minus, X, Save, Search, Edit2, Send, Copy, Filter, ChevronDown, ChevronUp, Trash2, Bell, MessageSquare, DollarSign, Star } from 'lucide-react'
+import { ArrowLeft, Calendar, MapPin, Users, Phone, Mail, Check, Plus, Minus, X, Save, Search, Edit2, Send, Copy, Filter, ChevronDown, ChevronUp, Trash2, Bell, DollarSign, Star } from 'lucide-react'
 import { TableSkeleton } from '../../components/SkeletonLoaders'
 import { exportBookingsCSV, exportBookingsPDF } from '../../lib/exportUtils'
 import PaymentTracker from '../../components/PaymentTracker'
 import AdminBookingEdit from '../../components/AdminBookingEdit'
 import { sendBookingNotifications, sendEventReminder } from '../../lib/emailService'
-import { sendBookingReminderSMS } from '../../lib/smsService'
 import { getDateConflicts, calculateStaffNeeds, calculateEquipmentNeeds, countMenuDishes } from '../../lib/cateringFormulas'
 
 export default function AdminBookings() {
@@ -31,7 +30,6 @@ export default function AdminBookings() {
   const [saving, setSaving] = useState(false)
   const [sendingEmail, setSendingEmail] = useState(false)
   const [sendingReminder, setSendingReminder] = useState(false)
-  const [sendingSMS, setSendingSMS] = useState(false)
   const [hasUnsavedAssignment, setHasUnsavedAssignment] = useState(false)
   const [staffSearch, setStaffSearch] = useState('')
   const [showExpenses, setShowExpenses] = useState(false)
@@ -294,28 +292,16 @@ export default function AdminBookings() {
 
   const handleSendReminder = async () => {
     if (!selectedBooking) return
+    if (!selectedBooking.customer_email) { alert('No email address on file.'); return }
     const daysUntil = Math.ceil((new Date(selectedBooking.event_date) - new Date()) / (1000 * 60 * 60 * 24))
     if (daysUntil < 0) { alert('This event has already passed.'); return }
 
-    const method = !selectedBooking.customer_email ? 'sms' :
-      window.confirm(`Send reminder via:\n\nOK = Email (${selectedBooking.customer_email})\nCancel = SMS (${selectedBooking.customer_phone})`) ? 'email' : 'sms'
-
-    if (method === 'email') {
-      setSendingReminder(true)
-      try {
-        const result = await sendEventReminder(selectedBooking)
-        alert(result.success ? `Reminder sent to ${selectedBooking.customer_email}!` : 'Failed: ' + result.error)
-      } catch (e) { alert('Error: ' + e.message) }
-      finally { setSendingReminder(false) }
-    } else {
-      if (!selectedBooking.customer_phone) { alert('No phone number'); return }
-      setSendingSMS(true)
-      try {
-        const result = await sendBookingReminderSMS(selectedBooking)
-        alert(result.success ? `SMS sent to ${selectedBooking.customer_phone}!` : 'Failed: ' + result.error)
-      } catch (e) { alert('Error: ' + e.message) }
-      finally { setSendingSMS(false) }
-    }
+    setSendingReminder(true)
+    try {
+      const result = await sendEventReminder(selectedBooking)
+      alert(result.success ? `Reminder sent to ${selectedBooking.customer_email}!` : 'Failed: ' + result.error)
+    } catch (e) { alert('Error: ' + e.message) }
+    finally { setSendingReminder(false) }
   }
 
   const handleSaveExpenses = async (expenses) => {
@@ -433,7 +419,7 @@ export default function AdminBookings() {
         <div className="lg:col-span-2">
           {selectedBooking ? (
             <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
-              <div className="bg-gradient-to-r from-red-700 to-red-800 text-white p-6"><div className="flex justify-between items-start"><div><h2 className="text-xl font-bold">{selectedBooking.customer_name}</h2><p className="text-red-200">{menuPackages[selectedBooking.menu_package]?.name} • {selectedBooking.menu_option}</p></div><div className="flex items-center gap-2 flex-wrap justify-end"><button onClick={handleDuplicate} className="bg-white/20 hover:bg-white/30 px-3 py-1 rounded-lg text-sm flex items-center gap-1"><Copy size={14} /> Duplicate</button><button onClick={handleSendEmail} disabled={sendingEmail} className="bg-white/20 hover:bg-white/30 px-3 py-1 rounded-lg text-sm flex items-center gap-1 disabled:opacity-50"><Send size={14} /> {sendingEmail ? 'Sending...' : 'Email'}</button><button onClick={handleSendReminder} disabled={sendingReminder || sendingSMS} className="bg-white/20 hover:bg-amber-500 px-3 py-1 rounded-lg text-sm flex items-center gap-1 disabled:opacity-50"><Bell size={14} /> {sendingReminder ? 'Sending...' : sendingSMS ? 'SMS...' : 'Remind'}</button><button onClick={() => setShowEditModal(true)} className="bg-white/20 hover:bg-white/30 px-3 py-1 rounded-lg text-sm flex items-center gap-1"><Edit2 size={14} /> Edit</button><button onClick={handleDeleteBooking} className="bg-white/20 hover:bg-red-500 px-3 py-1 rounded-lg text-sm flex items-center gap-1"><Trash2 size={14} /> Delete</button><select value={selectedBooking.status} onChange={(e) => updateStatus(selectedBooking.id, e.target.value)} className="bg-white/20 text-white border-0 rounded-lg px-3 py-1 text-sm"><option value="pending" className="text-gray-800">Pending</option><option value="confirmed" className="text-gray-800">Confirmed</option><option value="completed" className="text-gray-800">Completed</option><option value="cancelled" className="text-gray-800">Cancelled</option></select></div></div></div>
+              <div className="bg-gradient-to-r from-red-700 to-red-800 text-white p-6"><div className="flex justify-between items-start"><div><h2 className="text-xl font-bold">{selectedBooking.customer_name}</h2><p className="text-red-200">{menuPackages[selectedBooking.menu_package]?.name} • {selectedBooking.menu_option}</p></div><div className="flex items-center gap-2 flex-wrap justify-end"><button onClick={handleDuplicate} className="bg-white/20 hover:bg-white/30 px-3 py-1 rounded-lg text-sm flex items-center gap-1"><Copy size={14} /> Duplicate</button><button onClick={handleSendEmail} disabled={sendingEmail} className="bg-white/20 hover:bg-white/30 px-3 py-1 rounded-lg text-sm flex items-center gap-1 disabled:opacity-50"><Send size={14} /> {sendingEmail ? 'Sending...' : 'Email'}</button><button onClick={handleSendReminder} disabled={sendingReminder} className="bg-white/20 hover:bg-amber-500 px-3 py-1 rounded-lg text-sm flex items-center gap-1 disabled:opacity-50"><Bell size={14} /> {sendingReminder ? 'Sending...' : 'Remind'}</button><button onClick={() => setShowEditModal(true)} className="bg-white/20 hover:bg-white/30 px-3 py-1 rounded-lg text-sm flex items-center gap-1"><Edit2 size={14} /> Edit</button><button onClick={handleDeleteBooking} className="bg-white/20 hover:bg-red-500 px-3 py-1 rounded-lg text-sm flex items-center gap-1"><Trash2 size={14} /> Delete</button><select value={selectedBooking.status} onChange={(e) => updateStatus(selectedBooking.id, e.target.value)} className="bg-white/20 text-white border-0 rounded-lg px-3 py-1 text-sm"><option value="pending" className="text-gray-800">Pending</option><option value="confirmed" className="text-gray-800">Confirmed</option><option value="completed" className="text-gray-800">Completed</option><option value="cancelled" className="text-gray-800">Cancelled</option></select></div></div></div>
               <div className="p-6 space-y-6">
                 {/* Warning: Completed but unpaid */}
                 {selectedBooking.status === 'completed' && (!selectedBooking.payment_status || selectedBooking.payment_status === 'unpaid') && (

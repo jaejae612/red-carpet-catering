@@ -92,26 +92,26 @@ export default function AdminLayout({ children }) {
   )
 
   return (
-    <div className="flex min-h-[calc(100vh-64px)]">
+    <div className="flex min-h-[calc(100vh-64px)] print:block print:min-h-0">
       {/* Mobile Menu Button */}
       <button
         onClick={() => setMobileOpen(true)}
-        className="md:hidden fixed bottom-4 left-4 z-40 bg-red-700 text-white p-3 rounded-full shadow-lg"
+        className="md:hidden fixed bottom-4 left-4 z-40 bg-red-700 text-white p-3 rounded-full shadow-lg print:hidden"
       >
         <Menu size={24} />
       </button>
 
       {/* Mobile Overlay */}
       {mobileOpen && (
-        <div 
-          className="md:hidden fixed inset-0 bg-black/50 z-40"
+        <div
+          className="md:hidden fixed inset-0 bg-black/50 z-40 print:hidden"
           onClick={() => setMobileOpen(false)}
         />
       )}
 
       {/* Sidebar - Mobile */}
       <aside className={`
-        md:hidden fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-xl transform transition-transform
+        md:hidden fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-xl transform transition-transform print:hidden
         ${mobileOpen ? 'translate-x-0' : '-translate-x-full'}
       `}>
         <SidebarContent />
@@ -119,7 +119,7 @@ export default function AdminLayout({ children }) {
 
       {/* Sidebar - Desktop */}
       <aside className={`
-        hidden md:block bg-white border-r border-gray-200 transition-all duration-300
+        hidden md:block bg-white border-r border-gray-200 transition-all duration-300 print:hidden
         ${collapsed ? 'w-16' : 'w-64'}
       `}>
         <div className="sticky top-16">
@@ -128,7 +128,7 @@ export default function AdminLayout({ children }) {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 p-6 bg-gray-50">
+      <main className="flex-1 p-6 bg-gray-50 print:p-0 print:bg-white">
         {children}
       </main>
     </div>

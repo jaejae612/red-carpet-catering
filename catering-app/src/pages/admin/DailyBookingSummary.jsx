@@ -125,12 +125,6 @@ export default function DailyBookingSummary() {
       </div>
 
       {/* Printable Content */}
-      <style>{`
-        @media print {
-          * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-          .print\\:border { border: 1px solid #666 !important; }
-        }
-      `}</style>
       <div className="max-w-5xl mx-auto p-4 print:p-0 print:max-w-none">
         <div className="bg-white rounded-2xl shadow-lg print:shadow-none print:rounded-none">
           
@@ -152,7 +146,7 @@ export default function DailyBookingSummary() {
           </div>
 
           {/* Summary Stats */}
-          <div className="grid grid-cols-3 gap-4 p-6 bg-gray-50 print:bg-gray-100">
+          <div className="grid grid-cols-3 gap-4 p-6 bg-gray-50 print:bg-white border-b print:border-b">
             <div className="text-center">
               <p className="text-3xl font-bold text-red-700 print:text-black">{bookings.length}</p>
               <p className="text-gray-600">Total Bookings</p>
@@ -199,7 +193,7 @@ export default function DailyBookingSummary() {
                     </span>
                   </div>
 
-                  <div className="grid md:grid-cols-2 gap-4 ml-11">
+                  <div className="grid md:grid-cols-2 print:grid-cols-2 gap-4 ml-11">
                     <div className="space-y-2">
                       <p className="flex items-center gap-2 text-gray-700">
                         <Clock size={16} className="text-gray-400" />
@@ -300,25 +294,9 @@ export default function DailyBookingSummary() {
       {/* Print Styles */}
       <style>{`
         @media print {
-          html, body { background: white !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-          .print\\:hidden { display: none !important; }
-          .print\\:shadow-none { box-shadow: none !important; }
-          .print\\:rounded-none { border-radius: 0 !important; }
-          .print\\:p-0 { padding: 0 !important; }
-          .print\\:max-w-none { max-width: none !important; }
-          .print\\:break-inside-avoid { break-inside: avoid; }
-          .print\\:bg-gray-100 { background-color: #f3f4f6 !important; }
-          .print\\:bg-white { background-color: white !important; }
-          .print\\:text-black { color: black !important; }
-          .print\\:border-black { border-color: black !important; }
-          .print\\:border-b-2 { border-bottom-width: 2px !important; }
-          .print\\:border-t-2 { border-top-width: 2px !important; }
-          .print\\:divide-gray-400 > * + * { border-color: #9ca3af !important; }
-          .print\\:h-12 { height: 3rem !important; }
-          .print\\:p-4 { padding: 1rem !important; }
-          .bg-gray-100 { background: white !important; }
-          footer { display: none !important; }
-          nav { display: none !important; }
+          html, body { background: white !important; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+          nav, footer, aside, .print\\:hidden { display: none !important; }
+          .bg-gray-100, .bg-gray-50 { background: white !important; }
           @page { margin: 0.5cm; }
         }
       `}</style>
