@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
-import { TrendingUp, Users, Calendar, Package, Clock, ChevronDown, ChevronRight, Trash2, AlertTriangle, RefreshCw } from 'lucide-react'
+import { TrendingUp, Users, Calendar, Package, Clock, ChevronDown, ChevronRight, Trash2, AlertTriangle, RefreshCw, Star, BarChart3, MapPin } from 'lucide-react'
 import { DashboardSkeleton } from '../../components/SkeletonLoaders'
 import RevenueCharts from '../../components/RevenueCharts'
 
@@ -107,6 +107,78 @@ export default function AdminDashboardStats() {
   }
 
   const topCustomers = getTopCustomers()
+
+  // Popular packages
+  const getPopularPackages = () => {
+    const packages = {}
+    filteredBookings.filter(b => b.status !== 'cancelled').forEach(b => {
+      const pkg = b.menu_package || 'Other'
+      if (!packages[pkg]) packages[pkg] = { name: pkg, count: 0, revenue: 0, avgPax: 0, totalPax: 0 }
+      packages[pkg].count++
+      packages[pkg].revenue += b.total_amount || 0
+      packages[pkg].totalPax += b.number_of_pax || 0
+    })
+    return Object.values(packages)
+      .map(p => ({ ...p, avgPax: p.count > 0 ? Math.round(p.totalPax / p.count) : 0 }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 5)
+  }
+
+  // Peak booking days
+  const getPeakDays = () => {
+    const days = { 0: 'Sunday', 1: 'Monday', 2: 'Tuesday', 3: 'Wednesday', 4: 'Thursday', 5: 'Friday', 6: 'Saturday' }
+    const dayCounts = {}
+    filteredBookings.filter(b => b.status !== 'cancelled').forEach(b => {
+      const day = new Date(b.event_date).getDay()
+      dayCounts[day] = (dayCounts[day] || 0) + 1
+    })
+    return Object.entries(dayCounts)
+      .map(([day, count]) => ({ day: days[day], count, percentage: filteredBookings.length > 0 ? Math.round((count / filteredBookings.filter(b => b.status !== 'cancelled').length) * 100) : 0 }))
+      .sort((a, b) => b.count - a.count)
+  }
+
+  // Top venues
+  const getTopVenues = () => {
+    const venues = {}
+    filteredBookings.filter(b => b.status !== 'cancelled' && b.venue).forEach(b => {
+      const v = b.venue
+      if (!venues[v]) venues[v] = { name: v, count: 0 }
+      venues[v].count++
+    })
+    return Object.values(venues).sort((a, b) => b.count - a.count).slice(0, 5)
+  }
+
+  // Conversion rate
+  const conversionRate = filteredBookings.length > 0
+    ? ((filteredBookings.filter(b => b.status === 'completed' || b.status === 'confirmed').length / filteredBookings.length) * 100).toFixed(1)
+    : 0
+
+  // Average rating from reviews
+  const getAvgRating = () => {
+    const reviewed = filteredBookings.filter(b => b.review_rating)
+    if (reviewed.length === 0) return { avg: 0, count: 0 }
+    const sum = reviewed.reduce((s, b) => s + b.review_rating, 0)
+    return { avg: (sum / reviewed.length).toFixed(1), count: reviewed.length }
+  }
+
+  // Profit summary (from expense tracking)
+  const getProfitSummary = () => {
+    const withExpenses = filteredBookings.filter(b => b.expenses && b.status !== 'cancelled')
+    if (withExpenses.length === 0) return null
+    let totalRevenue = 0, totalExpenses = 0
+    withExpenses.forEach(b => {
+      totalRevenue += b.total_amount || 0
+      const e = b.expenses
+      totalExpenses += (e.food_cost || 0) + (e.staff_cost || 0) + (e.rental_cost || 0) + (e.transport_cost || 0) + (e.other_cost || 0)
+    })
+    return { totalRevenue, totalExpenses, profit: totalRevenue - totalExpenses, margin: totalRevenue > 0 ? ((totalRevenue - totalExpenses) / totalRevenue * 100).toFixed(1) : 0, count: withExpenses.length }
+  }
+
+  const popularPackages = getPopularPackages()
+  const peakDays = getPeakDays()
+  const topVenues = getTopVenues()
+  const avgRating = getAvgRating()
+  const profitSummary = getProfitSummary()
 
   // Upcoming bookings
   const upcomingBookings = bookings
@@ -460,6 +532,122 @@ export default function AdminDashboardStats() {
             <Link to="/admin/bookings" className="block text-center text-red-700 font-medium mt-4 hover:text-red-800">
               View All Bookings →
             </Link>
+          </div>
+        </div>
+
+        {/* Advanced Analytics Row */}
+        <div className="grid lg:grid-cols-3 gap-6 mt-6">
+          {/* Popular Packages */}
+          <div className="bg-white rounded-2xl shadow-lg p-6">
+            <h2 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+              <BarChart3 size={20} className="text-red-600" />
+              Popular Packages
+            </h2>
+            {popularPackages.length > 0 ? (
+              <div className="space-y-3">
+                {popularPackages.map((pkg, i) => (
+                  <div key={i} className="relative">
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-sm font-medium text-gray-700 truncate">{pkg.name}</span>
+                      <span className="text-sm text-gray-500">{pkg.count} booking{pkg.count !== 1 ? 's' : ''}</span>
+                    </div>
+                    <div className="h-2 bg-gray-100 rounded-full">
+                      <div className="h-full bg-red-500 rounded-full" style={{ width: `${(pkg.count / (popularPackages[0]?.count || 1)) * 100}%` }} />
+                    </div>
+                    <div className="flex justify-between text-xs text-gray-400 mt-0.5">
+                      <span>Avg {pkg.avgPax} pax</span>
+                      <span>₱{pkg.revenue.toLocaleString()}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : <p className="text-gray-500 text-center py-4">No data yet</p>}
+          </div>
+
+          {/* Peak Days & Venues */}
+          <div className="bg-white rounded-2xl shadow-lg p-6">
+            <h2 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+              <Calendar size={20} className="text-blue-600" />
+              Peak Event Days
+            </h2>
+            {peakDays.length > 0 ? (
+              <div className="space-y-2 mb-6">
+                {peakDays.map((d, i) => (
+                  <div key={i} className="flex items-center justify-between p-2 bg-gray-50 rounded-lg">
+                    <div className="flex items-center gap-2">
+                      <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${i === 0 ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-600'}`}>{i + 1}</span>
+                      <span className="font-medium text-gray-700">{d.day}</span>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-sm font-medium text-gray-800">{d.count} events</span>
+                      <span className="text-xs text-gray-400 ml-2">({d.percentage}%)</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : <p className="text-gray-500 text-center py-4">No data yet</p>}
+
+            <h3 className="text-md font-bold text-gray-800 mb-3 flex items-center gap-2"><MapPin size={18} className="text-green-600" /> Top Venues</h3>
+            {topVenues.length > 0 ? (
+              <div className="space-y-2">
+                {topVenues.map((v, i) => (
+                  <div key={i} className="flex items-center justify-between text-sm p-2 bg-gray-50 rounded-lg">
+                    <span className="text-gray-700 truncate">{v.name}</span>
+                    <span className="text-gray-500 font-medium shrink-0 ml-2">{v.count}x</span>
+                  </div>
+                ))}
+              </div>
+            ) : <p className="text-gray-500 text-center py-2 text-sm">No venue data</p>}
+          </div>
+
+          {/* KPIs: Conversion, Rating, Profit */}
+          <div className="bg-white rounded-2xl shadow-lg p-6">
+            <h2 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+              <TrendingUp size={20} className="text-green-600" />
+              Key Metrics
+            </h2>
+            <div className="space-y-4">
+              {/* Conversion Rate */}
+              <div className="bg-blue-50 rounded-xl p-4">
+                <p className="text-xs text-blue-600 font-medium mb-1">Booking Conversion</p>
+                <p className="text-2xl font-bold text-gray-800">{conversionRate}%</p>
+                <p className="text-xs text-gray-500">confirmed or completed vs total</p>
+              </div>
+
+              {/* Avg Rating */}
+              <div className="bg-amber-50 rounded-xl p-4">
+                <p className="text-xs text-amber-600 font-medium mb-1">Customer Rating</p>
+                {avgRating.count > 0 ? (
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <p className="text-2xl font-bold text-gray-800">{avgRating.avg}</p>
+                      <div className="flex items-center gap-0.5">
+                        {[1,2,3,4,5].map(s => (
+                          <Star key={s} size={16} className={s <= Math.round(avgRating.avg) ? 'text-amber-400 fill-amber-400' : 'text-gray-300'} />
+                        ))}
+                      </div>
+                    </div>
+                    <p className="text-xs text-gray-500">{avgRating.count} review{avgRating.count !== 1 ? 's' : ''}</p>
+                  </div>
+                ) : (
+                  <p className="text-sm text-gray-500">No reviews yet</p>
+                )}
+              </div>
+
+              {/* Profit Summary */}
+              {profitSummary ? (
+                <div className={`rounded-xl p-4 ${profitSummary.profit >= 0 ? 'bg-green-50' : 'bg-red-50'}`}>
+                  <p className="text-xs text-green-600 font-medium mb-1">Profit Summary ({profitSummary.count} tracked)</p>
+                  <p className={`text-2xl font-bold ${profitSummary.profit >= 0 ? 'text-green-700' : 'text-red-700'}`}>₱{profitSummary.profit.toLocaleString()}</p>
+                  <p className="text-xs text-gray-500">{profitSummary.margin}% margin on ₱{profitSummary.totalRevenue.toLocaleString()} revenue</p>
+                </div>
+              ) : (
+                <div className="bg-gray-50 rounded-xl p-4">
+                  <p className="text-xs text-gray-500 font-medium mb-1">Profit Tracking</p>
+                  <p className="text-sm text-gray-500">Add expenses in bookings to see profit summary</p>
+                </div>
+              )}
+            </div>
           </div>
         </div>
 

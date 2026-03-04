@@ -296,6 +296,62 @@ export const emailTemplates = {
     `
   }),
 
+  eventReminder: (booking, daysUntil) => ({
+    subject: `Reminder: Your Event is in ${daysUntil} Day${daysUntil !== 1 ? 's' : ''} - Red Carpet Catering`,
+    html: `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <style>
+          body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+          .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+          .header { background: linear-gradient(135deg, #b91c1c, #991b1b); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
+          .content { background: #f9fafb; padding: 30px; border: 1px solid #e5e7eb; }
+          .booking-details { background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border-left: 4px solid #b91c1c; }
+          .detail-row { padding: 10px 0; border-bottom: 1px solid #f3f4f6; }
+          .detail-label { font-weight: bold; color: #6b7280; }
+          .countdown { font-size: 48px; font-weight: bold; color: #b91c1c; text-align: center; margin: 20px 0; }
+          .footer { text-align: center; padding: 20px; color: #6b7280; font-size: 14px; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <h1 style="margin:0;">Event Reminder</h1>
+            <p style="margin:10px 0 0;">Your event is coming up soon!</p>
+          </div>
+          <div class="content">
+            <p>Dear <strong>${booking.customer_name}</strong>,</p>
+            <p>This is a friendly reminder about your upcoming event:</p>
+
+            <div class="countdown">${daysUntil} day${daysUntil !== 1 ? 's' : ''} to go!</div>
+
+            <div class="booking-details">
+              <div class="detail-row"><span class="detail-label">Event Date:</span> ${formatDate(booking.event_date)}</div>
+              <div class="detail-row"><span class="detail-label">Time:</span> ${formatTime(booking.event_time)}</div>
+              <div class="detail-row"><span class="detail-label">Venue:</span> ${booking.venue}</div>
+              <div class="detail-row"><span class="detail-label">Guests:</span> ${booking.number_of_pax} pax</div>
+              <div class="detail-row"><span class="detail-label">Package:</span> ${booking.menu_package}</div>
+              <div class="detail-row"><span class="detail-label">Total:</span> ${formatCurrency(booking.total_amount)}</div>
+              ${booking.payment_status !== 'fully_paid' ? `
+              <div class="detail-row" style="color: #dc2626;">
+                <span class="detail-label">Payment Status:</span> ${booking.payment_status === 'deposit_paid' ? 'Deposit Paid - Balance Due' : 'Payment Pending'}
+              </div>` : ''}
+            </div>
+
+            ${booking.payment_status !== 'fully_paid' ? '<p><strong>Please ensure your payment is settled before the event.</strong></p>' : ''}
+            <p>If you have any questions or changes, please contact us as soon as possible.</p>
+          </div>
+          <div class="footer">
+            <p><strong>Red Carpet Food and Catering Services</strong></p>
+            <p>0917-187-6510 | 0926-664-2839 | (032) 383-4122</p>
+          </div>
+        </div>
+      </body>
+      </html>
+    `
+  }),
+
   bookingStatusUpdate: (booking, newStatus) => ({
     subject: `Booking ${newStatus.charAt(0).toUpperCase() + newStatus.slice(1)} - Red Carpet Catering`,
     html: `
@@ -390,6 +446,18 @@ export const sendFoodOrderNotifications = async (order, adminEmail = 'redcarpetb
   })
 
   return results
+}
+
+// Send event reminder email
+export const sendEventReminder = async (booking) => {
+  if (!booking.customer_email) return { success: false, error: 'No customer email' }
+  const daysUntil = Math.ceil((new Date(booking.event_date) - new Date()) / (1000 * 60 * 60 * 24))
+  const emailContent = emailTemplates.eventReminder(booking, Math.max(daysUntil, 0))
+  return await sendEmail({
+    to: booking.customer_email,
+    subject: emailContent.subject,
+    html: emailContent.html
+  })
 }
 
 // Send status update email

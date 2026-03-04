@@ -2,12 +2,13 @@ import React, { useState, useEffect } from 'react'
 import { Link, useSearchParams, useNavigate } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import { menuPackages } from '../../lib/menuData'
-import { ArrowLeft, Calendar, MapPin, Users, Phone, Mail, Check, Plus, Minus, X, Save, Search, Edit2, Send, Copy, Filter, ChevronDown, ChevronUp, Trash2 } from 'lucide-react'
+import { ArrowLeft, Calendar, MapPin, Users, Phone, Mail, Check, Plus, Minus, X, Save, Search, Edit2, Send, Copy, Filter, ChevronDown, ChevronUp, Trash2, Bell, MessageSquare, DollarSign, Star } from 'lucide-react'
 import { TableSkeleton } from '../../components/SkeletonLoaders'
 import { exportBookingsCSV, exportBookingsPDF } from '../../lib/exportUtils'
 import PaymentTracker from '../../components/PaymentTracker'
 import AdminBookingEdit from '../../components/AdminBookingEdit'
-import { sendBookingNotifications } from '../../lib/emailService'
+import { sendBookingNotifications, sendEventReminder } from '../../lib/emailService'
+import { sendBookingReminderSMS } from '../../lib/smsService'
 import { getDateConflicts, calculateStaffNeeds, calculateEquipmentNeeds, countMenuDishes } from '../../lib/cateringFormulas'
 
 export default function AdminBookings() {
@@ -29,8 +30,11 @@ export default function AdminBookings() {
   const [showEditModal, setShowEditModal] = useState(false)
   const [saving, setSaving] = useState(false)
   const [sendingEmail, setSendingEmail] = useState(false)
+  const [sendingReminder, setSendingReminder] = useState(false)
+  const [sendingSMS, setSendingSMS] = useState(false)
   const [hasUnsavedAssignment, setHasUnsavedAssignment] = useState(false)
   const [staffSearch, setStaffSearch] = useState('')
+  const [showExpenses, setShowExpenses] = useState(false)
 
   useEffect(() => { fetchData() }, [])
 
@@ -288,6 +292,40 @@ export default function AdminBookings() {
     navigate('/book?duplicate=true')
   }
 
+  const handleSendReminder = async () => {
+    if (!selectedBooking) return
+    const daysUntil = Math.ceil((new Date(selectedBooking.event_date) - new Date()) / (1000 * 60 * 60 * 24))
+    if (daysUntil < 0) { alert('This event has already passed.'); return }
+
+    const method = !selectedBooking.customer_email ? 'sms' :
+      window.confirm(`Send reminder via:\n\nOK = Email (${selectedBooking.customer_email})\nCancel = SMS (${selectedBooking.customer_phone})`) ? 'email' : 'sms'
+
+    if (method === 'email') {
+      setSendingReminder(true)
+      try {
+        const result = await sendEventReminder(selectedBooking)
+        alert(result.success ? `Reminder sent to ${selectedBooking.customer_email}!` : 'Failed: ' + result.error)
+      } catch (e) { alert('Error: ' + e.message) }
+      finally { setSendingReminder(false) }
+    } else {
+      if (!selectedBooking.customer_phone) { alert('No phone number'); return }
+      setSendingSMS(true)
+      try {
+        const result = await sendBookingReminderSMS(selectedBooking)
+        alert(result.success ? `SMS sent to ${selectedBooking.customer_phone}!` : 'Failed: ' + result.error)
+      } catch (e) { alert('Error: ' + e.message) }
+      finally { setSendingSMS(false) }
+    }
+  }
+
+  const handleSaveExpenses = async (expenses) => {
+    if (!selectedBooking) return
+    await supabase.from('bookings').update({ expenses }).eq('id', selectedBooking.id)
+    const updated = { ...selectedBooking, expenses }
+    setSelectedBooking(updated)
+    setBookings(prev => prev.map(b => b.id === updated.id ? updated : b))
+  }
+
   const handleDeleteBooking = async () => {
     if (!selectedBooking) return
     const hasPayments = (selectedBooking.amount_paid || 0) > 0
@@ -395,7 +433,7 @@ export default function AdminBookings() {
         <div className="lg:col-span-2">
           {selectedBooking ? (
             <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
-              <div className="bg-gradient-to-r from-red-700 to-red-800 text-white p-6"><div className="flex justify-between items-start"><div><h2 className="text-xl font-bold">{selectedBooking.customer_name}</h2><p className="text-red-200">{menuPackages[selectedBooking.menu_package]?.name} • {selectedBooking.menu_option}</p></div><div className="flex items-center gap-2 flex-wrap justify-end"><button onClick={handleDuplicate} className="bg-white/20 hover:bg-white/30 px-3 py-1 rounded-lg text-sm flex items-center gap-1"><Copy size={14} /> Duplicate</button><button onClick={handleSendEmail} disabled={sendingEmail} className="bg-white/20 hover:bg-white/30 px-3 py-1 rounded-lg text-sm flex items-center gap-1 disabled:opacity-50"><Send size={14} /> {sendingEmail ? 'Sending...' : 'Email'}</button><button onClick={() => setShowEditModal(true)} className="bg-white/20 hover:bg-white/30 px-3 py-1 rounded-lg text-sm flex items-center gap-1"><Edit2 size={14} /> Edit</button><button onClick={handleDeleteBooking} className="bg-white/20 hover:bg-red-500 px-3 py-1 rounded-lg text-sm flex items-center gap-1"><Trash2 size={14} /> Delete</button><select value={selectedBooking.status} onChange={(e) => updateStatus(selectedBooking.id, e.target.value)} className="bg-white/20 text-white border-0 rounded-lg px-3 py-1 text-sm"><option value="pending" className="text-gray-800">Pending</option><option value="confirmed" className="text-gray-800">Confirmed</option><option value="completed" className="text-gray-800">Completed</option><option value="cancelled" className="text-gray-800">Cancelled</option></select></div></div></div>
+              <div className="bg-gradient-to-r from-red-700 to-red-800 text-white p-6"><div className="flex justify-between items-start"><div><h2 className="text-xl font-bold">{selectedBooking.customer_name}</h2><p className="text-red-200">{menuPackages[selectedBooking.menu_package]?.name} • {selectedBooking.menu_option}</p></div><div className="flex items-center gap-2 flex-wrap justify-end"><button onClick={handleDuplicate} className="bg-white/20 hover:bg-white/30 px-3 py-1 rounded-lg text-sm flex items-center gap-1"><Copy size={14} /> Duplicate</button><button onClick={handleSendEmail} disabled={sendingEmail} className="bg-white/20 hover:bg-white/30 px-3 py-1 rounded-lg text-sm flex items-center gap-1 disabled:opacity-50"><Send size={14} /> {sendingEmail ? 'Sending...' : 'Email'}</button><button onClick={handleSendReminder} disabled={sendingReminder || sendingSMS} className="bg-white/20 hover:bg-amber-500 px-3 py-1 rounded-lg text-sm flex items-center gap-1 disabled:opacity-50"><Bell size={14} /> {sendingReminder ? 'Sending...' : sendingSMS ? 'SMS...' : 'Remind'}</button><button onClick={() => setShowEditModal(true)} className="bg-white/20 hover:bg-white/30 px-3 py-1 rounded-lg text-sm flex items-center gap-1"><Edit2 size={14} /> Edit</button><button onClick={handleDeleteBooking} className="bg-white/20 hover:bg-red-500 px-3 py-1 rounded-lg text-sm flex items-center gap-1"><Trash2 size={14} /> Delete</button><select value={selectedBooking.status} onChange={(e) => updateStatus(selectedBooking.id, e.target.value)} className="bg-white/20 text-white border-0 rounded-lg px-3 py-1 text-sm"><option value="pending" className="text-gray-800">Pending</option><option value="confirmed" className="text-gray-800">Confirmed</option><option value="completed" className="text-gray-800">Completed</option><option value="cancelled" className="text-gray-800">Cancelled</option></select></div></div></div>
               <div className="p-6 space-y-6">
                 {/* Warning: Completed but unpaid */}
                 {selectedBooking.status === 'completed' && (!selectedBooking.payment_status || selectedBooking.payment_status === 'unpaid') && (
@@ -437,6 +475,90 @@ export default function AdminBookings() {
                       })
                   }}
                 />
+                {/* Expense Tracking */}
+                <div className="bg-gray-50 rounded-xl p-4">
+                  <button onClick={() => setShowExpenses(!showExpenses)} className="w-full flex items-center justify-between">
+                    <h3 className="font-semibold text-gray-700 flex items-center gap-2"><DollarSign size={18} /> Expense Tracking & Profit</h3>
+                    {showExpenses ? <ChevronUp size={18} className="text-gray-400" /> : <ChevronDown size={18} className="text-gray-400" />}
+                  </button>
+                  {showExpenses && (() => {
+                    const exp = selectedBooking.expenses || {}
+                    const totalExpenses = (exp.food_cost || 0) + (exp.staff_cost || 0) + (exp.rental_cost || 0) + (exp.transport_cost || 0) + (exp.other_cost || 0)
+                    const revenue = selectedBooking.total_amount || 0
+                    const profit = revenue - totalExpenses
+                    const margin = revenue > 0 ? ((profit / revenue) * 100).toFixed(1) : 0
+                    return (
+                      <div className="mt-3 space-y-3">
+                        <div className="grid grid-cols-2 gap-3">
+                          {[
+                            { key: 'food_cost', label: 'Food & Ingredients', icon: '🍖' },
+                            { key: 'staff_cost', label: 'Staff Wages', icon: '👥' },
+                            { key: 'rental_cost', label: 'Equipment Rental', icon: '📦' },
+                            { key: 'transport_cost', label: 'Transport & Gas', icon: '🚛' },
+                            { key: 'other_cost', label: 'Other Costs', icon: '📋' },
+                          ].map(({ key, label, icon }) => (
+                            <div key={key}>
+                              <label className="text-xs text-gray-500 mb-1 block">{icon} {label}</label>
+                              <input type="number" min="0" value={exp[key] || ''} placeholder="0"
+                                onChange={(e) => {
+                                  const newExp = { ...exp, [key]: parseInt(e.target.value) || 0 }
+                                  setSelectedBooking({ ...selectedBooking, expenses: newExp })
+                                }}
+                                className="w-full px-3 py-1.5 border border-gray-200 rounded-lg text-sm"
+                              />
+                            </div>
+                          ))}
+                          <div>
+                            <label className="text-xs text-gray-500 mb-1 block">📝 Notes</label>
+                            <input type="text" value={exp.notes || ''} placeholder="Expense notes..."
+                              onChange={(e) => {
+                                const newExp = { ...exp, notes: e.target.value }
+                                setSelectedBooking({ ...selectedBooking, expenses: newExp })
+                              }}
+                              className="w-full px-3 py-1.5 border border-gray-200 rounded-lg text-sm"
+                            />
+                          </div>
+                        </div>
+                        {/* Profit Summary */}
+                        <div className={`rounded-lg p-3 ${profit >= 0 ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200'}`}>
+                          <div className="grid grid-cols-3 gap-2 text-center text-sm">
+                            <div>
+                              <p className="text-gray-500 text-xs">Revenue</p>
+                              <p className="font-bold text-gray-800">₱{revenue.toLocaleString()}</p>
+                            </div>
+                            <div>
+                              <p className="text-gray-500 text-xs">Expenses</p>
+                              <p className="font-bold text-red-600">₱{totalExpenses.toLocaleString()}</p>
+                            </div>
+                            <div>
+                              <p className="text-gray-500 text-xs">Profit ({margin}%)</p>
+                              <p className={`font-bold ${profit >= 0 ? 'text-green-600' : 'text-red-600'}`}>₱{profit.toLocaleString()}</p>
+                            </div>
+                          </div>
+                        </div>
+                        <button onClick={() => handleSaveExpenses(selectedBooking.expenses || {})}
+                          className="w-full py-2 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 flex items-center justify-center gap-2">
+                          <Save size={16} /> Save Expenses
+                        </button>
+                      </div>
+                    )
+                  })()}
+                </div>
+
+                {/* Customer Review */}
+                {selectedBooking.review_rating && (
+                  <div className="bg-amber-50 rounded-xl p-4">
+                    <h3 className="font-semibold text-amber-800 mb-2 flex items-center gap-2"><Star size={18} /> Customer Review</h3>
+                    <div className="flex items-center gap-1 mb-1">
+                      {[1,2,3,4,5].map(s => (
+                        <Star key={s} size={18} className={s <= selectedBooking.review_rating ? 'text-amber-400 fill-amber-400' : 'text-gray-300'} />
+                      ))}
+                      <span className="text-sm text-gray-600 ml-2">{selectedBooking.review_rating}/5</span>
+                    </div>
+                    {selectedBooking.review_comment && <p className="text-sm text-gray-700">{selectedBooking.review_comment}</p>}
+                  </div>
+                )}
+
                 {/* Customer History */}
                 {(() => {
                   const customerBookings = bookings.filter(b => 

@@ -364,5 +364,39 @@ WHERE NOT EXISTS (SELECT 1 FROM equipment e WHERE e.name = t.name);
 
 
 -- =====================================================
+-- 9. ADD EXPENSE TRACKING TO BOOKINGS
+-- =====================================================
+ALTER TABLE bookings ADD COLUMN IF NOT EXISTS expenses JSONB;
+
+-- =====================================================
+-- 10. ADD REVIEW COLUMNS TO BOOKINGS & FOOD_ORDERS
+-- =====================================================
+ALTER TABLE bookings ADD COLUMN IF NOT EXISTS review_rating INTEGER;
+ALTER TABLE bookings ADD COLUMN IF NOT EXISTS review_comment TEXT;
+ALTER TABLE bookings ADD COLUMN IF NOT EXISTS review_date TIMESTAMPTZ;
+
+DO $$ BEGIN
+  IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_name = 'food_orders') THEN
+    ALTER TABLE food_orders ADD COLUMN IF NOT EXISTS review_rating INTEGER;
+    ALTER TABLE food_orders ADD COLUMN IF NOT EXISTS review_comment TEXT;
+    ALTER TABLE food_orders ADD COLUMN IF NOT EXISTS review_date TIMESTAMPTZ;
+  END IF;
+END $$;
+
+-- RLS: Users can update their own reviews
+DO $$ BEGIN
+  CREATE POLICY "Users can update own booking reviews" ON bookings FOR UPDATE USING (auth.uid() = user_id)
+    WITH CHECK (auth.uid() = user_id);
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
+
+DO $$ BEGIN
+  CREATE POLICY "Users can update own food order reviews" ON food_orders FOR UPDATE USING (auth.uid() = user_id)
+    WITH CHECK (auth.uid() = user_id);
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
+
+
+-- =====================================================
 -- DONE! Now run test-data.sql to add sample bookings.
 -- =====================================================
