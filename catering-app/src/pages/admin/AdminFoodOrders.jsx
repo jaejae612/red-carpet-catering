@@ -15,6 +15,8 @@ export default function AdminFoodOrders() {
   const [searchQuery, setSearchQuery] = useState('')
   const [expandedOrder, setExpandedOrder] = useState(null)
   const [selectedOrder, setSelectedOrder] = useState(null)
+  const [selectedIds, setSelectedIds] = useState(new Set())
+  const [bulkUpdating, setBulkUpdating] = useState(false)
 
   useEffect(() => {
     fetchOrders()
@@ -87,6 +89,36 @@ export default function AdminFoodOrders() {
         setOrders(prev => prev.map(o => o.id === orderId ? data : o))
       }
     }
+  }
+
+  const toggleSelectOrder = (id) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id); else next.add(id)
+      return next
+    })
+  }
+
+  const toggleSelectAll = () => {
+    if (selectedIds.size === filteredOrders.length) setSelectedIds(new Set())
+    else setSelectedIds(new Set(filteredOrders.map(o => o.id)))
+  }
+
+  const bulkUpdateStatus = async (newStatus) => {
+    if (selectedIds.size === 0) return
+    if (!window.confirm(`Update ${selectedIds.size} order(s) to "${newStatus}"?`)) return
+    setBulkUpdating(true)
+    try {
+      const { error } = await supabase
+        .from('food_orders')
+        .update({ status: newStatus, updated_at: new Date().toISOString() })
+        .in('id', Array.from(selectedIds))
+      if (!error) {
+        await fetchOrders()
+        setSelectedIds(new Set())
+      }
+    } catch (err) { console.error(err) }
+    finally { setBulkUpdating(false) }
   }
 
   const filteredOrders = orders.filter(order => {
@@ -177,6 +209,23 @@ export default function AdminFoodOrders() {
         </div>
       </div>
 
+      {/* Bulk Actions */}
+      {selectedIds.size > 0 && (
+        <div className="bg-blue-50 border border-blue-200 rounded-xl p-3 flex items-center justify-between">
+          <span className="text-sm font-medium text-blue-800">{selectedIds.size} order(s) selected</span>
+          <div className="flex items-center gap-2">
+            {ORDER_STATUSES.map(s => (
+              <button key={s.id} onClick={() => bulkUpdateStatus(s.id)} disabled={bulkUpdating} className="px-3 py-1 rounded-lg text-xs font-medium bg-white border border-gray-200 hover:bg-gray-100 disabled:opacity-50">
+                {s.name}
+              </button>
+            ))}
+            <button onClick={() => setSelectedIds(new Set())} className="px-3 py-1 rounded-lg text-xs font-medium text-gray-500 hover:bg-gray-100">
+              <X size={14} />
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Orders List */}
       {loading ? (
         <TableSkeleton rows={6} cols={4} />
@@ -187,14 +236,20 @@ export default function AdminFoodOrders() {
         </div>
       ) : (
         <div className="space-y-4">
+          <div className="flex items-center gap-3 mb-2 px-1">
+            <input type="checkbox" checked={selectedIds.size === filteredOrders.length && filteredOrders.length > 0} onChange={toggleSelectAll} className="w-4 h-4 text-red-700 rounded" />
+            <span className="text-xs text-gray-500">Select all</span>
+          </div>
           {filteredOrders.map(order => (
             <div key={order.id} className="bg-white rounded-xl shadow-sm border overflow-hidden">
-              <div 
+              <div
                 className="p-4 cursor-pointer hover:bg-gray-50"
                 onClick={() => setExpandedOrder(expandedOrder === order.id ? null : order.id)}
               >
                 <div className="flex justify-between items-start">
-                  <div className="flex-1">
+                  <div className="flex items-center gap-3 flex-1">
+                    <input type="checkbox" checked={selectedIds.has(order.id)} onChange={(e) => { e.stopPropagation(); toggleSelectOrder(order.id) }} onClick={(e) => e.stopPropagation()} className="w-4 h-4 text-red-700 rounded shrink-0" />
+                    <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-3 mb-2">
                       <h3 className="font-semibold text-gray-800">{order.customer_name}</h3>
                       <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(order.status)}`}>
@@ -214,6 +269,7 @@ export default function AdminFoodOrders() {
                         </span>
                       )}
                     </div>
+                  </div>
                   </div>
                   <div className="text-right">
                     <p className="font-bold text-red-700">₱{order.total_amount.toLocaleString()}</p>
@@ -298,7 +354,7 @@ export default function AdminFoodOrders() {
                           })
                       }}
                     />
-                  </div>}
+                  </div>
 
                   {/* Order Info */}
                   <div className="mt-4 pt-4 border-t text-sm text-gray-500">

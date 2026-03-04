@@ -64,6 +64,8 @@ ALTER TABLE equipment ADD COLUMN IF NOT EXISTS type TEXT DEFAULT 'owned';
 ALTER TABLE equipment ADD COLUMN IF NOT EXISTS supplier TEXT;
 ALTER TABLE equipment ADD COLUMN IF NOT EXISTS rental_cost DECIMAL(10,2);
 ALTER TABLE equipment ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();
+ALTER TABLE equipment ADD COLUMN IF NOT EXISTS maintenance_notes TEXT;
+ALTER TABLE equipment ADD COLUMN IF NOT EXISTS last_maintained DATE;
 
 
 -- =====================================================
@@ -99,6 +101,7 @@ DO $$ BEGIN
     ALTER TABLE food_items ADD COLUMN IF NOT EXISTS price_small DECIMAL(10,2);
     ALTER TABLE food_items ADD COLUMN IF NOT EXISTS price_medium DECIMAL(10,2);
     ALTER TABLE food_items ADD COLUMN IF NOT EXISTS price_large DECIMAL(10,2);
+    ALTER TABLE food_items ADD COLUMN IF NOT EXISTS image_url TEXT;
   END IF;
 END $$;
 
@@ -130,6 +133,7 @@ CREATE TABLE IF NOT EXISTS food_items (
   price_small DECIMAL(10,2),
   price_medium DECIMAL(10,2),
   price_large DECIMAL(10,2),
+  image_url TEXT,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 

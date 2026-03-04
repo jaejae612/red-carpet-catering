@@ -290,7 +290,7 @@ export default function DailyBookingSummary() {
                 <p>Contact: 0917-187-6510 | 0926-664-2839 | (032) 383-4122</p>
               </div>
               <div className="text-right">
-                <p className="text-sm text-gray-500">Page 1 of 1</p>
+                <p className="text-sm text-gray-500">{bookings.length} booking{bookings.length !== 1 ? 's' : ''} for {formatDate(selectedDate)}</p>
               </div>
             </div>
           </div>

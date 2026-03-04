@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
-import { ArrowLeft, Plus, Edit2, Trash2, User, Save, Phone } from 'lucide-react'
+import { ArrowLeft, Plus, Edit2, Trash2, User, Save, Phone, Calendar } from 'lucide-react'
 
 export default function AdminStaff() {
   const [staff, setStaff] = useState([])
@@ -9,9 +9,16 @@ export default function AdminStaff() {
   const [showForm, setShowForm] = useState(false)
   const [editingStaff, setEditingStaff] = useState(null)
   const [formData, setFormData] = useState({ name: '', role: 'service', type: 'regular', phone: '', daily_rate: 0, note: '', available: true })
+  const [upcomingBookings, setUpcomingBookings] = useState([])
+  const [showSchedule, setShowSchedule] = useState(false)
 
-  useEffect(() => { fetchStaff() }, [])
+  useEffect(() => { fetchStaff(); fetchUpcoming() }, [])
   const fetchStaff = async () => { const { data } = await supabase.from('staff').select('*').order('type, role, name'); setStaff(data || []); setLoading(false) }
+  const fetchUpcoming = async () => {
+    const today = new Date().toISOString().split('T')[0]
+    const { data } = await supabase.from('bookings').select('id, customer_name, event_date, event_time, venue, number_of_pax, assigned_staff').gte('event_date', today).neq('status', 'cancelled').order('event_date', { ascending: true }).limit(20)
+    setUpcomingBookings(data || [])
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -79,7 +86,10 @@ export default function AdminStaff() {
             <p className="text-gray-500">{regularStaff.length} regular • {onCallStaff.length} on-call</p>
           </div>
         </div>
-        <button onClick={() => setShowForm(true)} className="bg-red-700 text-white px-4 py-2 rounded-lg font-medium hover:bg-red-800 flex items-center gap-2"><Plus size={20} /> Add Staff</button>
+        <div className="flex items-center gap-2">
+          <button onClick={() => setShowSchedule(!showSchedule)} className={`px-4 py-2 rounded-lg font-medium flex items-center gap-2 ${showSchedule ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}><Calendar size={20} /> Schedule</button>
+          <button onClick={() => setShowForm(true)} className="bg-red-700 text-white px-4 py-2 rounded-lg font-medium hover:bg-red-800 flex items-center gap-2"><Plus size={20} /> Add Staff</button>
+        </div>
       </div>
 
       {/* Add/Edit Form */}
@@ -125,7 +135,7 @@ export default function AdminStaff() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-orange-700 mb-1">Daily Rate (₱)</label>
-                  <input type="number" min="0" value={formData.daily_rate} onChange={(e) => setFormData({ ...formData, daily_rate: parseInt(e.target.value) || 0 })} placeholder="800" className="w-full px-4 py-2 border border-orange-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500" />
+                  <input type="number" min="1" max="50000" value={formData.daily_rate} onChange={(e) => setFormData({ ...formData, daily_rate: Math.max(0, parseInt(e.target.value) || 0) })} placeholder="800" className="w-full px-4 py-2 border border-orange-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500" />
                 </div>
               </div>
             )}
@@ -143,6 +153,39 @@ export default function AdminStaff() {
               <button type="submit" className="flex-1 py-2 bg-red-700 text-white rounded-lg font-medium hover:bg-red-800 flex items-center justify-center gap-2"><Save size={18} /> Save</button>
             </div>
           </form>
+        </div>
+      )}
+
+      {/* Staff Schedule */}
+      {showSchedule && (
+        <div className="bg-white rounded-2xl shadow-lg p-6 mb-6">
+          <h2 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2"><Calendar size={20} className="text-blue-600" /> Upcoming Staff Assignments</h2>
+          {upcomingBookings.filter(b => b.assigned_staff && b.assigned_staff.length > 0).length === 0 ? (
+            <p className="text-gray-500 text-center py-4">No upcoming staff assignments</p>
+          ) : (
+            <div className="space-y-3">
+              {upcomingBookings.filter(b => b.assigned_staff && b.assigned_staff.length > 0).map(b => (
+                <div key={b.id} className="p-3 bg-gray-50 rounded-xl border-l-4 border-blue-500">
+                  <div className="flex items-center justify-between mb-2">
+                    <div>
+                      <p className="font-medium text-gray-800">{b.customer_name}</p>
+                      <p className="text-sm text-gray-500">{b.event_date} {b.event_time && `at ${b.event_time}`} • {b.venue} • {b.number_of_pax} pax</p>
+                    </div>
+                  </div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {b.assigned_staff.map((s, i) => {
+                      const staffMember = staff.find(st => st.id === s.id)
+                      return (
+                        <span key={i} className={`px-2 py-0.5 rounded-full text-xs font-medium ${(s.type || 'regular') === 'on_call' ? 'bg-orange-100 text-orange-700' : 'bg-blue-100 text-blue-700'}`}>
+                          {s.name} ({s.role === 'head_waiter' ? 'HW' : s.role === 'service' ? 'SVC' : s.role}) {!staffMember?.available && '(unavail)'}
+                        </span>
+                      )
+                    })}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
 

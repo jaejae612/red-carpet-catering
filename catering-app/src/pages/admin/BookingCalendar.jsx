@@ -55,18 +55,13 @@ export default function BookingCalendar() {
     }
   }
 
-  const getBookingsForDay = (day) => {
-    const dateStr = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
-    return bookings.filter(b => b.event_date === dateStr)
-  }
+  const formatDayDate = (day) => `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
 
-  const getFoodOrdersForDay = (day) => {
-    const dateStr = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
-    return foodOrders.filter(o => o.delivery_date === dateStr)
-  }
+  const getBookingsForDay = (day) => bookings.filter(b => b.event_date === formatDayDate(day))
+  const getFoodOrdersForDay = (day) => foodOrders.filter(o => o.delivery_date === formatDayDate(day))
 
   const handleDayClick = (day) => {
-    const dateStr = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+    const dateStr = formatDayDate(day)
     setSelectedDay(dateStr)
     setDayBookings(getBookingsForDay(day))
     setDayFoodOrders(getFoodOrdersForDay(day))
@@ -217,7 +212,7 @@ export default function BookingCalendar() {
                     const dayFoodOrdersList = getFoodOrdersForDay(day)
                     const hasBookings = dayBookingsList.length > 0
                     const hasFoodOrders = dayFoodOrdersList.length > 0
-                    const dateStr = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+                    const dateStr = formatDayDate(day)
                     const isSelected = selectedDay === dateStr
 
                     return (

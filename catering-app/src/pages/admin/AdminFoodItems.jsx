@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { supabase } from '../../lib/supabase'
 import { FOOD_CATEGORIES, SERVING_SIZES, getCategoryInfo } from '../../lib/foodOrderData'
-import { Plus, Search, Edit2, Trash2, X, Check, UtensilsCrossed } from 'lucide-react'
+import { Plus, Search, Edit2, Trash2, X, Check, UtensilsCrossed, Upload, Image } from 'lucide-react'
 
 export default function AdminFoodItems() {
   const [items, setItems] = useState([])
@@ -19,8 +19,10 @@ export default function AdminFoodItems() {
     price_small: 2750,
     price_medium: 3950,
     price_large: 6000,
-    available: true
+    available: true,
+    image_url: ''
   })
+  const [uploading, setUploading] = useState(false)
 
   useEffect(() => {
     fetchItems()
@@ -61,7 +63,8 @@ export default function AdminFoodItems() {
         price_small: 2750,
         price_medium: 3950,
         price_large: 6000,
-        available: true
+        available: true,
+        image_url: ''
       })
     }
   }
@@ -125,6 +128,20 @@ export default function AdminFoodItems() {
       'special': { home: 0, tray: 0, xs: 0, small: 0, medium: 0, large: 0 },
     }
     return templates[category] || templates['chicken']
+  }
+
+  const uploadImage = async (file, setter) => {
+    if (!file) return
+    setUploading(true)
+    try {
+      const ext = file.name.split('.').pop()
+      const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
+      const { error } = await supabase.storage.from('food-images').upload(fileName, file)
+      if (error) { alert('Upload failed: ' + error.message + '\n\nMake sure you have a "food-images" storage bucket in Supabase (public).'); setUploading(false); return }
+      const { data: { publicUrl } } = supabase.storage.from('food-images').getPublicUrl(fileName)
+      setter(publicUrl)
+    } catch (err) { alert('Upload error: ' + err.message) }
+    finally { setUploading(false) }
   }
 
   const applyPriceTemplate = (category) => {
@@ -230,7 +247,13 @@ export default function AdminFoodItems() {
                 <div className="divide-y">
                   {categoryItems.map(item => (
                     <div key={item.id} className={`p-4 flex justify-between items-center ${!item.available ? 'bg-gray-50 opacity-60' : ''}`}>
-                      <div className="flex-1">
+                      <div className="flex items-center gap-3 flex-1">
+                        {item.image_url ? (
+                          <img src={item.image_url} alt={item.name} className="w-12 h-12 object-cover rounded-lg shrink-0" />
+                        ) : (
+                          <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center shrink-0"><UtensilsCrossed size={20} className="text-gray-300" /></div>
+                        )}
+                        <div>
                         <h4 className="font-medium text-gray-800">{item.name}</h4>
                         <p className="text-sm text-red-600">
                           {item.category === 'dessert' || item.category === 'special'
@@ -238,7 +261,7 @@ export default function AdminFoodItems() {
                             : `₱${item.price_home.toLocaleString()} - ₱${item.price_large.toLocaleString()}`
                           }
                         </p>
-                      </div>
+                      </div></div>
                       <div className="flex items-center gap-2">
                         <button
                           onClick={() => toggleAvailability(item)}
@@ -294,15 +317,41 @@ export default function AdminFoodItems() {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Category *</label>
-                  <select
-                    value={newItem.category}
-                    onChange={(e) => applyPriceTemplate(e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
-                  >
-                    {FOOD_CATEGORIES.map(cat => (
-                      <option key={cat.id} value={cat.id}>{cat.icon} {cat.name}</option>
-                    ))}
-                  </select>
+                  <div className="flex gap-2">
+                    <select
+                      value={newItem.category}
+                      onChange={(e) => setNewItem({ ...newItem, category: e.target.value })}
+                      className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
+                    >
+                      {FOOD_CATEGORIES.map(cat => (
+                        <option key={cat.id} value={cat.id}>{cat.icon} {cat.name}</option>
+                      ))}
+                    </select>
+                    <button
+                      type="button"
+                      onClick={() => applyPriceTemplate(newItem.category)}
+                      className="px-3 py-2 bg-gray-100 text-gray-600 rounded-lg text-sm font-medium hover:bg-gray-200 whitespace-nowrap"
+                      title="Fill prices with default template for this category"
+                    >
+                      Auto-Fill Prices
+                    </button>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Image</label>
+                  <div className="flex items-center gap-3">
+                    {newItem.image_url ? (
+                      <img src={newItem.image_url} alt="" className="w-16 h-16 object-cover rounded-lg" />
+                    ) : (
+                      <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center"><Image size={24} className="text-gray-300" /></div>
+                    )}
+                    <label className={`flex items-center gap-2 px-4 py-2 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 text-sm ${uploading ? 'opacity-50' : ''}`}>
+                      <Upload size={16} /> {uploading ? 'Uploading...' : 'Upload'}
+                      <input type="file" accept="image/*" className="hidden" disabled={uploading} onChange={(e) => uploadImage(e.target.files[0], (url) => setNewItem(prev => ({ ...prev, image_url: url })))} />
+                    </label>
+                    {newItem.image_url && <button type="button" onClick={() => setNewItem({ ...newItem, image_url: '' })} className="text-red-500 text-sm">Remove</button>}
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">
@@ -409,6 +458,22 @@ export default function AdminFoodItems() {
                       <option key={cat.id} value={cat.id}>{cat.icon} {cat.name}</option>
                     ))}
                   </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Image</label>
+                  <div className="flex items-center gap-3">
+                    {editingItem.image_url ? (
+                      <img src={editingItem.image_url} alt="" className="w-16 h-16 object-cover rounded-lg" />
+                    ) : (
+                      <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center"><Image size={24} className="text-gray-300" /></div>
+                    )}
+                    <label className={`flex items-center gap-2 px-4 py-2 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 text-sm ${uploading ? 'opacity-50' : ''}`}>
+                      <Upload size={16} /> {uploading ? 'Uploading...' : 'Upload'}
+                      <input type="file" accept="image/*" className="hidden" disabled={uploading} onChange={(e) => uploadImage(e.target.files[0], (url) => setEditingItem(prev => ({ ...prev, image_url: url })))} />
+                    </label>
+                    {editingItem.image_url && <button type="button" onClick={() => setEditingItem({ ...editingItem, image_url: '' })} className="text-red-500 text-sm">Remove</button>}
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-3">

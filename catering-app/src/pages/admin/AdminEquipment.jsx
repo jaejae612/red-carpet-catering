@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
-import { ArrowLeft, Plus, Edit2, Trash2, Package, Save, Tag } from 'lucide-react'
+import { ArrowLeft, Plus, Edit2, Trash2, Package, Save, Tag, Wrench } from 'lucide-react'
 
 export default function AdminEquipment() {
   const [equipment, setEquipment] = useState([])
   const [loading, setLoading] = useState(true)
   const [showForm, setShowForm] = useState(false)
   const [editingItem, setEditingItem] = useState(null)
-  const [formData, setFormData] = useState({ name: '', category: 'Buffet', type: 'owned', quantity: 0, supplier: '', rental_cost: 0 })
+  const [formData, setFormData] = useState({ name: '', category: 'Buffet', type: 'owned', quantity: 0, supplier: '', rental_cost: 0, maintenance_notes: '', last_maintained: '' })
 
   useEffect(() => { fetchEquipment() }, [])
   const fetchEquipment = async () => { const { data } = await supabase.from('equipment').select('*').order('type, category, name'); setEquipment(data || []); setLoading(false) }
@@ -23,8 +23,8 @@ export default function AdminEquipment() {
   }
 
   const deleteItem = async (id) => { if (!confirm('Delete this equipment?')) return; await supabase.from('equipment').delete().eq('id', id); setEquipment(prev => prev.filter(e => e.id !== id)) }
-  const resetForm = () => { setShowForm(false); setEditingItem(null); setFormData({ name: '', category: 'Buffet', type: 'owned', quantity: 0, supplier: '', rental_cost: 0 }) }
-  const startEdit = (item) => { setEditingItem(item); setFormData({ name: item.name, category: item.category, type: item.type || 'owned', quantity: item.quantity, supplier: item.supplier || '', rental_cost: item.rental_cost || 0 }); setShowForm(true) }
+  const resetForm = () => { setShowForm(false); setEditingItem(null); setFormData({ name: '', category: 'Buffet', type: 'owned', quantity: 0, supplier: '', rental_cost: 0, maintenance_notes: '', last_maintained: '' }) }
+  const startEdit = (item) => { setEditingItem(item); setFormData({ name: item.name, category: item.category, type: item.type || 'owned', quantity: item.quantity, supplier: item.supplier || '', rental_cost: item.rental_cost || 0, maintenance_notes: item.maintenance_notes || '', last_maintained: item.last_maintained || '' }); setShowForm(true) }
 
   const ownedItems = equipment.filter(e => (e.type || 'owned') === 'owned')
   const rentalItems = equipment.filter(e => e.type === 'rental')
@@ -101,7 +101,21 @@ export default function AdminEquipment() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-orange-700 mb-1">Cost per Unit (₱)</label>
-                  <input type="number" min="0" value={formData.rental_cost} onChange={(e) => setFormData({ ...formData, rental_cost: parseInt(e.target.value) || 0 })} placeholder="150" className="w-full px-4 py-2 border border-orange-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500" />
+                  <input type="number" min="1" max="100000" value={formData.rental_cost} onChange={(e) => setFormData({ ...formData, rental_cost: Math.max(0, parseInt(e.target.value) || 0) })} placeholder="150" className="w-full px-4 py-2 border border-orange-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500" />
+                </div>
+              </div>
+            )}
+
+            {/* Maintenance Tracking */}
+            {formData.type === 'owned' && (
+              <div className="grid grid-cols-2 gap-4 bg-blue-50 rounded-lg p-4">
+                <div>
+                  <label className="block text-sm font-medium text-blue-700 mb-1">Last Maintained</label>
+                  <input type="date" value={formData.last_maintained} onChange={(e) => setFormData({ ...formData, last_maintained: e.target.value })} className="w-full px-4 py-2 border border-blue-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-blue-700 mb-1">Maintenance Notes</label>
+                  <input type="text" value={formData.maintenance_notes} onChange={(e) => setFormData({ ...formData, maintenance_notes: e.target.value })} placeholder="e.g., Cleaned, repaired leg" className="w-full px-4 py-2 border border-blue-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
                 </div>
               </div>
             )}
@@ -130,7 +144,11 @@ export default function AdminEquipment() {
                         <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center text-blue-600"><Package size={20} /></div>
                         <div>
                           <p className="font-medium text-gray-800">{item.name}</p>
-                          <p className="text-sm text-gray-500">Total: {item.quantity}</p>
+                          <p className="text-sm text-gray-500">
+                            Total: {item.quantity}
+                            {item.last_maintained && <span className="ml-2 text-blue-500"><Wrench size={12} className="inline" /> {item.last_maintained}</span>}
+                          </p>
+                          {item.maintenance_notes && <p className="text-xs text-gray-400">{item.maintenance_notes}</p>}
                         </div>
                       </div>
                       <div className="flex items-center gap-2">

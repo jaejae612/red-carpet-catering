@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { Link, useSearchParams, useNavigate } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import { menuPackages } from '../../lib/menuData'
-import { ArrowLeft, Calendar, MapPin, Users, Phone, Mail, Check, Plus, Minus, X, Save, Search, Edit2, CreditCard, Send, Copy, Filter, ChevronDown, ChevronUp } from 'lucide-react'
+import { ArrowLeft, Calendar, MapPin, Users, Phone, Mail, Check, Plus, Minus, X, Save, Search, Edit2, Send, Copy, Filter, ChevronDown, ChevronUp, Trash2 } from 'lucide-react'
 import { TableSkeleton } from '../../components/SkeletonLoaders'
 import { exportBookingsCSV, exportBookingsPDF } from '../../lib/exportUtils'
 import PaymentTracker from '../../components/PaymentTracker'
@@ -30,6 +30,7 @@ export default function AdminBookings() {
   const [saving, setSaving] = useState(false)
   const [sendingEmail, setSendingEmail] = useState(false)
   const [hasUnsavedAssignment, setHasUnsavedAssignment] = useState(false)
+  const [staffSearch, setStaffSearch] = useState('')
 
   useEffect(() => { fetchData() }, [])
 
@@ -287,6 +288,22 @@ export default function AdminBookings() {
     navigate('/book?duplicate=true')
   }
 
+  const handleDeleteBooking = async () => {
+    if (!selectedBooking) return
+    const hasPayments = (selectedBooking.amount_paid || 0) > 0
+    const msg = hasPayments
+      ? `⚠️ "${selectedBooking.customer_name}" has ₱${selectedBooking.amount_paid.toLocaleString()} in payments.\n\nThis will permanently delete the booking and all payment records.\n\nAre you sure?`
+      : `Delete booking for "${selectedBooking.customer_name}" on ${selectedBooking.event_date}?\n\nThis action cannot be undone.`
+    if (!window.confirm(msg)) return
+    const { error } = await supabase.from('bookings').delete().eq('id', selectedBooking.id)
+    if (!error) {
+      setBookings(prev => prev.filter(b => b.id !== selectedBooking.id))
+      setSelectedBooking(null)
+    } else {
+      alert('Error deleting booking: ' + error.message)
+    }
+  }
+
   const clearFilters = () => {
     setSearchTerm('')
     setStatusFilter('all')
@@ -378,7 +395,7 @@ export default function AdminBookings() {
         <div className="lg:col-span-2">
           {selectedBooking ? (
             <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
-              <div className="bg-gradient-to-r from-red-700 to-red-800 text-white p-6"><div className="flex justify-between items-start"><div><h2 className="text-xl font-bold">{selectedBooking.customer_name}</h2><p className="text-red-200">{menuPackages[selectedBooking.menu_package]?.name} • {selectedBooking.menu_option}</p></div><div className="flex items-center gap-2 flex-wrap justify-end"><button onClick={handleDuplicate} className="bg-white/20 hover:bg-white/30 px-3 py-1 rounded-lg text-sm flex items-center gap-1"><Copy size={14} /> Duplicate</button><button onClick={handleSendEmail} disabled={sendingEmail} className="bg-white/20 hover:bg-white/30 px-3 py-1 rounded-lg text-sm flex items-center gap-1 disabled:opacity-50"><Send size={14} /> {sendingEmail ? 'Sending...' : 'Email'}</button><button onClick={() => setShowEditModal(true)} className="bg-white/20 hover:bg-white/30 px-3 py-1 rounded-lg text-sm flex items-center gap-1"><Edit2 size={14} /> Edit</button><select value={selectedBooking.status} onChange={(e) => updateStatus(selectedBooking.id, e.target.value)} className="bg-white/20 text-white border-0 rounded-lg px-3 py-1 text-sm"><option value="pending" className="text-gray-800">Pending</option><option value="confirmed" className="text-gray-800">Confirmed</option><option value="completed" className="text-gray-800">Completed</option><option value="cancelled" className="text-gray-800">Cancelled</option></select></div></div></div>
+              <div className="bg-gradient-to-r from-red-700 to-red-800 text-white p-6"><div className="flex justify-between items-start"><div><h2 className="text-xl font-bold">{selectedBooking.customer_name}</h2><p className="text-red-200">{menuPackages[selectedBooking.menu_package]?.name} • {selectedBooking.menu_option}</p></div><div className="flex items-center gap-2 flex-wrap justify-end"><button onClick={handleDuplicate} className="bg-white/20 hover:bg-white/30 px-3 py-1 rounded-lg text-sm flex items-center gap-1"><Copy size={14} /> Duplicate</button><button onClick={handleSendEmail} disabled={sendingEmail} className="bg-white/20 hover:bg-white/30 px-3 py-1 rounded-lg text-sm flex items-center gap-1 disabled:opacity-50"><Send size={14} /> {sendingEmail ? 'Sending...' : 'Email'}</button><button onClick={() => setShowEditModal(true)} className="bg-white/20 hover:bg-white/30 px-3 py-1 rounded-lg text-sm flex items-center gap-1"><Edit2 size={14} /> Edit</button><button onClick={handleDeleteBooking} className="bg-white/20 hover:bg-red-500 px-3 py-1 rounded-lg text-sm flex items-center gap-1"><Trash2 size={14} /> Delete</button><select value={selectedBooking.status} onChange={(e) => updateStatus(selectedBooking.id, e.target.value)} className="bg-white/20 text-white border-0 rounded-lg px-3 py-1 text-sm"><option value="pending" className="text-gray-800">Pending</option><option value="confirmed" className="text-gray-800">Confirmed</option><option value="completed" className="text-gray-800">Completed</option><option value="cancelled" className="text-gray-800">Cancelled</option></select></div></div></div>
               <div className="p-6 space-y-6">
                 {/* Warning: Completed but unpaid */}
                 {selectedBooking.status === 'completed' && (!selectedBooking.payment_status || selectedBooking.payment_status === 'unpaid') && (
@@ -515,7 +532,7 @@ export default function AdminBookings() {
                               </p>
                             </div>
                             <div className="flex items-center gap-1.5">
-                              <button onClick={() => updateEquipQty(item.id, qty - 1)} className="w-7 h-7 rounded-full bg-gray-200 flex items-center justify-center hover:bg-gray-300 text-xs"><Minus size={12} /></button>
+                              <button onClick={() => updateEquipQty(item.id, qty - 1)} disabled={qty <= 0} className="w-7 h-7 rounded-full bg-gray-200 flex items-center justify-center hover:bg-gray-300 disabled:opacity-30 text-xs"><Minus size={12} /></button>
                               <span className={`w-7 text-center font-medium text-sm ${qty > availToday && !isRental ? 'text-red-600' : ''}`}>{qty}</span>
                               <button onClick={() => updateEquipQty(item.id, qty + 1)} disabled={!isRental && qty >= availToday} className="w-7 h-7 rounded-full bg-red-700 text-white flex items-center justify-center hover:bg-red-800 disabled:opacity-30 text-xs"><Plus size={12} /></button>
                             </div>
@@ -558,13 +575,15 @@ export default function AdminBookings() {
           ) : (<div className="bg-white rounded-2xl shadow-lg p-12 text-center"><div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4"><Calendar size={40} className="text-gray-400" /></div><h2 className="text-xl font-semibold text-gray-800 mb-2">Select a Booking</h2><p className="text-gray-500">Click on a booking to view and assign</p></div>)}
         </div>
       </div>
-      {showStaffPicker && (<div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"><div className="bg-white rounded-2xl w-full max-w-md max-h-[80vh] overflow-hidden"><div className="bg-red-700 text-white p-4 flex items-center justify-between"><h3 className="font-semibold">Select {{ head_waiter: 'Head Waiter', service: 'Service Staff', extra: 'Extra Staff', student: 'Students' }[showStaffPicker] || 'Staff'}</h3><button onClick={() => setShowStaffPicker(null)} className="p-1 hover:bg-red-800 rounded-full"><X size={24} /></button></div>
-        <div className="overflow-y-auto max-h-[60vh]">
+      {showStaffPicker && (<div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"><div className="bg-white rounded-2xl w-full max-w-md max-h-[80vh] overflow-hidden"><div className="bg-red-700 text-white p-4 flex items-center justify-between"><h3 className="font-semibold">Select {{ head_waiter: 'Head Waiter', service: 'Service Staff', extra: 'Extra Staff', student: 'Students' }[showStaffPicker] || 'Staff'}</h3><button onClick={() => { setShowStaffPicker(null); setStaffSearch('') }} className="p-1 hover:bg-red-800 rounded-full"><X size={24} /></button></div>
+        <div className="p-3 border-b"><div className="relative"><Search className="absolute left-3 top-2.5 text-gray-400" size={18} /><input type="text" placeholder="Search staff..." value={staffSearch} onChange={(e) => setStaffSearch(e.target.value)} className="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-red-500" /></div></div>
+        <div className="overflow-y-auto max-h-[55vh]">
           {staff.filter(s => {
-            if (showStaffPicker === 'head_waiter') return s.role === 'head_waiter'
-            if (showStaffPicker === 'service') return s.role === 'service' || s.role === 'extra'
-            if (showStaffPicker === 'extra') return s.role === 'extra' || s.role === 'student'
-            if (showStaffPicker === 'student') return s.role === 'student' || s.role === 'extra'
+            if (showStaffPicker === 'head_waiter' && s.role !== 'head_waiter') return false
+            if (showStaffPicker === 'service' && s.role !== 'service' && s.role !== 'extra') return false
+            if (showStaffPicker === 'extra' && s.role !== 'extra' && s.role !== 'student') return false
+            if (showStaffPicker === 'student' && s.role !== 'student' && s.role !== 'extra') return false
+            if (staffSearch && !s.name.toLowerCase().includes(staffSearch.toLowerCase())) return false
             return true
           }).sort((a, b) => {
             // Regular first, then on-call
@@ -578,9 +597,9 @@ export default function AdminBookings() {
             const disabled = !s.available || isBusy
             return (
               <button key={s.id} onClick={() => toggleStaff(s, showStaffPicker)} disabled={disabled} className={`w-full p-4 flex items-center justify-between border-b border-gray-100 ${disabled ? 'opacity-40 cursor-not-allowed' : 'hover:bg-red-50'} ${isSel ? 'bg-red-50' : ''}`}>
-                <div className="text-left">
+                <div className="text-left min-w-0 flex-1">
                   <div className="flex items-center gap-2">
-                    <p className="font-medium text-gray-800">{s.name}</p>
+                    <p className="font-medium text-gray-800 truncate">{s.name}</p>
                     {isOnCall && <span className="px-1.5 py-0.5 bg-orange-100 text-orange-600 rounded text-[10px] font-medium">📞 On-Call</span>}
                     {!isOnCall && <span className="px-1.5 py-0.5 bg-green-100 text-green-600 rounded text-[10px] font-medium">Regular</span>}
                   </div>
@@ -597,7 +616,7 @@ export default function AdminBookings() {
             )
           })}
         </div>
-        <div className="p-4 border-t"><button onClick={() => setShowStaffPicker(null)} className="w-full py-2 bg-red-700 text-white rounded-lg font-medium">Done</button></div></div></div>)}
+        <div className="p-4 border-t"><button onClick={() => { setShowStaffPicker(null); setStaffSearch('') }} className="w-full py-2 bg-red-700 text-white rounded-lg font-medium">Done</button></div></div></div>)}
       {showEditModal && selectedBooking && (<AdminBookingEdit booking={selectedBooking} onClose={() => setShowEditModal(false)} onSave={handleEditSave} />)}
     </div></div>
   )

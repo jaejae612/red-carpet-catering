@@ -22,14 +22,29 @@ export default function AdminDashboardStats() {
 
   useEffect(() => {
     fetchData()
-  }, [])
+  }, [timeRange])
+
+  const getStartDate = () => {
+    const now = new Date()
+    switch (timeRange) {
+      case 'week': now.setDate(now.getDate() - 7); break
+      case 'month': now.setMonth(now.getMonth() - 1); break
+      case 'year': now.setFullYear(now.getFullYear() - 1); break
+      default: return null
+    }
+    return now.toISOString()
+  }
 
   const fetchData = async () => {
     try {
-      const [bookingsRes, foodOrdersRes] = await Promise.all([
-        supabase.from('bookings').select('*').order('created_at', { ascending: false }),
-        supabase.from('food_orders').select('*').order('created_at', { ascending: false })
-      ])
+      const startDate = getStartDate()
+      let bookingsQuery = supabase.from('bookings').select('*').order('created_at', { ascending: false })
+      let foodOrdersQuery = supabase.from('food_orders').select('*').order('created_at', { ascending: false })
+      if (startDate) {
+        bookingsQuery = bookingsQuery.gte('created_at', startDate)
+        foodOrdersQuery = foodOrdersQuery.gte('created_at', startDate)
+      }
+      const [bookingsRes, foodOrdersRes] = await Promise.all([bookingsQuery, foodOrdersQuery])
       setBookings(bookingsRes.data || [])
       setFoodOrders(foodOrdersRes.data || [])
     } catch (error) {
@@ -45,30 +60,9 @@ export default function AdminDashboardStats() {
     fetchData()
   }
 
-  // Filter data by time range
-  const filterByTimeRange = (data, dateField = 'created_at') => {
-    const now = new Date()
-    let startDate = new Date()
-    
-    switch (timeRange) {
-      case 'week':
-        startDate.setDate(now.getDate() - 7)
-        break
-      case 'month':
-        startDate.setMonth(now.getMonth() - 1)
-        break
-      case 'year':
-        startDate.setFullYear(now.getFullYear() - 1)
-        break
-      default:
-        return data
-    }
-    
-    return data.filter(item => new Date(item[dateField]) >= startDate)
-  }
-
-  const filteredBookings = filterByTimeRange(bookings)
-  const filteredFoodOrders = filterByTimeRange(foodOrders)
+  // Data is already filtered server-side by timeRange
+  const filteredBookings = bookings
+  const filteredFoodOrders = foodOrders
 
   // Calculate stats - only count paid bookings for revenue
   const paidBookings = filteredBookings.filter(b => b.payment_status === 'deposit_paid' || b.payment_status === 'fully_paid')
