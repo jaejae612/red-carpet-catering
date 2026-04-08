@@ -483,12 +483,12 @@ export default function BookingPage() {
     return low
   }
 
-  const missingCategories = getMissingCategories()
-  const lowCategories = getLowCategories()
-
   // Heartland venue: use separate package set
   const isHeartland = booking.venueAddress.city === 'heartland'
   const currentPackages = isHeartland ? heartlandPackages : menuPackages
+
+  const missingCategories = getMissingCategories()
+  const lowCategories = getLowCategories()
 
   // Calculate total with new add-ons
   const calculateTotal = () => {
