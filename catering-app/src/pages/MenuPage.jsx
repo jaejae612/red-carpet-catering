@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { menuPackages, addOnStations } from '../lib/menuData'
-import { ChevronDown, ChevronUp, Check, ShoppingBag } from 'lucide-react'
+import { menuPackages, heartlandPackages, addOnStations } from '../lib/menuData'
+import { ChevronDown, ChevronUp, Check, ShoppingBag, MapPin, Star, Calendar } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import SEO from '../components/SEO'
 
@@ -234,6 +234,79 @@ export default function MenuPage() {
             </div>
           ))}
         </div>
+        {/* Heartland Estate Packages */}
+        <div className="bg-gradient-to-br from-gray-900 via-red-950 to-gray-900 rounded-2xl overflow-hidden mb-6">
+          <div className="p-6 border-b border-white/10">
+            <div className="flex items-center gap-3 mb-1">
+              <div className="w-8 h-8 bg-red-700 rounded-lg flex items-center justify-center font-bold text-white text-sm">RC</div>
+              <p className="text-red-300 text-sm font-medium uppercase tracking-wider">Exclusive Venue</p>
+            </div>
+            <h2 className="text-2xl font-bold text-white mb-1">Heartland Estate Packages</h2>
+            <div className="flex items-center gap-2 text-gray-400 text-sm mb-3">
+              <MapPin size={14} className="text-red-400" />
+              Red Carpet's own event venue in Cebu City
+            </div>
+            <div className="flex flex-wrap gap-2 mb-4">
+              {['Tables & chairs with covers', 'Buffet table with centrepiece', 'Wait staff', 'Utensils', '1 round drinks'].map(item => (
+                <span key={item} className="flex items-center gap-1 bg-white/10 text-gray-300 text-xs px-2 py-1 rounded-full">
+                  <Star size={10} className="text-yellow-400" fill="currentColor" /> {item}
+                </span>
+              ))}
+            </div>
+            <p className="text-xs text-gray-500">*30 person minimum. Prices vary by group size.</p>
+          </div>
+          <div className="p-4 space-y-3">
+            {Object.values(heartlandPackages).map(pkg => (
+              <div key={pkg.id} className="bg-white/5 border border-white/10 rounded-xl overflow-hidden">
+                <button
+                  onClick={() => setExpandedPackage(expandedPackage === pkg.id ? null : pkg.id)}
+                  className="w-full p-4 flex items-center justify-between hover:bg-white/10 transition-colors"
+                >
+                  <div className="text-left">
+                    <h3 className="text-lg font-bold text-white">{pkg.name}</h3>
+                    <p className="text-yellow-400 font-semibold">₱{pkg.pricePerHead}/head <span className="text-gray-400 font-normal text-sm">(60+ pax)</span></p>
+                    <p className="text-xs text-gray-400 mt-0.5">📋 {pkg.options.length} menu option{pkg.options.length > 1 ? 's' : ''} to choose from</p>
+                  </div>
+                  {expandedPackage === pkg.id ? <ChevronUp size={20} className="text-gray-400" /> : <ChevronDown size={20} className="text-gray-400" />}
+                </button>
+                {expandedPackage === pkg.id && (
+                  <div className="border-t border-white/10 p-4">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm mb-4 bg-white/5 rounded-xl p-3">
+                      <div className="text-gray-300">60+ pax: <span className="font-semibold text-white">₱{pkg.pricingTiers[60]}</span></div>
+                      <div className="text-gray-300">50 pax: <span className="font-semibold text-white">₱{pkg.pricingTiers[50]}</span></div>
+                      <div className="text-gray-300">40 pax: <span className="font-semibold text-white">₱{pkg.pricingTiers[40]}</span></div>
+                      <div className="text-gray-300">30 pax: <span className="font-semibold text-white">₱{pkg.pricingTiers[30]}</span></div>
+                    </div>
+                    <div className="grid md:grid-cols-2 gap-3">
+                      {pkg.options.map((option, idx) => (
+                        <div key={idx} className="bg-white/5 rounded-xl p-4">
+                          <h4 className="font-semibold text-white mb-2">{option.name}</h4>
+                          <ul className="text-sm text-gray-300 space-y-1">
+                            {option.items.map((item, i) => (
+                              <li key={i} className="flex items-start gap-2">
+                                <span className="flex-shrink-0">{getItemIcon(item)}</span>
+                                {item}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+          <div className="p-4 pt-0">
+            <Link
+              to={user ? '/book?venue=heartland' : '/signup'}
+              className="flex items-center justify-center gap-2 bg-red-700 hover:bg-red-600 text-white px-6 py-3 rounded-xl font-semibold transition-colors"
+            >
+              <Calendar size={18} /> Book Heartland Estate
+            </Link>
+          </div>
+        </div>
+
         <div className="bg-white rounded-2xl shadow-lg p-6 mb-12">
           <h2 className="text-2xl font-bold text-gray-800 mb-6">Add-on Stations</h2>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
