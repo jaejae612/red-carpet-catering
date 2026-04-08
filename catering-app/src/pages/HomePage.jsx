@@ -64,6 +64,73 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* Heartland Estate Section */}
+      <section className="py-16 px-4 bg-gradient-to-br from-gray-900 via-red-950 to-gray-900 text-white">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex flex-col lg:flex-row items-center gap-10">
+            {/* Left: Info */}
+            <div className="flex-1">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-12 h-12 bg-red-700 rounded-xl flex items-center justify-center font-bold text-lg shadow-lg">RC</div>
+                <div>
+                  <p className="text-red-300 text-sm font-medium uppercase tracking-wider">Exclusive Venue</p>
+                  <h2 className="text-3xl font-bold">Heartland Estate</h2>
+                </div>
+              </div>
+              <p className="text-gray-300 text-lg mb-6 leading-relaxed">
+                Our very own event venue — exclusively managed by Red Carpet Catering. Host your celebration in style with our all-in-one packages.
+              </p>
+
+              {/* Inclusions */}
+              <div className="grid grid-cols-2 gap-3 mb-8">
+                {[
+                  'Tables & chairs with covers',
+                  'Buffet table with centrepiece',
+                  'Professional wait staff',
+                  'Complete utensils',
+                  '1 round drinks included',
+                  'Exclusive venue setup',
+                ].map((item) => (
+                  <div key={item} className="flex items-center gap-2 text-sm text-gray-300">
+                    <Star size={14} className="text-yellow-400 shrink-0" fill="currentColor" />
+                    {item}
+                  </div>
+                ))}
+              </div>
+
+              <div className="flex items-center gap-2 text-gray-400 text-sm mb-6">
+                <MapPin size={16} className="text-red-400" />
+                Cebu City — Red Carpet's own event estate
+              </div>
+
+              <Link
+                to={user ? '/book?venue=heartland' : '/signup'}
+                className="inline-flex items-center gap-2 bg-red-700 hover:bg-red-600 text-white px-8 py-4 rounded-xl font-semibold text-lg shadow-lg transition-colors"
+              >
+                <Calendar size={20} /> Book Heartland Estate
+              </Link>
+            </div>
+
+            {/* Right: Package cards */}
+            <div className="flex-1 w-full">
+              <p className="text-red-300 text-sm font-medium uppercase tracking-wider mb-4">Available Packages</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {Object.values(heartlandPackages).map(pkg => (
+                  <div key={pkg.id} className="bg-white/10 backdrop-blur border border-white/10 rounded-xl p-4 hover:bg-white/15 transition-colors">
+                    <h3 className="font-bold text-white">{pkg.name}</h3>
+                    <p className="text-2xl font-bold text-yellow-400 mt-1">
+                      ₱{pkg.pricePerHead}<span className="text-sm font-normal text-gray-300">/head</span>
+                    </p>
+                    <p className="text-xs text-gray-400 mt-1">{pkg.options.length} menu option{pkg.options.length > 1 ? 's' : ''} to choose from</p>
+                  </div>
+                ))}
+              </div>
+              <p className="text-xs text-gray-500 mt-3">*60 person minimum. Prices vary for smaller groups.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Food Order CTA */}
       <section className="py-12 px-4 bg-gradient-to-r from-yellow-400 to-orange-400">
         <div className="max-w-4xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
@@ -105,73 +172,6 @@ export default function HomePage() {
           <div className="text-center mt-8"><Link to="/menu" className="inline-flex items-center gap-2 bg-red-700 text-white px-6 py-3 rounded-xl font-medium hover:bg-red-800">View All Packages <ChevronRight size={20} /></Link></div>
         </div>
       </section>
-      {/* Heartland Estate Section */}
-      <section className="py-16 px-4 bg-gradient-to-br from-gray-900 via-red-950 to-gray-900 text-white">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex flex-col lg:flex-row items-center gap-10">
-            {/* Left: Info */}
-            <div className="flex-1">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-12 h-12 bg-red-700 rounded-xl flex items-center justify-center font-bold text-lg shadow-lg">RC</div>
-                <div>
-                  <p className="text-red-300 text-sm font-medium uppercase tracking-wider">Exclusive Venue</p>
-                  <h2 className="text-3xl font-bold">Heartland Estate</h2>
-                </div>
-              </div>
-              <p className="text-gray-300 text-lg mb-6 leading-relaxed">
-                Our very own event venue — exclusively managed by Red Carpet Catering. Host your celebration in style with our all-in-one packages.
-              </p>
-
-              {/* Inclusions */}
-              <div className="grid grid-cols-2 gap-3 mb-8">
-                {[
-                  'Tables & chairs with covers',
-                  'Buffet table with centrepiece',
-                  'Professional wait staff',
-                  'Complete utensils',
-                  '1 round drinks included',
-                  'Exclusive venue setup',
-                ].map((item) => (
-                  <div key={item} className="flex items-center gap-2 text-sm text-gray-300">
-                    <Star size={14} className="text-yellow-400 shrink-0" fill="currentColor" />
-                    {item}
-                  </div>
-                ))}
-              </div>
-
-              <div className="flex items-center gap-2 text-gray-400 text-sm mb-6">
-                <MapPin size={16} className="text-red-400" />
-                Cebu City — Red Carpet's own event estate
-              </div>
-
-              <Link
-                to={user ? '/book' : '/signup'}
-                className="inline-flex items-center gap-2 bg-red-700 hover:bg-red-600 text-white px-8 py-4 rounded-xl font-semibold text-lg shadow-lg transition-colors"
-              >
-                <Calendar size={20} /> Book Heartland Estate
-              </Link>
-            </div>
-
-            {/* Right: Package cards */}
-            <div className="flex-1 w-full">
-              <p className="text-red-300 text-sm font-medium uppercase tracking-wider mb-4">Available Packages</p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {Object.values(heartlandPackages).map(pkg => (
-                  <div key={pkg.id} className="bg-white/10 backdrop-blur border border-white/10 rounded-xl p-4 hover:bg-white/15 transition-colors">
-                    <h3 className="font-bold text-white">{pkg.name}</h3>
-                    <p className="text-2xl font-bold text-yellow-400 mt-1">
-                      ₱{pkg.pricePerHead}<span className="text-sm font-normal text-gray-300">/head</span>
-                    </p>
-                    <p className="text-xs text-gray-400 mt-1">{pkg.options.length} menu option{pkg.options.length > 1 ? 's' : ''} to choose from</p>
-                  </div>
-                ))}
-              </div>
-              <p className="text-xs text-gray-500 mt-3">*60 person minimum. Prices vary for smaller groups.</p>
-            </div>
-          </div>
-        </div>
-      </section>
-
       <section className="py-16 px-4 bg-white">
         <div className="max-w-4xl mx-auto text-center">
           <h2 className="text-3xl font-bold text-gray-800 mb-8">Contact Us</h2>

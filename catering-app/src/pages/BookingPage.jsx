@@ -70,10 +70,11 @@ export default function BookingPage() {
   }
   
   const duplicateData = getDuplicateData()
-  
-  const [booking, setBooking] = useState({ 
-    venue: duplicateData?.venue || '', 
-    venueAddress: duplicateData?.venue_address || { city: '', barangay: '', street: '', landmark: '' },
+  const venueFromUrl = searchParams.get('venue')
+
+  const [booking, setBooking] = useState({
+    venue: duplicateData?.venue || '',
+    venueAddress: duplicateData?.venue_address || { city: venueFromUrl || '', barangay: '', street: '', landmark: '' },
     venueGasCharge: 0,
     date: '', 
     time: duplicateData?.event_time || '', 
