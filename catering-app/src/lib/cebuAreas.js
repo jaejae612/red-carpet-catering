@@ -195,6 +195,21 @@ export const CEBU_SERVICE_AREAS = {
       'North Poblacion', 'Panadtaran', 'Pitalo', 'San Isidro',
       'South Poblacion', 'Tabionan', 'Tananas', 'Tinago', 'Tonggo', 'Tubod'
     ].sort()
+  },
+  // ============================================
+  // HEARTLAND VENUE - Red Carpet's Own Venue
+  // Different pricing applies (see menuData.js heartlandPricingTiers)
+  // ============================================
+  heartland: {
+    id: 'heartland',
+    name: 'Heartland Estate',
+    deliveryFee: 0,
+    gasCharge: 0,   // No gas charge — Red Carpet's own venue
+    minPax: 30,
+    isOwnedVenue: true,
+    useVenuePricing: true,
+    note: 'Red Carpet\'s own event venue. Different pricing applies.',
+    barangays: []   // No barangay selection needed for this venue
   }
 }
 
@@ -276,6 +291,12 @@ export const isWithinServiceArea = (cityId) => {
 export const requiresQuotation = (cityId) => {
   const city = CEBU_SERVICE_AREAS[cityId]
   return city?.requiresQuote || false
+}
+
+// Check if venue is Red Carpet's own owned venue (uses different pricing)
+export const isOwnedVenue = (cityId) => {
+  const city = CEBU_SERVICE_AREAS[cityId]
+  return city?.isOwnedVenue || false
 }
 
 // Get minimum pax for catering in specific area

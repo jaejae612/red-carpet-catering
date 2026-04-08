@@ -72,6 +72,73 @@ export const menuPackages = {
   }
 }
 
+// =====================================================
+// HEARTLAND ESTATE PACKAGES
+// Red Carpet's own venue — includes tables, chairs,
+// buffet table w/ centrepiece, wait staff, utensils,
+// and 1 round drinks (Iced Tea/Juice)
+// =====================================================
+const HEARTLAND_INCLUSIONS = 'Tables & chairs with covers, buffet table with centrepiece, wait staff, utensils, 1 round drinks (Iced Tea/Juice)'
+
+export const heartlandPackages = {
+  heartland660: {
+    id: 'heartland660', name: 'Menu 660', pricePerHead: 660,
+    pricingTiers: { 60: 660, 50: 690, 40: 740, 30: 790 },
+    isHeartland: true,
+    inclusions: HEARTLAND_INCLUSIONS,
+    options: [
+      { name: 'Menu A', items: ['Green Salad w/ grilled fish in mustard sauce', 'Chicken Tim w/ asparagus', 'Braised Chinese Spareribs', 'Pancit Special w/ Red Egg', 'Chow Pat Chen', 'Fried Rice/Plain Rice', 'Broken Window', 'Leche Flan'] },
+      { name: 'Menu B', items: ['Chicken Macaroni Salad', 'Crispy Chicken w/ kropeks', 'Fish Fillet w/ black beans sauce', 'Seafood Marinara', 'Barbecued Roast Pork Belly', 'Fried Rice/Plain Rice', 'Blitz Torte', 'Choco Zambo'] },
+      { name: 'Menu C', items: ['Pomelo Salad', 'Chicken Afritada', 'Pork pieces w/ chili sauce', 'Sauteed Chicken w/ mixed vegetables', 'Beef w/ onions', 'Fried Rice/Plain Rice', 'Moist Chocolate Cake', 'Mango Float'] },
+      { name: 'Menu D', items: ['Potato Apple Salad', 'Chinese Humba', 'Chicken Canneloni', 'Stir Fried vegetables w/ quail egg', 'Beef w/ mushroom sauce', 'Fried Rice/Plain Rice', 'Brownies', 'Rainbow Delight'] },
+    ]
+  },
+  heartland760: {
+    id: 'heartland760', name: 'Menu 760', pricePerHead: 760,
+    pricingTiers: { 60: 760, 50: 790, 40: 840, 30: 890 },
+    isHeartland: true,
+    inclusions: HEARTLAND_INCLUSIONS,
+    options: [
+      { name: 'Menu A', items: ['Roast Beef w/ sweet sauce', 'Three Kinds of mushroom w/ broccoli', 'Pork Pizza w/ Mozzarella Cheese', 'Fish Fillet w/ tar tar sauce', 'Penne Carbonara', 'Fried Rice/Plain Rice', 'Mango Pandan', 'Custard Cake'] },
+      { name: 'Menu B', items: ['Papo Chicken', 'Barbecued Roast Pork Belly', 'Seafood Mixed Vegetable w/ tofu', 'Fish Fillet w/ soy sauce', 'Sotanghon Guisado', 'Fried Rice/Plain Rice', 'Dubos Enganos', 'Buko Lychee'] },
+      { name: 'Menu C', items: ['Hungarian Rolled Porkloin', 'Beef Tapa', 'Chicken Kebab w/ peanut sauce', 'Baked Ziti', 'Garlic Peppered Fish', 'Fried Rice/Plain Rice', 'Choco Toffee Cake', 'Ube Cake'] },
+      { name: 'Menu D', items: ['Stuffed Shrimp w/ sweet & sour dip', 'Spinach Lasagna', 'Pork w/ coconut cream', 'Chicken Cordon Bleu', 'Fish Fillet w/ oyster sauce', 'Arroz Valenciana/Plain Rice', 'Choco Cream Cheesecake', 'Maja Blanca'] },
+    ]
+  },
+  heartland830: {
+    id: 'heartland830', name: 'Menu 830', pricePerHead: 830,
+    pricingTiers: { 60: 830, 50: 860, 40: 910, 30: 960 },
+    isHeartland: true,
+    inclusions: HEARTLAND_INCLUSIONS,
+    options: [
+      { name: 'Filipino Buffet', items: ['Eggplant & Nangka salad', 'Pickled Green Mango w/ dilis', 'Roast Pork Liempo w/ special herbs', 'Kare-Kare w/ bagoong', 'Baked Crabmeat', 'Sinugbang Isda w/ vinegar sauce', 'Chicken w/ barbecue sauce', 'Garlic Rice/Plain Rice', 'Beko Bayot', 'Mango Sago'] },
+      { name: 'Asian Fusion', items: ['Ngocong Soup', 'Beef Pochero', 'Chinese Lumpia', 'Misua Guisado', 'Pad Thai', 'Lasagna', 'Callos', 'Chinese Valenciana/Plain Rice', 'Japanese Cheesecake', 'Coffee Jelly'] },
+      { name: 'International Buffet', items: ['Asian Mandarin Chicken Salad', 'Waldorf Salad', 'Chicken Galantina', 'Ox Tongue w/ cooked ham', 'Chicken Bacon Alfredo', 'Beef Morcon', 'Grilled Fish w/ lemon butter sauce', 'Paella/Plain Rice', 'Strawberry Cheesecake', 'Avocado Pie'] },
+    ]
+  },
+  heartland880: {
+    id: 'heartland880', name: 'Menu 880', pricePerHead: 880,
+    pricingTiers: { 60: 880, 50: 910, 40: 960, 30: 1010 },
+    isHeartland: true,
+    weddingMinPax: 100,
+    inclusions: HEARTLAND_INCLUSIONS,
+    options: [
+      { name: 'Filipino & Asian Fusion', items: ['Mango & Crabstick Salad on lettuce', 'Potato Bacon & Egg Salad', 'Pickled Green Mango w/ dilis', 'Korean Galbi Ribs', 'Chicken w/ barbecue sauce', 'Spicy Squid', 'Fettuccine w/ grilled chicken & balsamic sauce', 'Seafood Roll Salad', 'Plain Rice/Fried Rice', 'Fruit Salad', 'Cookies & Cream Cheesecake', 'Banana Surprise', 'Choco Balls'] },
+      { name: 'International', items: ['Green Vegetable salad w/ thousand island', 'Mediterranean Salad w/ olives', 'Chicken Macaroni Salad', 'Ox tongue w/ straw mushroom sauce', 'Crunchy Chicken w/ plum sauce', 'Roast beef w/ gravy', 'Baked Fish w/ mozzarella cheese', 'Polynesian Pork', 'Paella/Plain Rice', 'Choco Peach Cream Cake', 'Blueberry Cheesecake', 'Macaroons', 'Bingcava'] },
+    ]
+  },
+  heartland1010: {
+    id: 'heartland1010', name: 'Menu 1010 (Premium)', pricePerHead: 1010,
+    pricingTiers: { 60: 1010, 50: 1040, 40: 1090, 30: 1140 },
+    isHeartland: true,
+    weddingMinPax: 100,
+    inclusions: HEARTLAND_INCLUSIONS,
+    options: [
+      { name: 'Premium Buffet', items: ['Salad Bar', 'Japanese Sushi Rolls', 'Goat Calderita', 'Grilled Chicken Shawarma w/ Garlic avocado sauce', 'Baked Fish w/ mozzarella cheese', 'Ox Tongue w/ mushroom sauce', 'Spicy Spareribs', 'Prawn Tempura', 'Penne carbonara', 'Assorted fresh fruits', 'Japanese Cheesecake', 'Mini Fruit Tart', 'Blueberry Cheesecake'] },
+    ]
+  },
+}
+
 // Occasion types
 export const occasionTypes = [
   { id: 'birthday', name: 'Birthday', requiresDetails: true },
@@ -135,12 +202,13 @@ export const additionalDrinks = [
 ]
 
 export const getPricePerHead = (packageId, pax) => {
-  const pkg = menuPackages[packageId]
+  const pkg = menuPackages[packageId] || heartlandPackages[packageId]
   if (!pkg) return 0
-  if (pax >= 60) return pkg.pricingTiers[60]
-  if (pax >= 50) return pkg.pricingTiers[50]
-  if (pax >= 40) return pkg.pricingTiers[40]
-  return pkg.pricingTiers[30]
+  const tiers = pkg.pricingTiers
+  if (pax >= 60) return tiers[60]
+  if (pax >= 50) return tiers[50]
+  if (pax >= 40) return tiers[40]
+  return tiers[30]
 }
 
 // Alias for backwards compatibility
@@ -177,16 +245,16 @@ export const calculateAddOnsBreakdown = (addOns = [], desserts = [], drinks = []
     const item = addOnStations.find(s => s.id === a.id)
     return sum + (item ? item.price * (a.quantity || 1) : 0)
   }, 0)
-  
+
   const dessertTotal = desserts.reduce((sum, d) => {
     const item = dessertAddOns.find(s => s.id === d.id)
     return sum + (item ? item.price * (d.quantity || 1) : 0)
   }, 0)
-  
+
   const drinkTotal = drinks.reduce((sum, d) => {
     const item = additionalDrinks.find(s => s.id === d.id)
     return sum + (item ? item.price * (d.quantity || 1) : 0)
   }, 0)
-  
+
   return { stationsTotal, dessertTotal, drinkTotal, total: stationsTotal + dessertTotal + drinkTotal }
 }

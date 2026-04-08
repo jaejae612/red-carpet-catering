@@ -2,22 +2,23 @@ import React, { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
-import { 
-  menuPackages, 
-  addOnStations, 
-  calculatePricePerHead, 
+import {
+  menuPackages,
+  heartlandPackages,
+  addOnStations,
+  calculatePricePerHead,
   occasionTypes,
   presetMotifColors,
   freeDrinkOptions,
   additionalDrinks,
   calculateAddOnsBreakdown
 } from '../lib/menuData'
-import { 
-  getCityList, 
-  getBarangays, 
-  getGasCharge, 
-  getCityInfo, 
-  formatAddress, 
+import {
+  getCityList,
+  getBarangays,
+  getGasCharge,
+  getCityInfo,
+  formatAddress,
   getMinimumPax,
   requiresQuotation
 } from '../lib/cebuAreas'
@@ -289,7 +290,7 @@ export default function BookingPage() {
   // Check if default menu has items for a category
   const getDefaultItemsForCategory = (categoryId) => {
     const selectedOption = booking.selectedMenuOption && booking.selectedPackage 
-      ? menuPackages[booking.selectedPackage]?.options.find(o => o.name === booking.selectedMenuOption)
+      ? currentPackages[booking.selectedPackage]?.options.find(o => o.name === booking.selectedMenuOption)
       : null
     
     if (!selectedOption) return []
@@ -429,7 +430,7 @@ export default function BookingPage() {
   const getCategoryStatus = (categoryId, requiredCount) => {
     const customCount = (booking.customDishes[categoryId] || []).length
     const defaultItems = getDefaultItemsForCategory(categoryId)
-    const isCustomBuildMenu = menuPackages[booking.selectedPackage]?.isCustomBuild
+    const isCustomBuildMenu = currentPackages[booking.selectedPackage]?.isCustomBuild
     
     // For custom build menus, only count user selections
     // For preset menus, count custom + defaults
@@ -449,7 +450,7 @@ export default function BookingPage() {
   // Get all missing categories (completely empty or not meeting requirements)
   const getMissingCategories = () => {
     const missing = []
-    const isCustomBuildMenu = menuPackages[booking.selectedPackage]?.isCustomBuild
+    const isCustomBuildMenu = currentPackages[booking.selectedPackage]?.isCustomBuild
     
     DISH_CATEGORIES.forEach(cat => {
       const status = getCategoryStatus(cat.id, cat.pick)
@@ -485,9 +486,13 @@ export default function BookingPage() {
   const missingCategories = getMissingCategories()
   const lowCategories = getLowCategories()
 
+  // Heartland venue: use separate package set
+  const isHeartland = booking.venueAddress.city === 'heartland'
+  const currentPackages = isHeartland ? heartlandPackages : menuPackages
+
   // Calculate total with new add-ons
   const calculateTotal = () => {
-    const pkg = menuPackages[booking.selectedPackage]
+    const pkg = currentPackages[booking.selectedPackage]
     if (!pkg) return 0
     
     const pricePerHead = calculatePricePerHead(booking.selectedPackage, booking.numberOfPax)
@@ -734,9 +739,18 @@ export default function BookingPage() {
           value={booking.venueAddress.city}
           onChange={(e) => {
             const cityId = e.target.value
-            updateBooking('venueAddress', { ...booking.venueAddress, city: cityId, barangay: '' })
+            const wasHeartland = booking.venueAddress.city === 'heartland'
+            const nowHeartland = cityId === 'heartland'
+            updateBooking('venueAddress', { ...booking.venueAddress, city: cityId, barangay: '', street: '', landmark: '' })
             updateBooking('venueGasCharge', getGasCharge(cityId) || 0)
-            if (cityId) {
+            // Clear package selection when switching between heartland/regular
+            if (wasHeartland !== nowHeartland) {
+              updateBooking('selectedPackage', '')
+              updateBooking('selectedMenuOption', '')
+            }
+            if (cityId === 'heartland') {
+              updateBooking('venue', 'Heartland Estate (Red Carpet Catering)')
+            } else if (cityId) {
               const ci = getCityInfo(cityId)
               updateBooking('venue', ci?.name || '')
             }
@@ -745,15 +759,36 @@ export default function BookingPage() {
           className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 bg-white"
         >
           <option value="">Select city / municipality...</option>
-          {getCityList().map(city => (
+          <option disabled>── Red Carpet Venues ──</option>
+          {getCityList().filter(c => c.id === 'heartland').map(city => (
+            <option key={city.id} value={city.id}>⭐ {city.name}</option>
+          ))}
+          <option disabled>── Catering at your location ──</option>
+          {getCityList().filter(c => c.id !== 'heartland').map(city => (
             <option key={city.id} value={city.id}>
               {city.name}{city.gasCharge > 0 ? ` (+₱${city.gasCharge} gas)` : ''}{city.requiresQuote ? ' (Quote needed)' : ''}
             </option>
           ))}
         </select>
         
+        {/* Heartland Estate Banner */}
+        {booking.venueAddress.city === 'heartland' && (
+          <div className="bg-red-50 border border-red-200 rounded-xl p-4">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-10 h-10 bg-red-700 rounded-lg flex items-center justify-center text-white font-bold text-sm shrink-0">RC</div>
+              <div>
+                <p className="font-semibold text-red-800">Heartland Estate — Red Carpet Catering</p>
+                <p className="text-sm text-red-700">Our own event venue with exclusive packages</p>
+              </div>
+            </div>
+            <div className="text-xs text-red-700 bg-red-100 rounded-lg px-3 py-2 mt-1">
+              ✓ Inclusions: Tables &amp; chairs with covers, buffet table with centrepiece, wait staff, utensils, 1 round drinks (Iced Tea/Juice)
+            </div>
+          </div>
+        )}
+
         {/* Barangay */}
-        {booking.venueAddress.city && (
+        {booking.venueAddress.city && booking.venueAddress.city !== 'heartland' && (
           <select
             value={booking.venueAddress.barangay}
             onChange={(e) => updateBooking('venueAddress', { ...booking.venueAddress, barangay: e.target.value })}
@@ -766,9 +801,9 @@ export default function BookingPage() {
             ))}
           </select>
         )}
-        
+
         {/* Street / Venue */}
-        {booking.venueAddress.city && (
+        {booking.venueAddress.city && booking.venueAddress.city !== 'heartland' && (
           <input
             type="text"
             value={booking.venueAddress.street}
@@ -781,9 +816,9 @@ export default function BookingPage() {
             className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500"
           />
         )}
-        
+
         {/* Landmark */}
-        {booking.venueAddress.city && (
+        {booking.venueAddress.city && booking.venueAddress.city !== 'heartland' && (
           <input
             type="text"
             value={booking.venueAddress.landmark}
@@ -797,7 +832,7 @@ export default function BookingPage() {
         )}
         
         {/* Gas Charge */}
-        {booking.venueAddress.city && !requiresQuotation(booking.venueAddress.city) && (
+        {booking.venueAddress.city && booking.venueAddress.city !== 'heartland' && !requiresQuotation(booking.venueAddress.city) && (
           <div className={`rounded-xl p-4 flex items-center justify-between ${booking.venueGasCharge === 0 ? 'bg-green-50 border border-green-200' : 'bg-amber-50 border border-amber-200'}`}>
             <div className="flex items-center gap-2">
               <Fuel size={20} className={booking.venueGasCharge === 0 ? 'text-green-600' : 'text-amber-600'} />
@@ -810,7 +845,7 @@ export default function BookingPage() {
         )}
         
         {/* Quote Required */}
-        {booking.venueAddress.city && requiresQuotation(booking.venueAddress.city) && (
+        {booking.venueAddress.city && booking.venueAddress.city !== 'heartland' && requiresQuotation(booking.venueAddress.city) && (
           <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-start gap-3">
             <AlertCircle className="text-amber-600 flex-shrink-0 mt-0.5" size={20} />
             <div>
@@ -824,7 +859,7 @@ export default function BookingPage() {
         )}
         
         {/* Min Pax Warning */}
-        {booking.venueAddress.city && getMinimumPax(booking.venueAddress.city) > 30 && booking.numberOfPax < getMinimumPax(booking.venueAddress.city) && (
+        {booking.venueAddress.city && booking.venueAddress.city !== 'heartland' && getMinimumPax(booking.venueAddress.city) > 30 && booking.numberOfPax < getMinimumPax(booking.venueAddress.city) && (
           <div className="bg-red-50 border border-red-200 rounded-lg p-3 flex items-start gap-2">
             <AlertCircle size={16} className="text-red-600 flex-shrink-0 mt-0.5" />
             <p className="text-sm text-red-700">
@@ -834,12 +869,17 @@ export default function BookingPage() {
         )}
         
         {/* Address Preview */}
-        {booking.venueAddress.city && booking.venueAddress.barangay && booking.venueAddress.street && (
+        {booking.venueAddress.city === 'heartland' ? (
+          <div className="bg-gray-50 rounded-xl p-3 border border-gray-200">
+            <p className="text-xs text-gray-500 mb-1">Venue:</p>
+            <p className="text-sm font-medium text-gray-800">Heartland Estate (Red Carpet Catering)</p>
+          </div>
+        ) : (booking.venueAddress.city && booking.venueAddress.barangay && booking.venueAddress.street && (
           <div className="bg-gray-50 rounded-xl p-3 border border-gray-200">
             <p className="text-xs text-gray-500 mb-1">Complete Address:</p>
             <p className="text-sm font-medium text-gray-800">{booking.venue}</p>
           </div>
-        )}
+        ))}
       </div>
       <div className="grid grid-cols-2 gap-4">
         <div>
@@ -892,14 +932,22 @@ export default function BookingPage() {
   )
 
   const renderStep2 = () => {
-    const selectedPkg = booking.selectedPackage ? menuPackages[booking.selectedPackage] : null
+    const selectedPkg = booking.selectedPackage ? currentPackages[booking.selectedPackage] : null
     const isCustomBuild = selectedPkg?.isCustomBuild
-    
+
     return (
     <div className="space-y-6">
       <h2 className="text-xl font-semibold text-gray-800">Select Menu Package</h2>
+
+      {/* Heartland inclusions reminder */}
+      {isHeartland && (
+        <div className="bg-red-50 border border-red-200 rounded-xl p-3 text-sm text-red-800">
+          <span className="font-semibold">Heartland Estate</span> packages include: tables &amp; chairs with covers, buffet table with centrepiece, wait staff, utensils, and 1 round drinks.
+        </div>
+      )}
+
       <div className="space-y-3">
-        {Object.values(menuPackages).map(pkg => (
+        {Object.values(currentPackages).map(pkg => (
           <button key={pkg.id} onClick={() => { 
             updateBooking('selectedPackage', pkg.id); 
             // Auto-select for custom build menus
@@ -914,7 +962,9 @@ export default function BookingPage() {
               <div>
                 <h3 className="font-semibold text-gray-800">{pkg.name}</h3>
                 <p className="text-red-600">₱{pkg.pricePerHead}/head</p>
-                {pkg.id === 'menu470' ? (
+                {pkg.isHeartland ? (
+                  <p className="text-xs text-red-600 mt-1">🏛️ Heartland Estate • Venue inclusions included</p>
+                ) : pkg.id === 'menu470' ? (
                   <p className="text-xs text-blue-600 mt-1">🛠️ Build Your Own • 🍚 Plain Rice & Fried Rice only</p>
                 ) : pkg.id === 'menu510' ? (
                   <p className="text-xs text-blue-600 mt-1">🛠️ Build Your Own • 4 Main, 1 Side • 🍚 Plain, Fried & Arroz Valenciana</p>
@@ -935,7 +985,7 @@ export default function BookingPage() {
         <div className="bg-gray-50 rounded-xl p-4">
           <label className="block text-sm font-semibold text-red-700 uppercase mb-3">Select Base Menu</label>
           <div className="space-y-2">
-            {menuPackages[booking.selectedPackage]?.options.map((option, idx) => (
+            {currentPackages[booking.selectedPackage]?.options.map((option, idx) => (
               <div key={idx}>
                 <button 
                   onClick={() => updateBooking('selectedMenuOption', option.name)} 
@@ -1011,10 +1061,10 @@ export default function BookingPage() {
 
   const renderStep3 = () => {
     const selectedOption = booking.selectedMenuOption && booking.selectedPackage 
-      ? menuPackages[booking.selectedPackage]?.options.find(o => o.name === booking.selectedMenuOption)
+      ? currentPackages[booking.selectedPackage]?.options.find(o => o.name === booking.selectedMenuOption)
       : null
-    const isCustomBuild = menuPackages[booking.selectedPackage]?.isCustomBuild
-    const currentPkg = menuPackages[booking.selectedPackage]
+    const isCustomBuild = currentPackages[booking.selectedPackage]?.isCustomBuild
+    const currentPkg = currentPackages[booking.selectedPackage]
     const allowSwap = currentPkg?.allowSwap // Menu 560 allows swapping
     const isPresetMenu = ['menu660', 'menu810'].includes(booking.selectedPackage) // 560 removed - it allows swaps
 
@@ -1236,7 +1286,7 @@ export default function BookingPage() {
 
         {isCustomBuild && (
           <div className="bg-amber-50 border border-amber-200 rounded-xl p-4">
-            <h3 className="font-semibold text-amber-800 mb-2">🛠️ {menuPackages[booking.selectedPackage]?.name} - Build Your Own</h3>
+            <h3 className="font-semibold text-amber-800 mb-2">🛠️ {currentPackages[booking.selectedPackage]?.name} - Build Your Own</h3>
             <p className="text-sm text-amber-700">Select dishes from each category below. All selections are required.</p>
           </div>
         )}
@@ -1309,7 +1359,7 @@ export default function BookingPage() {
 
           {isCustomBuild && (
             <p className="text-xs text-blue-600 font-medium bg-blue-50 px-2 py-1 rounded inline-block mb-3">
-              🛠️ Build Your Own - {menuPackages[booking.selectedPackage]?.name}
+              🛠️ Build Your Own - {currentPackages[booking.selectedPackage]?.name}
             </p>
           )}
           
@@ -1630,13 +1680,13 @@ export default function BookingPage() {
   )
 
   const renderStep6 = () => {
-    const pkg = menuPackages[booking.selectedPackage]
+    const pkg = currentPackages[booking.selectedPackage]
     const pph = calculatePricePerHead(booking.selectedPackage, booking.numberOfPax)
     const total = calculateTotal()
     const displayName = isAdmin ? booking.customerName : (profile?.full_name || 'Customer')
     const displayPhone = isAdmin ? booking.customerPhone : (profile?.phone || '')
     const customDishesArray = Object.values(booking.customDishes).flat()
-    const selectedOption = menuPackages[booking.selectedPackage]?.options.find(o => o.name === booking.selectedMenuOption)
+    const selectedOption = currentPackages[booking.selectedPackage]?.options.find(o => o.name === booking.selectedMenuOption)
     
     return (
       <div className="space-y-6">
@@ -1907,8 +1957,9 @@ export default function BookingPage() {
       // Other occasion validation
       if (booking.occasion === 'other' && !booking.occasionOther) return false
       if (!isValidDate(booking.date, booking.time)) return false
-      if (isAdmin) return booking.customerName && booking.customerPhone && booking.venueAddress.city && booking.venueAddress.barangay && booking.venueAddress.street
-      return booking.venueAddress.city && booking.venueAddress.barangay && booking.venueAddress.street
+      const isHeartland = booking.venueAddress.city === 'heartland'
+      if (isAdmin) return booking.customerName && booking.customerPhone && booking.venueAddress.city && (isHeartland || (booking.venueAddress.barangay && booking.venueAddress.street))
+      return booking.venueAddress.city && (isHeartland || (booking.venueAddress.barangay && booking.venueAddress.street))
     }
     if (step === 2) return booking.selectedPackage && booking.selectedMenuOption
     if (step === 3) {
@@ -1916,7 +1967,7 @@ export default function BookingPage() {
       const isPresetMenu = ['menu660', 'menu810'].includes(booking.selectedPackage)
       if (isPresetMenu) return true
       // Menu 560 with swap capability can always proceed (swapping is optional)
-      const allowSwap = menuPackages[booking.selectedPackage]?.allowSwap
+      const allowSwap = currentPackages[booking.selectedPackage]?.allowSwap
       if (allowSwap) return true
       return missingCategories.length === 0 // Block if menu is incomplete for custom build menus
     }
