@@ -1,10 +1,10 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { 
-  UtensilsCrossed, Wine, Package, Coffee, ArrowRight, Users, 
+import {
+  UtensilsCrossed, Wine, Package, Coffee, ArrowRight, Users,
   Clock, Star, CheckCircle, ChevronDown, ChevronUp, Sparkles,
-  Calendar, MapPin, PartyPopper, Heart
+  Calendar, MapPin, PartyPopper, Heart, Building2
 } from 'lucide-react'
 
 const cateringOptions = [
@@ -37,6 +37,37 @@ const cateringOptions = [
       { name: 'Menu 580', price: '₱580/head', highlight: 'Filipino & International' },
       { name: 'Menu 680', price: '₱680/head', highlight: 'Premium selection' },
       { name: 'Menu 830', price: '₱830/head', highlight: 'Luxury experience' },
+    ]
+  },
+  {
+    id: 'heartland',
+    name: 'Heartland Estate',
+    tagline: "RC's exclusive event venue with all-in packages",
+    description: "Host your celebration at Red Carpet's own venue. All packages include the venue setup — tables & chairs with covers, buffet table with centrepiece, wait staff, utensils, and 1 round of drinks.",
+    icon: Building2,
+    color: 'red',
+    bgGradient: 'from-gray-800 to-red-950',
+    lightBg: 'bg-gray-900',
+    borderColor: 'border-red-900',
+    textColor: 'text-red-400',
+    route: '/book?venue=heartland',
+    priceRange: '₱660 - ₱1,010 per head',
+    minGuests: 30,
+    features: [
+      'Exclusive venue — no outside caterer needed',
+      'Tables & chairs with covers included',
+      'Buffet table with centrepiece included',
+      'Professional wait staff included',
+      'Complete utensils provided',
+      '1 round of drinks (Iced Tea / Juice)'
+    ],
+    bestFor: ['Weddings', 'Debuts', 'Birthdays', 'Anniversaries', 'Corporate Events'],
+    packages: [
+      { name: 'Menu 660', price: '₱660/head', highlight: '4 menu options' },
+      { name: 'Menu 760', price: '₱760/head', highlight: '4 menu options' },
+      { name: 'Menu 830', price: '₱830/head', highlight: '3 themed buffets' },
+      { name: 'Menu 880', price: '₱880/head', highlight: '2 grand menus' },
+      { name: 'Menu 1010', price: '₱1,010/head', highlight: 'Premium buffet' },
     ]
   },
   {

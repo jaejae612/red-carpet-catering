@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { Menu, X, User, LogOut, ChevronDown, Settings, UtensilsCrossed, Wine, Package } from 'lucide-react'
+import { Menu, X, User, LogOut, ChevronDown, Settings, UtensilsCrossed, Wine, Package, Building2 } from 'lucide-react'
 
 export default function Navbar() {
   const { user, userProfile, isAdmin, signOut } = useAuth()
@@ -58,8 +58,8 @@ export default function Navbar() {
                       <p className="text-xs text-gray-500">View all catering types</p>
                     </div>
                   </Link>
-                  <Link 
-                    to="/book" 
+                  <Link
+                    to="/book"
                     onClick={() => setShowCateringMenu(false)}
                     className="px-4 py-3 hover:bg-gray-50 flex items-center gap-3"
                   >
@@ -69,6 +69,19 @@ export default function Navbar() {
                     <div>
                       <p className="font-medium">Buffet Catering</p>
                       <p className="text-xs text-gray-500">Full-service events</p>
+                    </div>
+                  </Link>
+                  <Link
+                    to="/book?venue=heartland"
+                    onClick={() => setShowCateringMenu(false)}
+                    className="px-4 py-3 hover:bg-red-50 flex items-center gap-3 bg-gradient-to-r from-red-950/5 to-transparent"
+                  >
+                    <div className="w-8 h-8 bg-red-700 rounded-lg flex items-center justify-center">
+                      <Building2 size={16} className="text-white" />
+                    </div>
+                    <div>
+                      <p className="font-medium">Heartland Estate</p>
+                      <p className="text-xs text-gray-500">RC's exclusive venue</p>
                     </div>
                   </Link>
                   <Link 
@@ -145,6 +158,9 @@ export default function Navbar() {
             </Link>
             <Link to="/book" onClick={() => setIsOpen(false)} className="flex py-2 pl-4 items-center gap-2">
               <UtensilsCrossed size={16} /> Buffet Catering
+            </Link>
+            <Link to="/book?venue=heartland" onClick={() => setIsOpen(false)} className="flex py-2 pl-4 items-center gap-2">
+              <Building2 size={16} /> Heartland Estate
             </Link>
             <Link to="/book/cocktail" onClick={() => setIsOpen(false)} className="flex py-2 pl-4 items-center gap-2">
               <Wine size={16} /> Cocktail Party
