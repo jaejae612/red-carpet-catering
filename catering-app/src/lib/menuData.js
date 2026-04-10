@@ -1,8 +1,8 @@
 // Red Carpet Catering Menu Packages
 export const menuPackages = {
   menu470: {
-    id: 'menu470', name: 'Menu 470', pricePerHead: 470,
-    pricingTiers: { 60: 470, 50: 490, 40: 540, 30: 590 },
+    id: 'menu470', name: 'Menu 490', pricePerHead: 490,
+    pricingTiers: { 60: 490, 50: 510, 40: 560, 30: 610 },
     isCustomBuild: true, // Flag for fully customizable menu
     options: [
       { name: 'Standard Menu', items: ['1 Salad', '2 Main Dishes', '2 Sides', 'Plain Rice & Fried Rice', '2 Desserts'] }
@@ -16,8 +16,8 @@ export const menuPackages = {
     }
   },
   menu510: {
-    id: 'menu510', name: 'Menu 510', pricePerHead: 510,
-    pricingTiers: { 60: 510, 50: 530, 40: 580, 30: 630 },
+    id: 'menu510', name: 'Menu 530', pricePerHead: 530,
+    pricingTiers: { 60: 530, 50: 550, 40: 600, 30: 650 },
     isCustomBuild: true,
     options: [
       { name: 'Standard Menu', items: ['4 Main Dishes', '1 Side', '2 Kinds of Rice', '2 Desserts'] }
@@ -31,8 +31,8 @@ export const menuPackages = {
     }
   },
   menu560: {
-    id: 'menu560', name: 'Menu 560', pricePerHead: 560,
-    pricingTiers: { 60: 560, 50: 580, 40: 630, 30: 680 },
+    id: 'menu560', name: 'Menu 580', pricePerHead: 580,
+    pricingTiers: { 60: 580, 50: 600, 40: 650, 30: 700 },
     allowSwap: true, // Enable dish swapping with Asian Fusion
     options: [
       { name: 'Filipino Buffet', items: ['Eggplant & Nangka salad', 'Pickled Green Mango w/ dilis', 'Roast Pork Liempo w/ special herbs', 'Kare-Kare w/ bagoong', 'Baked Crabmeat', 'Sinugbang Isda w/ vinegar sauce', 'Chicken w/ barbecue sauce', 'Garlic Rice/Plain Rice', 'Beko Bayot', 'Mango Sago'] },
@@ -56,16 +56,16 @@ export const menuPackages = {
     }
   },
   menu660: {
-    id: 'menu660', name: 'Menu 660', pricePerHead: 660,
-    pricingTiers: { 60: 660, 50: 680, 40: 730, 30: 780 },
+    id: 'menu660', name: 'Menu 680', pricePerHead: 680,
+    pricingTiers: { 60: 680, 50: 700, 40: 750, 30: 800 },
     options: [
       { name: 'Filipino & Asian Fusion', items: ['Mango & Crabstick Salad', 'Potato Bacon & Egg Salad', 'Korean Galbi Ribs', 'Chicken w/ barbecue sauce', 'Spicy Squid', 'Fettuccine w/ grilled chicken', 'Seafood Roll Salad', 'Plain Rice/Fried Rice', 'Fruit Salad', 'Cookies & Cream Cheesecake'] },
       { name: 'International', items: ['Green Vegetable salad w/ thousand island', 'Mediterranean Salad w/ olives', 'Ox tongue w/ mushroom sauce', 'Crunchy Chicken w/ plum sauce', 'Roast beef w/ gravy', 'Baked Fish w/ mozzarella cheese', 'Polynesian Pork', 'Paella/Plain Rice', 'Choco Peach Cream Cake', 'Blueberry Cheesecake'] }
     ]
   },
   menu810: {
-    id: 'menu810', name: 'Menu 810 (Premium)', pricePerHead: 810,
-    pricingTiers: { 60: 810, 50: 830, 40: 880, 30: 930 },
+    id: 'menu810', name: 'Menu 830 (Premium)', pricePerHead: 830,
+    pricingTiers: { 60: 830, 50: 850, 40: 900, 30: 950 },
     options: [
       { name: 'Premium Buffet', items: ['Salad Bar', 'Japanese Sushi Rolls', 'Grilled Beef Short Rib (Carving Station)', 'Chicken Relleno', 'Baked Fish w/ mozzarella cheese', 'Ox Tongue w/ mushroom sauce', 'Spicy Spareribs', 'Prawn Tempura', 'Penne Carbonara', 'Assorted fresh fruits', 'Blitz Torte', 'Mini Fruit Tart', 'Blueberry Cheesecake'] }
     ]

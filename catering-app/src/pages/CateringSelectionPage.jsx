@@ -32,11 +32,11 @@ const cateringOptions = [
     ],
     bestFor: ['Weddings', 'Debuts', 'Corporate Events', 'Reunions', 'Fiestas'],
     packages: [
-      { name: 'Menu 470', price: '₱470/head', highlight: 'Budget-friendly' },
-      { name: 'Menu 510', price: '₱510/head', highlight: 'Popular choice' },
-      { name: 'Menu 560', price: '₱560/head', highlight: 'Filipino & International' },
-      { name: 'Menu 660', price: '₱660/head', highlight: 'Premium selection' },
-      { name: 'Menu 810', price: '₱810/head', highlight: 'Luxury experience' },
+      { name: 'Menu 490', price: '₱490/head', highlight: 'Budget-friendly' },
+      { name: 'Menu 530', price: '₱530/head', highlight: 'Popular choice' },
+      { name: 'Menu 580', price: '₱580/head', highlight: 'Filipino & International' },
+      { name: 'Menu 680', price: '₱680/head', highlight: 'Premium selection' },
+      { name: 'Menu 830', price: '₱830/head', highlight: 'Luxury experience' },
     ]
   },
   {
