@@ -357,6 +357,10 @@ export default function CateringSelectionPage() {
                     <UtensilsCrossed size={20} className="mx-auto mb-1" />
                     Buffet
                   </th>
+                  <th className="px-6 py-4 text-center text-sm font-semibold text-red-800">
+                    <Building2 size={20} className="mx-auto mb-1" />
+                    Heartland
+                  </th>
                   <th className="px-6 py-4 text-center text-sm font-semibold text-purple-700">
                     <Wine size={20} className="mx-auto mb-1" />
                     Cocktail
@@ -374,7 +378,8 @@ export default function CateringSelectionPage() {
               <tbody className="divide-y divide-gray-100">
                 <tr>
                   <td className="px-6 py-4 text-sm text-gray-600">Price Range</td>
-                  <td className="px-6 py-4 text-center text-sm font-medium">₱470-810/head</td>
+                  <td className="px-6 py-4 text-center text-sm font-medium">₱490-830/head</td>
+                  <td className="px-6 py-4 text-center text-sm font-medium">₱660-1010/head</td>
                   <td className="px-6 py-4 text-center text-sm font-medium">₱400-600/head</td>
                   <td className="px-6 py-4 text-center text-sm font-medium">₱180-320/pack</td>
                   <td className="px-6 py-4 text-center text-sm font-medium">₱150-200/pack</td>
@@ -383,12 +388,14 @@ export default function CateringSelectionPage() {
                   <td className="px-6 py-4 text-sm text-gray-600">Minimum Order</td>
                   <td className="px-6 py-4 text-center text-sm">30 pax</td>
                   <td className="px-6 py-4 text-center text-sm">30 pax</td>
+                  <td className="px-6 py-4 text-center text-sm">30 pax</td>
                   <td className="px-6 py-4 text-center text-sm">10 packs</td>
                   <td className="px-6 py-4 text-center text-sm">10 packs</td>
                 </tr>
                 <tr>
                   <td className="px-6 py-4 text-sm text-gray-600">Service Style</td>
                   <td className="px-6 py-4 text-center text-sm">Full setup + staff</td>
+                  <td className="px-6 py-4 text-center text-sm">Exclusive venue</td>
                   <td className="px-6 py-4 text-center text-sm">Setup + service</td>
                   <td className="px-6 py-4 text-center text-sm">Delivery/Pickup</td>
                   <td className="px-6 py-4 text-center text-sm">Delivery/Pickup</td>
@@ -396,12 +403,14 @@ export default function CateringSelectionPage() {
                 <tr className="bg-gray-50">
                   <td className="px-6 py-4 text-sm text-gray-600">Best For</td>
                   <td className="px-6 py-4 text-center text-sm">Weddings, Big Events</td>
+                  <td className="px-6 py-4 text-center text-sm">Weddings, Debuts</td>
                   <td className="px-6 py-4 text-center text-sm">Receptions, Mixers</td>
                   <td className="px-6 py-4 text-center text-sm">Meetings, Seminars</td>
                   <td className="px-6 py-4 text-center text-sm">Workshops, Kids</td>
                 </tr>
                 <tr>
                   <td className="px-6 py-4 text-sm text-gray-600">Lead Time</td>
+                  <td className="px-6 py-4 text-center text-sm">5-7 days</td>
                   <td className="px-6 py-4 text-center text-sm">5-7 days</td>
                   <td className="px-6 py-4 text-center text-sm">3-5 days</td>
                   <td className="px-6 py-4 text-center text-sm">24 hours</td>
