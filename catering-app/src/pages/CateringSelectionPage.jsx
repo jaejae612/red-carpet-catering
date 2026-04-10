@@ -20,7 +20,7 @@ const cateringOptions = [
     borderColor: 'border-red-200',
     textColor: 'text-red-700',
     route: '/book',
-    priceRange: '₱470 - ₱810 per head',
+    priceRange: '₱490 - ₱830 per head',
     minGuests: 30,
     features: [
       'Full buffet setup with chafing dishes',
