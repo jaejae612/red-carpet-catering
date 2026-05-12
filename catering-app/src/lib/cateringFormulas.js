@@ -320,10 +320,14 @@ export const countMenuDishes = (menuPackage, booking) => {
     menu470: 7,
     menu510: 9,
     menu560: 10,
-    menu620: 11,
     menu660: 11,
-    menu680: 12,
     menu810: 12,
+    // Heartland Estate packages
+    heartland660: 11,
+    heartland760: 12,
+    heartland830: 12,
+    heartland880: 13,
+    heartland1010: 14,
     cocktail: 8,
   }
   return defaults[menuPackage] || 8
