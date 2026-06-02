@@ -58,6 +58,7 @@ export const menuPackages = {
   menu660: {
     id: 'menu660', name: 'Menu 680', pricePerHead: 680,
     pricingTiers: { 60: 680, 50: 700, 40: 750, 30: 800 },
+    isFixedMenu: true,
     options: [
       { name: 'Filipino & Asian Fusion', items: ['Mango & Crabstick Salad', 'Potato Bacon & Egg Salad', 'Korean Galbi Ribs', 'Chicken w/ barbecue sauce', 'Spicy Squid', 'Fettuccine w/ grilled chicken', 'Seafood Roll Salad', 'Plain Rice/Fried Rice', 'Fruit Salad', 'Cookies & Cream Cheesecake'] },
       { name: 'International', items: ['Green Vegetable salad w/ thousand island', 'Mediterranean Salad w/ olives', 'Ox tongue w/ mushroom sauce', 'Crunchy Chicken w/ plum sauce', 'Roast beef w/ gravy', 'Baked Fish w/ mozzarella cheese', 'Polynesian Pork', 'Paella/Plain Rice', 'Choco Peach Cream Cake', 'Blueberry Cheesecake'] }
@@ -66,6 +67,7 @@ export const menuPackages = {
   menu810: {
     id: 'menu810', name: 'Menu 830 (Premium)', pricePerHead: 830,
     pricingTiers: { 60: 830, 50: 850, 40: 900, 30: 950 },
+    isFixedMenu: true,
     options: [
       { name: 'Premium Buffet', items: ['Salad Bar', 'Japanese Sushi Rolls', 'Grilled Beef Short Rib (Carving Station)', 'Chicken Relleno', 'Baked Fish w/ mozzarella cheese', 'Ox Tongue w/ mushroom sauce', 'Spicy Spareribs', 'Prawn Tempura', 'Penne Carbonara', 'Assorted fresh fruits', 'Blitz Torte', 'Mini Fruit Tart', 'Blueberry Cheesecake'] }
     ]

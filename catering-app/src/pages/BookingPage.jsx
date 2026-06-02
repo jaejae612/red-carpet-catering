@@ -11,8 +11,7 @@ import {
   occasionTypes,
   presetMotifColors,
   freeDrinkOptions,
-  additionalDrinks,
-  calculateAddOnsBreakdown
+  additionalDrinks
 } from '../lib/menuData'
 import {
   getCityList,
@@ -1112,10 +1111,9 @@ export default function BookingPage() {
     const currentPkg = currentPackages[booking.selectedPackage]
     const allowSwap = currentPkg?.allowSwap // Menu 560 allows swapping
     const isPresetMenu = currentPackages[booking.selectedPackage]?.isFixedMenu ||
-                         isHeartland || isChateau ||
-                         ['menu660', 'menu810'].includes(booking.selectedPackage)
+                         isHeartland || isChateau
 
-    // For preset menus (660, 810) - no customization, just show the menu
+    // For preset menus - no customization, just show the menu
     if (isPresetMenu) {
       return (
         <div className="space-y-6">
@@ -2014,8 +2012,7 @@ export default function BookingPage() {
     if (step === 3) {
       // Preset/fixed menus can always proceed - no dish customization needed
       const isPresetMenu = currentPackages[booking.selectedPackage]?.isFixedMenu ||
-                           isHeartland || isChateau ||
-                           ['menu660', 'menu810'].includes(booking.selectedPackage)
+                           isHeartland || isChateau
       if (isPresetMenu) return true
       // Menu 560 with swap capability can always proceed (swapping is optional)
       const allowSwap = currentPackages[booking.selectedPackage]?.allowSwap
