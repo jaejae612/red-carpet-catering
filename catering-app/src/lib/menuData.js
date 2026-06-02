@@ -289,16 +289,16 @@ export const presetMotifColors = [
 export const addOnStations = [
   { id: 'water', name: 'Water (5 gallons)', price: 50, unit: 'per 5 gallons' },
   { id: 'ice', name: 'Ice (10 kilos)', price: 150, unit: 'per bag' },
-  { id: 'halohalo', name: 'Halo-halo Bar', price: 3500, unit: 'good for 50' },
-  { id: 'crepe', name: 'Crepe Station', price: 3500, unit: 'good for 50' },
-  { id: 'fruitshake', name: 'Fresh Fruit Shake Bar', price: 3500, unit: 'good for 50' },
+  { id: 'halohalo', name: 'Halo-halo Bar', price: 4000, unit: 'good for 50' },
+  { id: 'crepe', name: 'Crepe Station', price: 4000, unit: 'good for 50' },
+  { id: 'fruitshake', name: 'Fresh Fruit Shake Bar', price: 4000, unit: 'good for 50' },
   { id: 'sushi', name: 'Sushi Platter', price: 4000, unit: 'good for 15-20' },
-  { id: 'prawns', name: 'Prawn Tempura (Small)', price: 4000, unit: 'order' },
-  { id: 'prawnm', name: 'Prawn Tempura (Medium)', price: 6000, unit: 'order' },
-  { id: 'prawnl', name: 'Prawn Tempura (Large)', price: 8000, unit: 'order' },
-  { id: 'taco', name: 'Taco Station', price: 3000, unit: 'good for 50' },
-  { id: 'burrito', name: 'Burrito Station', price: 3500, unit: 'good for 50' },
-  { id: 'salad', name: 'Salad Bar', price: 3500, unit: 'good for 50' },
+  { id: 'prawns', name: 'Prawn Tempura (Small)', price: 4725, unit: 'order' },
+  { id: 'prawnm', name: 'Prawn Tempura (Medium)', price: 6720, unit: 'order' },
+  { id: 'prawnl', name: 'Prawn Tempura (Large)', price: 9240, unit: 'order' },
+  { id: 'taco', name: 'Taco Station', price: 4000, unit: 'good for 50' },
+  { id: 'burrito', name: 'Burrito Station', price: 4000, unit: 'good for 50' },
+  { id: 'salad', name: 'Salad Bar', price: 4000, unit: 'good for 50' },
 ]
 
 // =====================================================
