@@ -5,7 +5,9 @@ import { supabase } from '../lib/supabase'
 import {
   menuPackages,
   heartlandPackages,
+  chateauPackages,
   addOnStations,
+  chateauAddOnStations,
   calculatePricePerHead,
   occasionTypes,
   presetMotifColors,
@@ -484,9 +486,11 @@ export default function BookingPage() {
     return low
   }
 
-  // Heartland venue: use separate package set
+  // Venue detection: use separate package sets per venue
   const isHeartland = booking.venueAddress.city === 'heartland'
-  const currentPackages = isHeartland ? heartlandPackages : menuPackages
+  const isChateau = booking.venueAddress.city === 'chateau'
+  const currentPackages = isHeartland ? heartlandPackages : isChateau ? chateauPackages : menuPackages
+  const currentAddOnStations = isChateau ? chateauAddOnStations : addOnStations
 
   const missingCategories = getMissingCategories()
   const lowCategories = getLowCategories()
@@ -501,7 +505,7 @@ export default function BookingPage() {
     
     // Station add-ons
     const stationsTotal = booking.addOns.reduce((sum, a) => {
-      const item = addOnStations.find(s => s.id === a.id)
+      const item = currentAddOnStations.find(s => s.id === a.id)
       return sum + (item ? item.price * (a.quantity || 1) : 0)
     }, 0)
     
@@ -940,10 +944,15 @@ export default function BookingPage() {
     <div className="space-y-6">
       <h2 className="text-xl font-semibold text-gray-800">Select Menu Package</h2>
 
-      {/* Heartland inclusions reminder */}
+      {/* Venue inclusions reminder */}
       {isHeartland && (
         <div className="bg-red-50 border border-red-200 rounded-xl p-3 text-sm text-red-800">
           <span className="font-semibold">Heartland Estate</span> packages include: tables &amp; chairs with covers, buffet table with centrepiece, wait staff, utensils, and 1 round drinks.
+        </div>
+      )}
+      {isChateau && (
+        <div className="bg-blue-50 border border-blue-200 rounded-xl p-3 text-sm text-blue-800">
+          <span className="font-semibold">Chateau by the Sea</span> — outside catering at a third-party venue. Tables, chairs &amp; venue setup are handled separately by the venue.
         </div>
       )}
 
@@ -965,6 +974,10 @@ export default function BookingPage() {
                 <p className="text-red-600">₱{pkg.pricePerHead}/head</p>
                 {pkg.isHeartland ? (
                   <p className="text-xs text-red-600 mt-1">🏛️ Heartland Estate • Venue inclusions included</p>
+                ) : pkg.isChateau ? (
+                  <p className="text-xs text-blue-600 mt-1">🌊 Chateau by the Sea • Outside catering rates</p>
+                ) : pkg.isFixedMenu ? (
+                  <p className="text-xs text-purple-600 mt-1">📋 Fixed Menu • Choose a preset theme</p>
                 ) : pkg.id === 'menu470' ? (
                   <p className="text-xs text-blue-600 mt-1">🛠️ Build Your Own • 🍚 Plain Rice & Fried Rice only</p>
                 ) : pkg.id === 'menu510' ? (
@@ -1067,7 +1080,9 @@ export default function BookingPage() {
     const isCustomBuild = currentPackages[booking.selectedPackage]?.isCustomBuild
     const currentPkg = currentPackages[booking.selectedPackage]
     const allowSwap = currentPkg?.allowSwap // Menu 560 allows swapping
-    const isPresetMenu = ['menu660', 'menu810'].includes(booking.selectedPackage) // 560 removed - it allows swaps
+    const isPresetMenu = currentPackages[booking.selectedPackage]?.isFixedMenu ||
+                         isHeartland || isChateau ||
+                         ['menu660', 'menu810'].includes(booking.selectedPackage)
 
     // For preset menus (660, 810) - no customization, just show the menu
     if (isPresetMenu) {
@@ -1524,7 +1539,7 @@ export default function BookingPage() {
       <div>
         <label className="block text-sm font-semibold text-gray-700 mb-3">Add-on Stations</label>
         <div className="space-y-2">
-          {addOnStations.map(addon => { 
+          {currentAddOnStations.map(addon => {
             const sel = booking.addOns.find(a => a.id === addon.id)
             return (
               <div key={addon.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
@@ -1746,9 +1761,9 @@ export default function BookingPage() {
             })}
             
             {/* Station add-ons */}
-            {booking.addOns.map(addon => { 
-              const item = addOnStations.find(a => a.id === addon.id)
-              return <div key={addon.id} className="flex justify-between text-gray-600"><span>{item?.name} ×{addon.quantity}</span><span>₱{((item?.price || 0) * addon.quantity).toLocaleString()}</span></div> 
+            {booking.addOns.map(addon => {
+              const item = currentAddOnStations.find(a => a.id === addon.id)
+              return <div key={addon.id} className="flex justify-between text-gray-600"><span>{item?.name} ×{addon.quantity}</span><span>₱{((item?.price || 0) * addon.quantity).toLocaleString()}</span></div>
             })}
             
             {/* Gas charge */}
@@ -1958,14 +1973,18 @@ export default function BookingPage() {
       // Other occasion validation
       if (booking.occasion === 'other' && !booking.occasionOther) return false
       if (!isValidDate(booking.date, booking.time)) return false
-      const isHeartland = booking.venueAddress.city === 'heartland'
-      if (isAdmin) return booking.customerName && booking.customerPhone && booking.venueAddress.city && (isHeartland || (booking.venueAddress.barangay && booking.venueAddress.street))
-      return booking.venueAddress.city && (isHeartland || (booking.venueAddress.barangay && booking.venueAddress.street))
+      const isHeartlandStep = booking.venueAddress.city === 'heartland'
+      const isChateauStep = booking.venueAddress.city === 'chateau'
+      const venueOnlyCity = isHeartlandStep || isChateauStep
+      if (isAdmin) return booking.customerName && booking.customerPhone && booking.venueAddress.city && (venueOnlyCity || (booking.venueAddress.barangay && booking.venueAddress.street))
+      return booking.venueAddress.city && (venueOnlyCity || (booking.venueAddress.barangay && booking.venueAddress.street))
     }
     if (step === 2) return booking.selectedPackage && booking.selectedMenuOption
     if (step === 3) {
-      // Preset menus (660, 810) can always proceed - no customization needed
-      const isPresetMenu = ['menu660', 'menu810'].includes(booking.selectedPackage)
+      // Preset/fixed menus can always proceed - no dish customization needed
+      const isPresetMenu = currentPackages[booking.selectedPackage]?.isFixedMenu ||
+                           isHeartland || isChateau ||
+                           ['menu660', 'menu810'].includes(booking.selectedPackage)
       if (isPresetMenu) return true
       // Menu 560 with swap capability can always proceed (swapping is optional)
       const allowSwap = currentPackages[booking.selectedPackage]?.allowSwap

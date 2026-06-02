@@ -20,7 +20,7 @@ const cateringOptions = [
     borderColor: 'border-red-200',
     textColor: 'text-red-700',
     route: '/book',
-    priceRange: '₱490 - ₱830 per head',
+    priceRange: '₱490 - ₱1,060 per head',
     minGuests: 30,
     features: [
       'Full buffet setup with chafing dishes',
@@ -37,6 +37,11 @@ const cateringOptions = [
       { name: 'Menu 580', price: '₱580/head', highlight: 'Filipino & International' },
       { name: 'Menu 680', price: '₱680/head', highlight: 'Premium selection' },
       { name: 'Menu 830', price: '₱830/head', highlight: 'Luxury experience' },
+      { name: 'Menu 750', price: '₱750/head', highlight: 'Elevated buffet' },
+      { name: 'Menu 780', price: '₱780/head', highlight: 'Grand selection' },
+      { name: 'Menu 810', price: '₱810/head', highlight: 'Fixed premium menu' },
+      { name: 'Menu 910', price: '₱910/head', highlight: 'Gourmet experience' },
+      { name: 'Menu 1060', price: '₱1,060/head', highlight: 'Ultra premium' },
     ]
   },
   {
@@ -68,6 +73,37 @@ const cateringOptions = [
       { name: 'Menu 830', price: '₱830/head', highlight: '3 themed buffets' },
       { name: 'Menu 880', price: '₱880/head', highlight: '2 grand menus' },
       { name: 'Menu 1010', price: '₱1,010/head', highlight: 'Premium buffet' },
+    ]
+  },
+  {
+    id: 'chateau',
+    name: 'Chateau by the Sea',
+    tagline: 'Seaside elegance for your special celebration',
+    description: "Red Carpet catering service at Chateau by the Sea — a stunning venue with ocean views. We bring our full outside catering setup to this premier third-party venue.",
+    icon: MapPin,
+    color: 'blue',
+    bgGradient: 'from-blue-700 to-cyan-800',
+    lightBg: 'bg-blue-50',
+    borderColor: 'border-blue-200',
+    textColor: 'text-blue-700',
+    route: '/book?venue=chateau',
+    priceRange: '₱550 - ₱890 per head',
+    minGuests: 30,
+    features: [
+      'RC catering at Chateau by the Sea venue',
+      'Full buffet setup with chafing dishes',
+      'Professional waitstaff included',
+      'Multiple menu packages to choose from',
+      'Add-on stations available',
+      'Venue booking handled separately'
+    ],
+    bestFor: ['Weddings', 'Debuts', 'Anniversaries', 'Birthdays', 'Corporate Events'],
+    packages: [
+      { name: 'Menu 550', price: '₱550/head', highlight: '4 menu options' },
+      { name: 'Menu 590', price: '₱590/head', highlight: '4 menu options' },
+      { name: 'Menu 640', price: '₱640/head', highlight: '3 themed buffets' },
+      { name: 'Menu 740', price: '₱740/head', highlight: '2 grand menus' },
+      { name: 'Menu 890', price: '₱890/head', highlight: 'Premium buffet' },
     ]
   },
   {
@@ -361,6 +397,10 @@ export default function CateringSelectionPage() {
                     <Building2 size={20} className="mx-auto mb-1" />
                     Heartland
                   </th>
+                  <th className="px-6 py-4 text-center text-sm font-semibold text-blue-700">
+                    <MapPin size={20} className="mx-auto mb-1" />
+                    Chateau
+                  </th>
                   <th className="px-6 py-4 text-center text-sm font-semibold text-purple-700">
                     <Wine size={20} className="mx-auto mb-1" />
                     Cocktail
@@ -378,14 +418,16 @@ export default function CateringSelectionPage() {
               <tbody className="divide-y divide-gray-100">
                 <tr>
                   <td className="px-6 py-4 text-sm text-gray-600">Price Range</td>
-                  <td className="px-6 py-4 text-center text-sm font-medium">₱490-830/head</td>
+                  <td className="px-6 py-4 text-center text-sm font-medium">₱490-1060/head</td>
                   <td className="px-6 py-4 text-center text-sm font-medium">₱660-1010/head</td>
+                  <td className="px-6 py-4 text-center text-sm font-medium">₱550-890/head</td>
                   <td className="px-6 py-4 text-center text-sm font-medium">₱400-600/head</td>
                   <td className="px-6 py-4 text-center text-sm font-medium">₱180-320/pack</td>
                   <td className="px-6 py-4 text-center text-sm font-medium">₱150-200/pack</td>
                 </tr>
                 <tr className="bg-gray-50">
                   <td className="px-6 py-4 text-sm text-gray-600">Minimum Order</td>
+                  <td className="px-6 py-4 text-center text-sm">30 pax</td>
                   <td className="px-6 py-4 text-center text-sm">30 pax</td>
                   <td className="px-6 py-4 text-center text-sm">30 pax</td>
                   <td className="px-6 py-4 text-center text-sm">30 pax</td>
@@ -396,6 +438,7 @@ export default function CateringSelectionPage() {
                   <td className="px-6 py-4 text-sm text-gray-600">Service Style</td>
                   <td className="px-6 py-4 text-center text-sm">Full setup + staff</td>
                   <td className="px-6 py-4 text-center text-sm">Exclusive venue</td>
+                  <td className="px-6 py-4 text-center text-sm">Outside catering</td>
                   <td className="px-6 py-4 text-center text-sm">Setup + service</td>
                   <td className="px-6 py-4 text-center text-sm">Delivery/Pickup</td>
                   <td className="px-6 py-4 text-center text-sm">Delivery/Pickup</td>
@@ -404,12 +447,14 @@ export default function CateringSelectionPage() {
                   <td className="px-6 py-4 text-sm text-gray-600">Best For</td>
                   <td className="px-6 py-4 text-center text-sm">Weddings, Big Events</td>
                   <td className="px-6 py-4 text-center text-sm">Weddings, Debuts</td>
+                  <td className="px-6 py-4 text-center text-sm">Weddings, Anniversaries</td>
                   <td className="px-6 py-4 text-center text-sm">Receptions, Mixers</td>
                   <td className="px-6 py-4 text-center text-sm">Meetings, Seminars</td>
                   <td className="px-6 py-4 text-center text-sm">Workshops, Kids</td>
                 </tr>
                 <tr>
                   <td className="px-6 py-4 text-sm text-gray-600">Lead Time</td>
+                  <td className="px-6 py-4 text-center text-sm">5-7 days</td>
                   <td className="px-6 py-4 text-center text-sm">5-7 days</td>
                   <td className="px-6 py-4 text-center text-sm">5-7 days</td>
                   <td className="px-6 py-4 text-center text-sm">3-5 days</td>

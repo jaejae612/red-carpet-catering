@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { menuPackages, heartlandPackages, addOnStations } from '../lib/menuData'
-import { ChevronDown, ChevronUp, Check, ShoppingBag, MapPin, Star, Calendar } from 'lucide-react'
+import { menuPackages, heartlandPackages, chateauPackages, addOnStations, chateauAddOnStations } from '../lib/menuData'
+import { ChevronDown, ChevronUp, Check, ShoppingBag, MapPin, Star, Calendar, Waves } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import SEO from '../components/SEO'
 
@@ -77,6 +77,8 @@ export default function MenuPage() {
                     <p className="text-xs text-gray-500 mt-1">🛠️ Build Your Own • 🍚 Plain Rice & Fried Rice only</p>
                   ) : pkg.id === 'menu510' ? (
                     <p className="text-xs text-gray-500 mt-1">🛠️ Build Your Own • 🍚 Plain Rice, Fried Rice & Arroz Valenciana</p>
+                  ) : pkg.isFixedMenu ? (
+                    <p className="text-xs text-purple-600 mt-1">📋 Fixed Curated Menu — No dish customization</p>
                   ) : (
                     <p className="text-xs text-green-600 mt-1">📋 Preset Buffet Menus</p>
                   )}
@@ -307,13 +309,106 @@ export default function MenuPage() {
           </div>
         </div>
 
-        <div className="bg-white rounded-2xl shadow-lg p-6 mb-12">
-          <h2 className="text-2xl font-bold text-gray-800 mb-6">Add-on Stations</h2>
+        {/* Chateau by the Sea Packages */}
+        <div className="bg-gradient-to-br from-blue-950 via-blue-900 to-slate-900 rounded-2xl overflow-hidden mb-6">
+          <div className="p-6 border-b border-white/10">
+            <div className="flex items-center gap-3 mb-1">
+              <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
+                <Waves size={16} className="text-white" />
+              </div>
+              <p className="text-blue-300 text-sm font-medium uppercase tracking-wider">Partner Venue</p>
+            </div>
+            <h2 className="text-2xl font-bold text-white mb-1">Chateau by the Sea Packages</h2>
+            <div className="flex items-center gap-2 text-gray-400 text-sm mb-3">
+              <MapPin size={14} className="text-blue-400" />
+              Seaside venue catering in Cebu
+            </div>
+            <div className="flex flex-wrap gap-2 mb-4">
+              {['Tables & chairs with covers', 'Buffet table with centrepiece', 'Wait staff', 'Utensils', '1 round drinks', 'Venue coordination'].map(item => (
+                <span key={item} className="flex items-center gap-1 bg-white/10 text-gray-300 text-xs px-2 py-1 rounded-full">
+                  <Star size={10} className="text-yellow-400" fill="currentColor" /> {item}
+                </span>
+              ))}
+            </div>
+            <p className="text-xs text-gray-500">*30 person minimum. Prices vary by group size.</p>
+          </div>
+          <div className="p-4 space-y-3">
+            {Object.values(chateauPackages).map(pkg => (
+              <div key={pkg.id} className="bg-white/5 border border-white/10 rounded-xl overflow-hidden">
+                <button
+                  onClick={() => setExpandedPackage(expandedPackage === pkg.id ? null : pkg.id)}
+                  className="w-full p-4 flex items-center justify-between hover:bg-white/10 transition-colors"
+                >
+                  <div className="text-left">
+                    <h3 className="text-lg font-bold text-white">{pkg.name}</h3>
+                    <p className="text-blue-300 font-semibold">₱{pkg.pricePerHead}/head <span className="text-gray-400 font-normal text-sm">(60+ pax)</span></p>
+                    <p className="text-xs text-gray-400 mt-0.5">
+                      {pkg.isFixedMenu ? '📋 Fixed Curated Menu' : `📋 ${pkg.options.length} menu option${pkg.options.length > 1 ? 's' : ''} to choose from`}
+                    </p>
+                  </div>
+                  {expandedPackage === pkg.id ? <ChevronUp size={20} className="text-gray-400" /> : <ChevronDown size={20} className="text-gray-400" />}
+                </button>
+                {expandedPackage === pkg.id && (
+                  <div className="border-t border-white/10 p-4">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm mb-4 bg-white/5 rounded-xl p-3">
+                      <div className="text-gray-300">60+ pax: <span className="font-semibold text-white">₱{pkg.pricingTiers[60]}</span></div>
+                      <div className="text-gray-300">50 pax: <span className="font-semibold text-white">₱{pkg.pricingTiers[50]}</span></div>
+                      <div className="text-gray-300">40 pax: <span className="font-semibold text-white">₱{pkg.pricingTiers[40]}</span></div>
+                      <div className="text-gray-300">30 pax: <span className="font-semibold text-white">₱{pkg.pricingTiers[30]}</span></div>
+                    </div>
+                    <div className="grid md:grid-cols-2 gap-3">
+                      {pkg.options.map((option, idx) => (
+                        <div key={idx} className="bg-white/5 rounded-xl p-4">
+                          <h4 className="font-semibold text-white mb-2">{option.name}</h4>
+                          <ul className="text-sm text-gray-300 space-y-1">
+                            {option.items.map((item, i) => (
+                              <li key={i} className="flex items-start gap-2">
+                                <span className="flex-shrink-0">{getItemIcon(item)}</span>
+                                {item}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+          <div className="p-4 pt-0">
+            <Link
+              to={user ? '/book?venue=chateau' : '/signup'}
+              className="flex items-center justify-center gap-2 bg-blue-700 hover:bg-blue-600 text-white px-6 py-3 rounded-xl font-semibold transition-colors"
+            >
+              <Calendar size={18} /> Book Chateau by the Sea
+            </Link>
+          </div>
+        </div>
+
+        {/* Add-on Stations */}
+        <div className="bg-white rounded-2xl shadow-lg p-6 mb-6">
+          <h2 className="text-2xl font-bold text-gray-800 mb-2">Add-on Stations</h2>
+          <p className="text-gray-500 text-sm mb-4">Prices below are for outside catering events.</p>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
             {addOnStations.map(addon => (
               <div key={addon.id} className="bg-gray-50 rounded-xl p-4 flex justify-between items-center">
                 <div><p className="font-medium text-gray-800">{addon.name}</p><p className="text-sm text-gray-500">{addon.unit}</p></div>
                 <p className="font-semibold text-red-700">₱{addon.price.toLocaleString()}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Chateau Add-on Stations */}
+        <div className="bg-white rounded-2xl shadow-lg p-6 mb-12">
+          <h2 className="text-2xl font-bold text-gray-800 mb-2">Add-on Stations <span className="text-blue-700 text-lg font-semibold">(Chateau by the Sea)</span></h2>
+          <p className="text-gray-500 text-sm mb-4">Prices for Chateau by the Sea events.</p>
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {chateauAddOnStations.map(addon => (
+              <div key={addon.id} className="bg-blue-50 rounded-xl p-4 flex justify-between items-center">
+                <div><p className="font-medium text-gray-800">{addon.name}</p><p className="text-sm text-gray-500">{addon.unit}</p></div>
+                <p className="font-semibold text-blue-700">₱{addon.price.toLocaleString()}</p>
               </div>
             ))}
           </div>

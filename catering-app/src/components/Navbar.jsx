@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { Menu, X, User, LogOut, ChevronDown, Settings, UtensilsCrossed, Wine, Package, Building2 } from 'lucide-react'
+import { Menu, X, User, LogOut, ChevronDown, Settings, UtensilsCrossed, Wine, Package, Building2, MapPin } from 'lucide-react'
 
 export default function Navbar() {
   const { user, userProfile, isAdmin, signOut } = useAuth()
@@ -84,6 +84,19 @@ export default function Navbar() {
                       <p className="text-xs text-gray-500">RC's exclusive venue</p>
                     </div>
                   </Link>
+                  <Link
+                    to="/book?venue=chateau"
+                    onClick={() => setShowCateringMenu(false)}
+                    className="px-4 py-3 hover:bg-blue-50 flex items-center gap-3 bg-gradient-to-r from-blue-950/5 to-transparent"
+                  >
+                    <div className="w-8 h-8 bg-blue-700 rounded-lg flex items-center justify-center">
+                      <MapPin size={16} className="text-white" />
+                    </div>
+                    <div>
+                      <p className="font-medium">Chateau by the Sea</p>
+                      <p className="text-xs text-gray-500">Seaside venue catering</p>
+                    </div>
+                  </Link>
                   <Link 
                     to="/book/cocktail" 
                     onClick={() => setShowCateringMenu(false)}
@@ -161,6 +174,9 @@ export default function Navbar() {
             </Link>
             <Link to="/book?venue=heartland" onClick={() => setIsOpen(false)} className="flex py-2 pl-4 items-center gap-2">
               <Building2 size={16} /> Heartland Estate
+            </Link>
+            <Link to="/book?venue=chateau" onClick={() => setIsOpen(false)} className="flex py-2 pl-4 items-center gap-2">
+              <MapPin size={16} /> Chateau by the Sea
             </Link>
             <Link to="/book/cocktail" onClick={() => setIsOpen(false)} className="flex py-2 pl-4 items-center gap-2">
               <Wine size={16} /> Cocktail Party

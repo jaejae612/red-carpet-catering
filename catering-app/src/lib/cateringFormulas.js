@@ -322,12 +322,24 @@ export const countMenuDishes = (menuPackage, booking) => {
     menu560: 10,
     menu660: 11,
     menu810: 12,
+    // New outside catering packages (March 2026)
+    menu750: 11,
+    menu780: 12,
+    menu810b: 12,
+    menu910: 13,
+    menu1060: 14,
     // Heartland Estate packages
     heartland660: 11,
     heartland760: 12,
     heartland830: 12,
     heartland880: 13,
     heartland1010: 14,
+    // Chateau by the Sea packages
+    chateau550: 11,
+    chateau590: 12,
+    chateau640: 12,
+    chateau740: 13,
+    chateau890: 14,
     cocktail: 8,
   }
   return defaults[menuPackage] || 8

@@ -35,7 +35,7 @@ export const menuPackages = {
     pricingTiers: { 60: 580, 50: 600, 40: 650, 30: 700 },
     allowSwap: true, // Enable dish swapping with Asian Fusion
     options: [
-      { name: 'Filipino Buffet', items: ['Eggplant & Nangka salad', 'Pickled Green Mango w/ dilis', 'Roast Pork Liempo w/ special herbs', 'Kare-Kare w/ bagoong', 'Baked Crabmeat', 'Sinugbang Isda w/ vinegar sauce', 'Chicken w/ barbecue sauce', 'Garlic Rice/Plain Rice', 'Beko Bayot', 'Mango Sago'] },
+      { name: 'Filipino Buffet', items: ['Eggplant & Nangka salad', 'Pickled Green Mango w/ dilis', 'Roast Pork Liempo w/ special herbs', 'Kare-Kara w/ bagoong', 'Baked Crabmeat', 'Sinugbang Isda w/ vinegar sauce', 'Chicken w/ barbecue sauce', 'Garlic Rice/Plain Rice', 'Beko Bayot', 'Mango Sago'] },
       { name: 'International Buffet', items: ['Asian Mandarin Chicken Salad', 'Waldorf Salad', 'Chicken Galantina', 'Ox Tongue w/ cooked ham', 'Chicken Bacon Alfredo', 'Beef Morcon', 'Grilled Fish w/ lemon butter sauce', 'Paella/Plain Rice', 'Strawberry Cheesecake', 'Avocado Pie'] }
     ],
     // Asian Fusion items available as swap alternatives
@@ -69,7 +69,58 @@ export const menuPackages = {
     options: [
       { name: 'Premium Buffet', items: ['Salad Bar', 'Japanese Sushi Rolls', 'Grilled Beef Short Rib (Carving Station)', 'Chicken Relleno', 'Baked Fish w/ mozzarella cheese', 'Ox Tongue w/ mushroom sauce', 'Spicy Spareribs', 'Prawn Tempura', 'Penne Carbonara', 'Assorted fresh fruits', 'Blitz Torte', 'Mini Fruit Tart', 'Blueberry Cheesecake'] }
     ]
-  }
+  },
+
+  // =====================================================
+  // NEW OUTSIDE CATERING PACKAGES (March 2026)
+  // =====================================================
+  menu750: {
+    id: 'menu750', name: 'Menu 750', pricePerHead: 750,
+    pricingTiers: { 60: 750, 50: 770, 40: 820, 30: 870 },
+    options: [
+      { name: 'Menu A', items: ['Green Salad w/ grilled fish in mustard sauce', 'Chicken Tim w/ asparagus', 'Braised Chinese Spareribs', 'Pancit Special w/ Red Egg', 'Chow Pat Chen', 'Fried Rice/Plain Rice', 'Broken Window', 'Leche Flan'] },
+      { name: 'Menu B', items: ['Chicken Macaroni Salad', 'Crispy Chicken w/ kropeks', 'Fish Fillet w/ black beans sauce', 'Seafood Marinara', 'Barbecued Roast Pork Belly', 'Fried Rice/Plain Rice', 'Blitz Torte', 'Choco Zambo'] },
+      { name: 'Menu C', items: ['Pomelo Salad', 'Chicken Afritada', 'Pork pieces w/ chili sauce', 'Sauteed Chicken w/ mixed vegetables', 'Beef w/ onions', 'Fried Rice/Plain Rice', 'Moist Chocolate Cake', 'Mango Float'] },
+      { name: 'Menu D', items: ['Potato Apple Salad', 'Chinese Humba', 'Chicken Canneloni', 'Stir Fried vegetables w/ quail egg', 'Beef w/ mushroom sauce', 'Fried Rice/Plain Rice', 'Brownies', 'Rainbow Delight'] },
+    ]
+  },
+  menu780: {
+    id: 'menu780', name: 'Menu 780', pricePerHead: 780,
+    pricingTiers: { 60: 780, 50: 800, 40: 850, 30: 900 },
+    options: [
+      { name: 'Menu A', items: ['Roast Beef w/ sweet sauce', 'Three Kinds of mushroom w/ broccoli', 'Pork Pizza w/ Mozzarella Cheese', 'Fish Fillet w/ tar tar sauce', 'Penne Carbonara', 'Fried Rice/Plain Rice', 'Mango Pandan', 'Custard Cake'] },
+      { name: 'Menu B', items: ['Papo Chicken', 'Barbecued Roast Pork Belly', 'Seafood Mixed Vegetable w/ tofu', 'Fish Fillet w/ soy sauce', 'Sotanghon Guisado', 'Fried Rice/Plain Rice', 'Dubos Enganos', 'Buko Lychee'] },
+      { name: 'Menu C', items: ['Hungarian Rolled Porkloin', 'Beef Tapa', 'Chicken Kebab w/ peanut sauce', 'Baked Ziti', 'Garlic Peppered Fish', 'Fried Rice/Plain Rice', 'Choco Toffee Cake', 'Ube Cake'] },
+      { name: 'Menu D', items: ['Stuffed Shrimp w/ sweet & sour dip', 'Spinach Lasagna', 'Pork w/ coconut cream', 'Chicken Cordon Bleu', 'Fish Fillet w/ oyster sauce', 'Arroz Valenciana/Plain Rice', 'Choco Cream Cheesecake', 'Maja Blanca'] },
+    ]
+  },
+  menu810b: {
+    id: 'menu810b', name: 'Menu 810', pricePerHead: 810,
+    pricingTiers: { 60: 810, 50: 830, 40: 880, 30: 930 },
+    isFixedMenu: true,
+    options: [
+      { name: 'Filipino Buffet', items: ['Eggplant & Nangka salad', 'Pickled Green Mango w/ dilis', 'Roast Pork Liempo w/ special herbs', 'Kare-Kare w/ bagoong', 'Baked Crabmeat', 'Sinugbang Isda w/ vinegar sauce', 'Chicken w/ barbecue sauce', 'Garlic Rice/Plain Rice', 'Beko Bayot', 'Mango Sago'] },
+      { name: 'Asian Fusion', items: ['Ngocong Soup', 'Beef Pochero', 'Chinese Lumpia', 'Misua Guisado', 'Pad Thai', 'Lasagna', 'Callos', 'Chinese Valenciana/Plain Rice', 'Japanese Cheesecake', 'Coffee Jelly'] },
+      { name: 'International Buffet', items: ['Asian Mandarin Chicken Salad', 'Waldorf Salad', 'Chicken Galantina', 'Ox Tongue w/ cooked ham', 'Chicken Bacon Alfredo', 'Beef Morcon', 'Grilled Fish w/ lemon butter sauce', 'Paella/Plain Rice', 'Strawberry Cheesecake', 'Avocado Pie'] },
+    ]
+  },
+  menu910: {
+    id: 'menu910', name: 'Menu 910', pricePerHead: 910,
+    pricingTiers: { 60: 910, 50: 930, 40: 980, 30: 1030 },
+    isFixedMenu: true,
+    options: [
+      { name: 'Filipino & Asian Fusion', items: ['Mango & Crabstick Salad on lettuce', 'Potato Bacon & Egg Salad', 'Pickled Green Mango w/ dilis', 'Korean Galbi Ribs', 'Chicken w/ barbecue sauce', 'Spicy Squid', 'Fettuccine w/ grilled chicken & balsamic sauce', 'Seafood Roll Salad', 'Plain Rice/Fried Rice', 'Fruit Salad', 'Cookies & Cream Cheesecake', 'Banana Surprise', 'Choco Balls'] },
+      { name: 'International', items: ['Green Vegetable salad w/ thousand island', 'Mediterranean Salad w/ olives', 'Chicken Macaroni Salad', 'Ox tongue w/ straw mushroom sauce', 'Crunchy Chicken w/ plum sauce', 'Roast beef w/ gravy', 'Baked Fish w/ mozzarella cheese', 'Polynesian Pork', 'Paella/Plain Rice', 'Choco Peach Cream Cake', 'Blueberry Cheesecake', 'Macaroons', 'Bingcava'] },
+    ]
+  },
+  menu1060: {
+    id: 'menu1060', name: 'Menu 1060 (Premium)', pricePerHead: 1060,
+    pricingTiers: { 60: 1060, 50: 1080, 40: 1130, 30: 1180 },
+    isFixedMenu: true,
+    options: [
+      { name: 'Premium Buffet', items: ['Salad Bar', 'Japanese Sushi Rolls', 'Goat Calderita', 'Grilled Chicken Shawarma w/ Garlic avocado sauce', 'Baked Fish w/ mozzarella cheese', 'Ox Tongue w/ mushroom sauce', 'Spicy Spareribs', 'Prawn Tempura', 'Penne carbonara', 'Assorted fresh fruits', 'Japanese Cheesecake', 'Mini Fruit Tart', 'Blueberry Cheesecake'] },
+    ]
+  },
 }
 
 // =====================================================
@@ -139,6 +190,71 @@ export const heartlandPackages = {
   },
 }
 
+// =====================================================
+// CHATEAU BY THE SEA PACKAGES
+// Third-party venue — bring your own setup
+// Pricing reflects Chateau venue rates
+// =====================================================
+const CHATEAU_INCLUSIONS = 'Outside catering at Chateau by the Sea venue. Tables, chairs & venue setup handled separately by the venue.'
+
+export const chateauPackages = {
+  chateau550: {
+    id: 'chateau550', name: 'Menu 550', pricePerHead: 550,
+    pricingTiers: { 60: 550, 50: 570, 40: 620, 30: 670 },
+    isChateau: true,
+    inclusions: CHATEAU_INCLUSIONS,
+    options: [
+      { name: 'Menu A', items: ['Green Salad w/ grilled fish in mustard sauce', 'Chicken Tim w/ asparagus', 'Braised Chinese Spareribs', 'Pancit Special w/ Red Egg', 'Chow Pat Chen', 'Fried Rice/Plain Rice', 'Broken Window', 'Leche Flan'] },
+      { name: 'Menu B', items: ['Chicken Macaroni Salad', 'Crispy Chicken w/ kropeks', 'Fish Fillet w/ black beans sauce', 'Seafood Marinara', 'Barbecued Roast Pork Belly', 'Fried Rice/Plain Rice', 'Blitz Torte', 'Choco Zambo'] },
+      { name: 'Menu C', items: ['Pomelo Salad', 'Chicken Afritada', 'Pork pieces w/ chili sauce', 'Sauteed Chicken w/ mixed vegetables', 'Beef w/ onions', 'Fried Rice/Plain Rice', 'Moist Chocolate Cake', 'Mango Float'] },
+      { name: 'Menu D', items: ['Potato Apple Salad', 'Chinese Humba', 'Chicken Canneloni', 'Stir Fried vegetables w/ quail egg', 'Beef w/ mushroom sauce', 'Fried Rice/Plain Rice', 'Brownies', 'Rainbow Delight'] },
+    ]
+  },
+  chateau590: {
+    id: 'chateau590', name: 'Menu 590', pricePerHead: 590,
+    pricingTiers: { 60: 590, 50: 650, 40: 710, 30: 770 },
+    isChateau: true,
+    inclusions: CHATEAU_INCLUSIONS,
+    options: [
+      { name: 'Menu A', items: ['Roast Beef w/ sweet sauce', 'Three Kinds of mushroom w/ broccoli', 'Pork Pizza w/ Mozzarella Cheese', 'Fish Fillet w/ tar tar sauce', 'Penne Carbonara', 'Fried Rice/Plain Rice', 'Mango Pandan', 'Custard Cake'] },
+      { name: 'Menu B', items: ['Papo Chicken', 'Barbecued Roast Pork Belly', 'Seafood Mixed Vegetable w/ tofu', 'Fish Fillet w/ soy sauce', 'Sotanghon Guisado', 'Fried Rice/Plain Rice', 'Dubos Enganos', 'Buko Lychee'] },
+      { name: 'Menu C', items: ['Hungarian Rolled Porkloin', 'Beef Tapa', 'Chicken Kebab w/ peanut sauce', 'Baked Ziti', 'Garlic Peppered Fish', 'Fried Rice/Plain Rice', 'Choco Toffee Cake', 'Ube Cake'] },
+      { name: 'Menu D', items: ['Stuffed Shrimp w/ sweet & sour dip', 'Spinach Lasagna', 'Pork w/ coconut cream', 'Chicken Cordon Bleu', 'Fish Fillet w/ oyster sauce', 'Arroz Valenciana/Plain Rice', 'Choco Cream Cheesecake', 'Maja Blanca'] },
+    ]
+  },
+  chateau640: {
+    id: 'chateau640', name: 'Menu 640', pricePerHead: 640,
+    pricingTiers: { 60: 640, 50: 660, 40: 740, 30: 790 },
+    isChateau: true,
+    inclusions: CHATEAU_INCLUSIONS,
+    options: [
+      { name: 'Filipino Buffet', items: ['Eggplant & Nangka salad', 'Pickled Green Mango w/ dilis', 'Roast Pork Liempo w/ special herbs', 'Kare-Kare w/ bagoong', 'Baked Crabmeat', 'Sinugbang Isda w/ vinegar sauce', 'Chicken w/ barbecue sauce', 'Garlic Rice/Plain Rice', 'Beko Bayot', 'Mango Sago'] },
+      { name: 'Asian Fusion', items: ['Ngocong Soup', 'Beef Pochero', 'Chinese Lumpia', 'Misua Guisado', 'Pad Thai', 'Lasagna', 'Callos', 'Chinese Valenciana/Plain Rice', 'Japanese Cheesecake', 'Coffee Jelly'] },
+      { name: 'International Buffet', items: ['Asian Mandarin Chicken Salad', 'Waldorf Salad', 'Chicken Galantina', 'Ox Tongue w/ cooked ham', 'Chicken Bacon Alfredo', 'Beef Morcon', 'Grilled Fish w/ lemon butter sauce', 'Paella/Plain Rice', 'Strawberry Cheesecake', 'Avocado Pie'] },
+    ]
+  },
+  chateau740: {
+    id: 'chateau740', name: 'Menu 740', pricePerHead: 740,
+    pricingTiers: { 60: 740, 50: 760, 40: 840, 30: 890 },
+    isChateau: true,
+    inclusions: CHATEAU_INCLUSIONS,
+    options: [
+      { name: 'Filipino & Asian Fusion', items: ['Mango & Crabstick Salad on lettuce', 'Potato Bacon & Egg Salad', 'Pickled Green Mango w/ dilis', 'Korean Galbi Ribs', 'Chicken w/ barbecue sauce', 'Spicy Squid', 'Fettuccine w/ grilled chicken & balsamic sauce', 'Seafood Roll Salad', 'Plain Rice/Fried Rice', 'Fruit Salad', 'Cookies & Cream Cheesecake', 'Banana Surprise', 'Choco Balls'] },
+      { name: 'International', items: ['Green Vegetable salad w/ thousand island', 'Mediterranean Salad w/ olives', 'Chicken Macaroni Salad', 'Ox tongue w/ straw mushroom sauce', 'Crunchy Chicken w/ plum sauce', 'Roast beef w/ gravy', 'Baked Fish w/ mozzarella cheese', 'Polynesian Pork', 'Paella/Plain Rice', 'Choco Peach Cream Cake', 'Blueberry Cheesecake', 'Macaroons', 'Bingcava'] },
+    ]
+  },
+  chateau890: {
+    id: 'chateau890', name: 'Menu 890 (Premium)', pricePerHead: 890,
+    pricingTiers: { 60: 890, 50: 910, 40: 970, 30: 1030 },
+    isChateau: true,
+    isFixedMenu: true,
+    inclusions: CHATEAU_INCLUSIONS,
+    options: [
+      { name: 'Premium Buffet', items: ['Salad Bar', 'Japanese Sushi Rolls', 'Goat Calderita', 'Grilled Chicken Shawarma w/ Garlic avocado sauce', 'Baked Fish w/ mozzarella cheese', 'Ox Tongue w/ mushroom sauce', 'Spicy Spareribs', 'Prawn Tempura', 'Penne carbonara', 'Assorted fresh fruits', 'Japanese Cheesecake', 'Mini Fruit Tart', 'Blueberry Cheesecake'] },
+    ]
+  },
+}
+
 // Occasion types
 export const occasionTypes = [
   { id: 'birthday', name: 'Birthday', requiresDetails: true },
@@ -167,18 +283,39 @@ export const presetMotifColors = [
   { id: 'tropical', name: 'Tropical (Orange & Green)', colors: ['#f97316', '#22c55e'] },
 ]
 
-// Add-on Stations
+// =====================================================
+// ADD-ON STATIONS — Outside catering prices
+// =====================================================
 export const addOnStations = [
+  { id: 'water', name: 'Water (5 gallons)', price: 50, unit: 'per 5 gallons' },
+  { id: 'ice', name: 'Ice (10 kilos)', price: 150, unit: 'per bag' },
+  { id: 'halohalo', name: 'Halo-halo Bar', price: 3500, unit: 'good for 50' },
+  { id: 'crepe', name: 'Crepe Station', price: 3500, unit: 'good for 50' },
+  { id: 'fruitshake', name: 'Fresh Fruit Shake Bar', price: 3500, unit: 'good for 50' },
+  { id: 'sushi', name: 'Sushi Platter', price: 4000, unit: 'good for 15-20' },
+  { id: 'prawns', name: 'Prawn Tempura (Small)', price: 4000, unit: 'order' },
+  { id: 'prawnm', name: 'Prawn Tempura (Medium)', price: 6000, unit: 'order' },
+  { id: 'prawnl', name: 'Prawn Tempura (Large)', price: 8000, unit: 'order' },
+  { id: 'taco', name: 'Taco Station', price: 3000, unit: 'good for 50' },
+  { id: 'burrito', name: 'Burrito Station', price: 3500, unit: 'good for 50' },
+  { id: 'salad', name: 'Salad Bar', price: 3500, unit: 'good for 50' },
+]
+
+// =====================================================
+// ADD-ON STATIONS — Chateau by the Sea prices
+// (Higher rates for venue events)
+// =====================================================
+export const chateauAddOnStations = [
   { id: 'water', name: 'Water (5 gallons)', price: 50, unit: 'per 5 gallons' },
   { id: 'ice', name: 'Ice (10 kilos)', price: 150, unit: 'per bag' },
   { id: 'halohalo', name: 'Halo-halo Bar', price: 4000, unit: 'good for 50' },
   { id: 'crepe', name: 'Crepe Station', price: 4000, unit: 'good for 50' },
   { id: 'fruitshake', name: 'Fresh Fruit Shake Bar', price: 4000, unit: 'good for 50' },
   { id: 'sushi', name: 'Sushi Platter', price: 4000, unit: 'good for 15-20' },
-  { id: 'prawns', name: 'Prawn Tempura (Small)', price: 4500, unit: 'order' },
-  { id: 'prawnm', name: 'Prawn Tempura (Medium)', price: 6400, unit: 'order' },
-  { id: 'prawnl', name: 'Prawn Tempura (Large)', price: 8800, unit: 'order' },
-  { id: 'taco', name: 'Taco Station', price: 3000, unit: 'good for 50' },
+  { id: 'prawns', name: 'Prawn Tempura (Small)', price: 4725, unit: 'order' },
+  { id: 'prawnm', name: 'Prawn Tempura (Medium)', price: 6720, unit: 'order' },
+  { id: 'prawnl', name: 'Prawn Tempura (Large)', price: 9240, unit: 'order' },
+  { id: 'taco', name: 'Taco Station', price: 4000, unit: 'good for 50' },
   { id: 'burrito', name: 'Burrito Station', price: 4000, unit: 'good for 50' },
   { id: 'salad', name: 'Salad Bar', price: 4000, unit: 'good for 50' },
 ]
@@ -202,7 +339,7 @@ export const additionalDrinks = [
 ]
 
 export const getPricePerHead = (packageId, pax) => {
-  const pkg = menuPackages[packageId] || heartlandPackages[packageId]
+  const pkg = menuPackages[packageId] || heartlandPackages[packageId] || chateauPackages[packageId]
   if (!pkg) return 0
   const tiers = pkg.pricingTiers
   if (pax >= 60) return tiers[60]
