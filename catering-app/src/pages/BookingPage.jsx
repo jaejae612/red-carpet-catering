@@ -13,6 +13,7 @@ import {
   freeDrinkOptions,
   additionalDrinks
 } from '../lib/menuData'
+import { sendBookingNotifications } from '../lib/emailService'
 import {
   getCityList,
   getBarangays,
@@ -594,6 +595,9 @@ export default function BookingPage() {
 
       const { data, error: insertError } = await supabase.from('bookings').insert([bookingData]).select().single()
       if (insertError) throw insertError
+
+      // Send notification emails (non-blocking — don't fail booking if email fails)
+      sendBookingNotifications(data).catch(err => console.error('Email notification failed:', err))
 
       navigate(isAdmin ? '/admin/bookings' : '/my-orders')
     } catch (err) {

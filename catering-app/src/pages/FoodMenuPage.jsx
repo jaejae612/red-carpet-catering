@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
 import { FOOD_CATEGORIES, SERVING_SIZES, FIXED_PRICE_SIZE, BINGCAVA_SIZES, LUMPIA_SIZES, DESSERT_SIZES, getItemPrice, getAvailableSizes, calculateCartTotal, getCategoryInfo } from '../lib/foodOrderData'
+import { sendFoodOrderNotifications } from '../lib/emailService'
 import { ShoppingCart, Plus, Minus, X, Search, ChevronRight, MapPin, Calendar, Clock, User, Phone, Mail, Send, Trash2, AlertCircle } from 'lucide-react'
 import SEO from '../components/SEO'
 import { FoodMenuSkeleton } from '../components/SkeletonLoaders'
@@ -174,6 +175,9 @@ export default function FoodMenuPage() {
       }
       const { data, error: insertError } = await supabase.from('food_orders').insert([orderData]).select().single()
       if (insertError) throw insertError
+
+      // Send notification emails (non-blocking)
+      sendFoodOrderNotifications(data).catch(err => console.error('Email notification failed:', err))
 
       setCart([])
       setShowCheckout(false)
