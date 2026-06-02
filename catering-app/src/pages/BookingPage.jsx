@@ -7,7 +7,6 @@ import {
   heartlandPackages,
   chateauPackages,
   addOnStations,
-  chateauAddOnStations,
   calculatePricePerHead,
   occasionTypes,
   presetMotifColors,
@@ -75,7 +74,7 @@ export default function BookingPage() {
   const venueFromUrl = searchParams.get('venue')
 
   const [booking, setBooking] = useState({
-    venue: duplicateData?.venue || '',
+    venue: duplicateData?.venue || (venueFromUrl === 'heartland' ? 'Heartland Estate (Red Carpet Catering)' : venueFromUrl === 'chateau' ? 'Chateau by the Sea' : ''),
     venueAddress: duplicateData?.venue_address || { city: venueFromUrl || '', barangay: '', street: '', landmark: '' },
     venueGasCharge: 0,
     date: '', 
@@ -490,7 +489,7 @@ export default function BookingPage() {
   const isHeartland = booking.venueAddress.city === 'heartland'
   const isChateau = booking.venueAddress.city === 'chateau'
   const currentPackages = isHeartland ? heartlandPackages : isChateau ? chateauPackages : menuPackages
-  const currentAddOnStations = isChateau ? chateauAddOnStations : addOnStations
+  const currentAddOnStations = addOnStations
 
   const missingCategories = getMissingCategories()
   const lowCategories = getLowCategories()
@@ -744,17 +743,20 @@ export default function BookingPage() {
           value={booking.venueAddress.city}
           onChange={(e) => {
             const cityId = e.target.value
-            const wasHeartland = booking.venueAddress.city === 'heartland'
-            const nowHeartland = cityId === 'heartland'
+            const wasSpecial = ['heartland', 'chateau'].includes(booking.venueAddress.city)
+            const nowSpecial = ['heartland', 'chateau'].includes(cityId)
+            const specialChanged = wasSpecial !== nowSpecial || (wasSpecial && nowSpecial && booking.venueAddress.city !== cityId)
             updateBooking('venueAddress', { ...booking.venueAddress, city: cityId, barangay: '', street: '', landmark: '' })
             updateBooking('venueGasCharge', getGasCharge(cityId) || 0)
-            // Clear package selection when switching between heartland/regular
-            if (wasHeartland !== nowHeartland) {
+            // Clear package selection when switching between venue types
+            if (specialChanged) {
               updateBooking('selectedPackage', '')
               updateBooking('selectedMenuOption', '')
             }
             if (cityId === 'heartland') {
               updateBooking('venue', 'Heartland Estate (Red Carpet Catering)')
+            } else if (cityId === 'chateau') {
+              updateBooking('venue', 'Chateau by the Sea')
             } else if (cityId) {
               const ci = getCityInfo(cityId)
               updateBooking('venue', ci?.name || '')
@@ -768,6 +770,7 @@ export default function BookingPage() {
           {getCityList().filter(c => c.id === 'heartland').map(city => (
             <option key={city.id} value={city.id}>⭐ {city.name}</option>
           ))}
+          <option value="chateau">🌊 Chateau by the Sea</option>
           <option disabled>── Catering at your location ──</option>
           {getCityList().filter(c => c.id !== 'heartland').map(city => (
             <option key={city.id} value={city.id}>
@@ -775,7 +778,7 @@ export default function BookingPage() {
             </option>
           ))}
         </select>
-        
+
         {/* Heartland Estate Banner */}
         {booking.venueAddress.city === 'heartland' && (
           <div className="bg-red-50 border border-red-200 rounded-xl p-4">
@@ -792,8 +795,24 @@ export default function BookingPage() {
           </div>
         )}
 
+        {/* Chateau by the Sea Banner */}
+        {booking.venueAddress.city === 'chateau' && (
+          <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-10 h-10 bg-blue-700 rounded-lg flex items-center justify-center text-white font-bold text-sm shrink-0">CS</div>
+              <div>
+                <p className="font-semibold text-blue-900">Chateau by the Sea</p>
+                <p className="text-sm text-blue-700">Seaside venue catering</p>
+              </div>
+            </div>
+            <div className="text-xs text-blue-700 bg-blue-100 rounded-lg px-3 py-2 mt-1">
+              Outside catering at a third-party venue. Tables, chairs &amp; venue setup are handled separately by the venue.
+            </div>
+          </div>
+        )}
+
         {/* Barangay */}
-        {booking.venueAddress.city && booking.venueAddress.city !== 'heartland' && (
+        {booking.venueAddress.city && !['heartland', 'chateau'].includes(booking.venueAddress.city) && (
           <select
             value={booking.venueAddress.barangay}
             onChange={(e) => updateBooking('venueAddress', { ...booking.venueAddress, barangay: e.target.value })}
@@ -808,7 +827,7 @@ export default function BookingPage() {
         )}
 
         {/* Street / Venue */}
-        {booking.venueAddress.city && booking.venueAddress.city !== 'heartland' && (
+        {booking.venueAddress.city && !['heartland', 'chateau'].includes(booking.venueAddress.city) && (
           <input
             type="text"
             value={booking.venueAddress.street}
@@ -823,7 +842,7 @@ export default function BookingPage() {
         )}
 
         {/* Landmark */}
-        {booking.venueAddress.city && booking.venueAddress.city !== 'heartland' && (
+        {booking.venueAddress.city && !['heartland', 'chateau'].includes(booking.venueAddress.city) && (
           <input
             type="text"
             value={booking.venueAddress.landmark}
@@ -835,9 +854,9 @@ export default function BookingPage() {
             className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500"
           />
         )}
-        
+
         {/* Gas Charge */}
-        {booking.venueAddress.city && booking.venueAddress.city !== 'heartland' && !requiresQuotation(booking.venueAddress.city) && (
+        {booking.venueAddress.city && !['heartland', 'chateau'].includes(booking.venueAddress.city) && !requiresQuotation(booking.venueAddress.city) && (
           <div className={`rounded-xl p-4 flex items-center justify-between ${booking.venueGasCharge === 0 ? 'bg-green-50 border border-green-200' : 'bg-amber-50 border border-amber-200'}`}>
             <div className="flex items-center gap-2">
               <Fuel size={20} className={booking.venueGasCharge === 0 ? 'text-green-600' : 'text-amber-600'} />
@@ -848,9 +867,9 @@ export default function BookingPage() {
             </span>
           </div>
         )}
-        
+
         {/* Quote Required */}
-        {booking.venueAddress.city && booking.venueAddress.city !== 'heartland' && requiresQuotation(booking.venueAddress.city) && (
+        {booking.venueAddress.city && !['heartland', 'chateau'].includes(booking.venueAddress.city) && requiresQuotation(booking.venueAddress.city) && (
           <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 flex items-start gap-3">
             <AlertCircle className="text-amber-600 flex-shrink-0 mt-0.5" size={20} />
             <div>
@@ -862,9 +881,9 @@ export default function BookingPage() {
             </div>
           </div>
         )}
-        
+
         {/* Min Pax Warning */}
-        {booking.venueAddress.city && booking.venueAddress.city !== 'heartland' && getMinimumPax(booking.venueAddress.city) > 30 && booking.numberOfPax < getMinimumPax(booking.venueAddress.city) && (
+        {booking.venueAddress.city && !['heartland', 'chateau'].includes(booking.venueAddress.city) && getMinimumPax(booking.venueAddress.city) > 30 && booking.numberOfPax < getMinimumPax(booking.venueAddress.city) && (
           <div className="bg-red-50 border border-red-200 rounded-lg p-3 flex items-start gap-2">
             <AlertCircle size={16} className="text-red-600 flex-shrink-0 mt-0.5" />
             <p className="text-sm text-red-700">
@@ -872,12 +891,17 @@ export default function BookingPage() {
             </p>
           </div>
         )}
-        
+
         {/* Address Preview */}
         {booking.venueAddress.city === 'heartland' ? (
           <div className="bg-gray-50 rounded-xl p-3 border border-gray-200">
             <p className="text-xs text-gray-500 mb-1">Venue:</p>
             <p className="text-sm font-medium text-gray-800">Heartland Estate (Red Carpet Catering)</p>
+          </div>
+        ) : booking.venueAddress.city === 'chateau' ? (
+          <div className="bg-gray-50 rounded-xl p-3 border border-gray-200">
+            <p className="text-xs text-gray-500 mb-1">Venue:</p>
+            <p className="text-sm font-medium text-gray-800">Chateau by the Sea</p>
           </div>
         ) : (booking.venueAddress.city && booking.venueAddress.barangay && booking.venueAddress.street && (
           <div className="bg-gray-50 rounded-xl p-3 border border-gray-200">

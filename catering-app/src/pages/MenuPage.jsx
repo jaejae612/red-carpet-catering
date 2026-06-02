@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { menuPackages, heartlandPackages, chateauPackages, addOnStations, chateauAddOnStations } from '../lib/menuData'
+import { menuPackages, heartlandPackages, chateauPackages, addOnStations } from '../lib/menuData'
 import { ChevronDown, ChevronUp, Check, ShoppingBag, MapPin, Star, Calendar, Waves } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import SEO from '../components/SEO'
@@ -387,28 +387,13 @@ export default function MenuPage() {
         </div>
 
         {/* Add-on Stations */}
-        <div className="bg-white rounded-2xl shadow-lg p-6 mb-6">
-          <h2 className="text-2xl font-bold text-gray-800 mb-2">Add-on Stations</h2>
-          <p className="text-gray-500 text-sm mb-4">Prices below are for outside catering events.</p>
+        <div className="bg-white rounded-2xl shadow-lg p-6 mb-12">
+          <h2 className="text-2xl font-bold text-gray-800 mb-6">Add-on Stations</h2>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
             {addOnStations.map(addon => (
               <div key={addon.id} className="bg-gray-50 rounded-xl p-4 flex justify-between items-center">
                 <div><p className="font-medium text-gray-800">{addon.name}</p><p className="text-sm text-gray-500">{addon.unit}</p></div>
                 <p className="font-semibold text-red-700">₱{addon.price.toLocaleString()}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Chateau Add-on Stations */}
-        <div className="bg-white rounded-2xl shadow-lg p-6 mb-12">
-          <h2 className="text-2xl font-bold text-gray-800 mb-2">Add-on Stations <span className="text-blue-700 text-lg font-semibold">(Chateau by the Sea)</span></h2>
-          <p className="text-gray-500 text-sm mb-4">Prices for Chateau by the Sea events.</p>
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {chateauAddOnStations.map(addon => (
-              <div key={addon.id} className="bg-blue-50 rounded-xl p-4 flex justify-between items-center">
-                <div><p className="font-medium text-gray-800">{addon.name}</p><p className="text-sm text-gray-500">{addon.unit}</p></div>
-                <p className="font-semibold text-blue-700">₱{addon.price.toLocaleString()}</p>
               </div>
             ))}
           </div>
