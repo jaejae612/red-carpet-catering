@@ -212,10 +212,11 @@ export default function BookingPage() {
   // Format time for display (e.g., "14:00" -> "2:00 PM")
   const formatTime = (time) => {
     if (!time) return ''
-    const [hours] = time.split(':').map(Number)
+    const [hours, minutes] = time.split(':').map(Number)
     const displayHour = hours > 12 ? hours - 12 : hours === 0 ? 12 : hours
     const ampm = hours >= 12 ? 'PM' : 'AM'
-    return `${displayHour}:00 ${ampm}`
+    const displayMinutes = String(minutes || 0).padStart(2, '0')
+    return `${displayHour}:${displayMinutes} ${ampm}`
   }
 
   // Rice options for basic menus
@@ -815,7 +816,13 @@ export default function BookingPage() {
         {booking.venueAddress.city && !['heartland', 'chateau'].includes(booking.venueAddress.city) && (
           <select
             value={booking.venueAddress.barangay}
-            onChange={(e) => updateBooking('venueAddress', { ...booking.venueAddress, barangay: e.target.value })}
+            onChange={(e) => {
+              const newBarangay = e.target.value
+              updateBooking('venueAddress', { ...booking.venueAddress, barangay: newBarangay })
+              if (booking.venueAddress.street) {
+                updateBooking('venue', formatAddress(booking.venueAddress.street, newBarangay, booking.venueAddress.city, booking.venueAddress.landmark))
+              }
+            }}
             required
             className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500 bg-white"
           >

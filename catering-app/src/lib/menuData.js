@@ -301,25 +301,6 @@ export const addOnStations = [
   { id: 'salad', name: 'Salad Bar', price: 4000, unit: 'good for 50' },
 ]
 
-// =====================================================
-// ADD-ON STATIONS — Chateau by the Sea prices
-// (Higher rates for venue events)
-// =====================================================
-export const chateauAddOnStations = [
-  { id: 'water', name: 'Water (5 gallons)', price: 50, unit: 'per 5 gallons' },
-  { id: 'ice', name: 'Ice (10 kilos)', price: 150, unit: 'per bag' },
-  { id: 'halohalo', name: 'Halo-halo Bar', price: 4000, unit: 'good for 50' },
-  { id: 'crepe', name: 'Crepe Station', price: 4000, unit: 'good for 50' },
-  { id: 'fruitshake', name: 'Fresh Fruit Shake Bar', price: 4000, unit: 'good for 50' },
-  { id: 'sushi', name: 'Sushi Platter', price: 4000, unit: 'good for 15-20' },
-  { id: 'prawns', name: 'Prawn Tempura (Small)', price: 4725, unit: 'order' },
-  { id: 'prawnm', name: 'Prawn Tempura (Medium)', price: 6720, unit: 'order' },
-  { id: 'prawnl', name: 'Prawn Tempura (Large)', price: 9240, unit: 'order' },
-  { id: 'taco', name: 'Taco Station', price: 4000, unit: 'good for 50' },
-  { id: 'burrito', name: 'Burrito Station', price: 4000, unit: 'good for 50' },
-  { id: 'salad', name: 'Salad Bar', price: 4000, unit: 'good for 50' },
-]
-
 // Dessert Add-ons
 export const dessertAddOns = [
   { id: 'dessert_20pax', name: 'Dessert Platter (20 pax)', price: 1400, pax: 20, unit: 'good for 20 pax' },
