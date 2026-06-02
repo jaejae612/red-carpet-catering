@@ -14,6 +14,7 @@ import {
   additionalDrinks
 } from '../lib/menuData'
 import { sendBookingNotifications } from '../lib/emailService'
+import { sendBookingMessengerAlert } from '../lib/messengerService'
 import {
   getCityList,
   getBarangays,
@@ -596,8 +597,9 @@ export default function BookingPage() {
       const { data, error: insertError } = await supabase.from('bookings').insert([bookingData]).select().single()
       if (insertError) throw insertError
 
-      // Send notification emails (non-blocking — don't fail booking if email fails)
+      // Send notification emails + Messenger alert (non-blocking)
       sendBookingNotifications(data).catch(err => console.error('Email notification failed:', err))
+      sendBookingMessengerAlert(data).catch(err => console.error('Messenger notification failed:', err))
 
       navigate(isAdmin ? '/admin/bookings' : '/my-orders')
     } catch (err) {
