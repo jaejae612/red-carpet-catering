@@ -372,7 +372,7 @@ export default function MyOrdersPage() {
                         {order.items?.map((item, idx) => (
                           <div key={idx} className="flex justify-between">
                             <span>{item.name} × {item.quantity}</span>
-                            <span className="font-medium">₱{item.subtotal?.toLocaleString()}</span>
+                            <span className="font-medium">₱{(item.price * item.quantity).toLocaleString()}</span>
                           </div>
                         ))}
                       </div>
