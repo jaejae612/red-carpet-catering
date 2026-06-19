@@ -147,6 +147,38 @@ export default function AdminFoodOrders() {
     finally { setBulkUpdating(false) }
   }
 
+  const deleteOrder = async (orderId) => {
+    if (!window.confirm('Delete this food order? This cannot be undone.')) return
+    const { error } = await supabase.from('food_orders').delete().eq('id', orderId)
+    if (!error) {
+      setOrders(prev => prev.filter(o => o.id !== orderId))
+      if (expandedOrder === orderId) setExpandedOrder(null)
+      logAudit({
+        entityType: 'food_order',
+        entityId: orderId,
+        action: 'deleted',
+        adminId: user?.id,
+        adminName: profile?.full_name,
+        changedFields: [],
+      })
+    }
+  }
+
+  const bulkDeleteOrders = async () => {
+    if (selectedIds.size === 0) return
+    if (!window.confirm(`Delete ${selectedIds.size} order(s)? This cannot be undone.`)) return
+    setBulkUpdating(true)
+    try {
+      const idsArray = Array.from(selectedIds)
+      const { error } = await supabase.from('food_orders').delete().in('id', idsArray)
+      if (!error) {
+        setOrders(prev => prev.filter(o => !selectedIds.has(o.id)))
+        setSelectedIds(new Set())
+      }
+    } catch (err) { console.error(err) }
+    finally { setBulkUpdating(false) }
+  }
+
   const filteredOrders = orders.filter(order => {
     const matchesFilter = filter === 'all' || order.status === filter
     const matchesSearch = order.customer_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -245,6 +277,9 @@ export default function AdminFoodOrders() {
                 {s.name}
               </button>
             ))}
+            <button onClick={bulkDeleteOrders} disabled={bulkUpdating} className="px-3 py-1 rounded-lg text-xs font-medium bg-red-600 text-white hover:bg-red-700 disabled:opacity-50 flex items-center gap-1">
+              <Trash2 size={14} /> Delete
+            </button>
             <button onClick={() => setSelectedIds(new Set())} className="px-3 py-1 rounded-lg text-xs font-medium text-gray-500 hover:bg-gray-100">
               <X size={14} />
             </button>
@@ -390,6 +425,16 @@ export default function AdminFoodOrders() {
                     <p>Order ID: {order.id.slice(0, 8)}...</p>
                     <p>Placed: {new Date(order.created_at).toLocaleString()}</p>
                     {order.customer_email && <p>Email: {order.customer_email}</p>}
+                  </div>
+
+                  {/* Delete */}
+                  <div className="mt-4 pt-4 border-t">
+                    <button
+                      onClick={() => deleteOrder(order.id)}
+                      className="flex items-center gap-2 px-4 py-2 bg-red-50 text-red-700 border border-red-200 rounded-lg text-sm hover:bg-red-100"
+                    >
+                      <Trash2 size={16} /> Delete Order
+                    </button>
                   </div>
                 </div>
               )}

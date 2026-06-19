@@ -14,7 +14,7 @@ import {
   additionalDrinks
 } from '../lib/menuData'
 import { sendBookingNotifications } from '../lib/emailService'
-import { sendBookingMessengerAlert } from '../lib/messengerService'
+import { sendBookingTelegramAlert } from '../lib/telegramService'
 import {
   getCityList,
   getBarangays,
@@ -599,7 +599,7 @@ export default function BookingPage() {
 
       // Send notification emails + Messenger alert (non-blocking)
       sendBookingNotifications(data).catch(err => console.error('Email notification failed:', err))
-      sendBookingMessengerAlert(data).catch(err => console.error('Messenger notification failed:', err))
+      sendBookingTelegramAlert(data).catch(err => console.error('Telegram notification failed:', err))
 
       navigate(isAdmin ? '/admin/bookings' : '/my-orders')
     } catch (err) {

@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext'
 import { supabase } from '../lib/supabase'
 import { FOOD_CATEGORIES, SERVING_SIZES, FIXED_PRICE_SIZE, BINGCAVA_SIZES, LUMPIA_SIZES, DESSERT_SIZES, getItemPrice, getAvailableSizes, calculateCartTotal, getCategoryInfo } from '../lib/foodOrderData'
 import { sendFoodOrderNotifications } from '../lib/emailService'
-import { sendFoodOrderMessengerAlert } from '../lib/messengerService'
+import { sendFoodOrderTelegramAlert } from '../lib/telegramService'
 import { ShoppingCart, Plus, Minus, X, Search, ChevronRight, MapPin, Calendar, Clock, User, Phone, Mail, Send, Trash2, AlertCircle } from 'lucide-react'
 import SEO from '../components/SEO'
 import { FoodMenuSkeleton } from '../components/SkeletonLoaders'
@@ -179,7 +179,7 @@ export default function FoodMenuPage() {
 
       // Send notification emails + Messenger alert (non-blocking)
       sendFoodOrderNotifications(data).catch(err => console.error('Email notification failed:', err))
-      sendFoodOrderMessengerAlert(data).catch(err => console.error('Messenger notification failed:', err))
+      sendFoodOrderTelegramAlert(data).catch(err => console.error('Telegram notification failed:', err))
 
       setCart([])
       setShowCheckout(false)
