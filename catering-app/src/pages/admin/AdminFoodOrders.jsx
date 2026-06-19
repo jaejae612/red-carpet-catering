@@ -10,6 +10,13 @@ import AuditTimeline from '../../components/AuditTimeline'
 import { useAuth } from '../../context/AuthContext'
 import { logAudit } from '../../lib/auditLog'
 
+const formatDate = (dateStr) => {
+  if (!dateStr) return ''
+  return new Date(dateStr + 'T00:00:00').toLocaleDateString('en-US', {
+    month: 'long', day: 'numeric', year: 'numeric'
+  })
+}
+
 export default function AdminFoodOrders() {
   const { user, profile } = useAuth()
   const [searchParams] = useSearchParams()
@@ -322,7 +329,7 @@ export default function AdminFoodOrders() {
                         <Phone size={14} /> {order.customer_phone}
                       </span>
                       <span className="flex items-center gap-1">
-                        <Calendar size={14} /> {order.delivery_date}
+                        <Calendar size={14} /> {formatDate(order.delivery_date)}
                       </span>
                       {order.delivery_time && (
                         <span className="flex items-center gap-1">

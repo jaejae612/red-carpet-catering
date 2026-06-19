@@ -13,6 +13,13 @@ import { getDateConflicts, calculateStaffNeeds, calculateEquipmentNeeds, countMe
 import { useAuth } from '../../context/AuthContext'
 import { logAudit } from '../../lib/auditLog'
 
+const formatDate = (dateStr) => {
+  if (!dateStr) return ''
+  return new Date(dateStr + 'T00:00:00').toLocaleDateString('en-US', {
+    month: 'long', day: 'numeric', year: 'numeric'
+  })
+}
+
 export default function AdminBookings() {
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
@@ -456,7 +463,7 @@ export default function AdminBookings() {
           {/* Results count */}
           <p className="text-xs text-gray-500 mb-2">{filtered.length} booking{filtered.length !== 1 ? 's' : ''} found</p>
           
-          <div className="space-y-2 max-h-[60vh] overflow-y-auto">{filtered.map(b => (<button key={b.id} onClick={() => { setSelectedBooking(b); setHasUnsavedAssignment(false) }} className={`w-full p-3 rounded-xl text-left ${selectedBooking?.id === b.id ? 'bg-red-50 border-2 border-red-700' : 'bg-gray-50 hover:bg-gray-100 border-2 border-transparent'}`}><div className="flex justify-between items-start mb-1"><span className="font-medium text-gray-800 truncate">{b.customer_name}</span><div className="flex items-center gap-1">{b.status === 'completed' && (!b.payment_status || b.payment_status === 'unpaid') && <span title="Completed but unpaid" className="text-red-500 text-xs">⚠️</span>}<span className={`px-2 py-0.5 rounded-full text-xs font-medium ${getStatusColor(b.status)}`}>{b.status}</span></div></div><p className="text-sm text-gray-500">{b.event_date}</p><div className="flex items-center justify-between mt-1"><span className="text-sm text-gray-500">{b.number_of_pax} pax • ₱{b.total_amount?.toLocaleString()}</span><span className={`px-2 py-0.5 rounded-full text-xs font-medium ${getPaymentStatusColor(b.payment_status)}`}>{getPaymentStatusLabel(b.payment_status)}</span></div></button>))}{filtered.length === 0 && <p className="text-center text-gray-500 py-4">No bookings found</p>}</div>
+          <div className="space-y-2 max-h-[60vh] overflow-y-auto">{filtered.map(b => (<button key={b.id} onClick={() => { setSelectedBooking(b); setHasUnsavedAssignment(false) }} className={`w-full p-3 rounded-xl text-left ${selectedBooking?.id === b.id ? 'bg-red-50 border-2 border-red-700' : 'bg-gray-50 hover:bg-gray-100 border-2 border-transparent'}`}><div className="flex justify-between items-start mb-1"><span className="font-medium text-gray-800 truncate">{b.customer_name}</span><div className="flex items-center gap-1">{b.status === 'completed' && (!b.payment_status || b.payment_status === 'unpaid') && <span title="Completed but unpaid" className="text-red-500 text-xs">⚠️</span>}<span className={`px-2 py-0.5 rounded-full text-xs font-medium ${getStatusColor(b.status)}`}>{b.status}</span></div></div><p className="text-sm text-gray-500">{formatDate(b.event_date)}</p><div className="flex items-center justify-between mt-1"><span className="text-sm text-gray-500">{b.number_of_pax} pax • ₱{b.total_amount?.toLocaleString()}</span><span className={`px-2 py-0.5 rounded-full text-xs font-medium ${getPaymentStatusColor(b.payment_status)}`}>{getPaymentStatusLabel(b.payment_status)}</span></div></button>))}{filtered.length === 0 && <p className="text-center text-gray-500 py-4">No bookings found</p>}</div>
         </div></div>
         <div className="lg:col-span-2">
           {selectedBooking ? (
@@ -606,7 +613,7 @@ export default function AdminBookings() {
                         {customerBookings.slice(0, 5).map(b => (
                           <div key={b.id} className="flex items-center justify-between p-2 bg-white rounded-lg text-sm">
                             <div>
-                              <p className="font-medium text-gray-800">{b.event_date}</p>
+                              <p className="font-medium text-gray-800">{formatDate(b.event_date)}</p>
                               <p className="text-xs text-gray-500">{b.venue} • {b.number_of_pax} pax</p>
                             </div>
                             <div className="text-right">
@@ -631,7 +638,7 @@ export default function AdminBookings() {
                   {/* Same-day warning */}
                   {sameDayBookings.length > 0 && (
                     <div className="bg-amber-50 border border-amber-200 rounded-lg p-2.5 mb-3 text-xs">
-                      <p className="font-medium text-amber-800">📅 {sameDayBookings.length} other booking(s) on {selectedBooking.event_date}:</p>
+                      <p className="font-medium text-amber-800">📅 {sameDayBookings.length} other booking(s) on {formatDate(selectedBooking.event_date)}:</p>
                       {sameDayBookings.map(b => <p key={b.id} className="text-amber-600 ml-4">• {b.customer_name} — {b.number_of_pax} pax ({b.status})</p>)}
                     </div>
                   )}
@@ -761,7 +768,7 @@ export default function AdminBookings() {
                     {isOnCall && s.daily_rate > 0 && <p className="text-xs text-orange-500">₱{s.daily_rate.toLocaleString()}/day</p>}
                     {isOnCall && s.phone && <p className="text-xs text-gray-400">{s.phone}</p>}
                   </div>
-                  {isBusy && <p className="text-xs text-red-500 mt-0.5">📅 Busy on {selectedBooking?.event_date}</p>}
+                  {isBusy && <p className="text-xs text-red-500 mt-0.5">📅 Busy on {formatDate(selectedBooking?.event_date)}</p>}
                   {!s.available && !isBusy && <p className="text-xs text-red-500 mt-0.5">Unavailable</p>}
                 </div>
                 {isSel && <Check size={20} className="text-red-700" />}

@@ -5,6 +5,13 @@ import { TrendingUp, Users, Calendar, Package, Clock, ChevronDown, ChevronRight,
 import { DashboardSkeleton } from '../../components/SkeletonLoaders'
 import RevenueCharts from '../../components/RevenueCharts'
 
+const formatDate = (dateStr) => {
+  if (!dateStr) return ''
+  return new Date(dateStr + 'T00:00:00').toLocaleDateString('en-US', {
+    month: 'long', day: 'numeric', year: 'numeric'
+  })
+}
+
 // Custom Peso Icon component
 const PesoSign = ({ className, size = 20 }) => (
   <span className={`font-bold ${className}`} style={{ fontSize: size * 0.9 }}>₱</span>
@@ -520,7 +527,7 @@ export default function AdminDashboardStats() {
                       <p className="text-xs text-gray-500">{booking.venue}</p>
                     </div>
                     <div className="text-right">
-                      <p className="font-medium text-gray-800">{booking.event_date}</p>
+                      <p className="font-medium text-gray-800">{formatDate(booking.event_date)}</p>
                       <p className="text-xs text-gray-500">{booking.number_of_pax} pax • {booking.status === 'pending' ? '⏳' : '✅'}</p>
                     </div>
                   </Link>

@@ -73,6 +73,13 @@ function CustomerPaymentSummary({ bookingId, foodOrderId, totalAmount, paymentSt
 }
 
 // Helpers
+const formatDate = (dateStr) => {
+  if (!dateStr) return ''
+  return new Date(dateStr + 'T00:00:00').toLocaleDateString('en-US', {
+    month: 'long', day: 'numeric', year: 'numeric'
+  })
+}
+
 const getDaysUntil = (dateStr) => {
   const event = new Date(dateStr)
   const today = new Date()
@@ -236,7 +243,7 @@ export default function MyOrdersPage() {
                   </div>
                   <h3 className="font-semibold text-gray-800">{pkg?.name}</h3>
                   <div className="flex items-center gap-4 text-sm text-gray-500 mt-1">
-                    <span className="flex items-center gap-1"><Calendar size={14} />{order.event_date}</span>
+                    <span className="flex items-center gap-1"><Calendar size={14} />{formatDate(order.event_date)}</span>
                     <span className="flex items-center gap-1"><Users size={14} />{order.number_of_pax} pax</span>
                   </div>
                 </div>
@@ -252,7 +259,7 @@ export default function MyOrdersPage() {
                       <h4 className="font-semibold text-gray-700 mb-3">Event Details</h4>
                       <div className="space-y-2 text-sm">
                         <p className="flex items-start gap-2"><MapPin size={16} className="text-gray-400 mt-0.5" />{order.venue}</p>
-                        <p className="flex items-center gap-2"><Calendar size={16} className="text-gray-400" />{order.event_date}</p>
+                        <p className="flex items-center gap-2"><Calendar size={16} className="text-gray-400" />{formatDate(order.event_date)}</p>
                         <p className="flex items-center gap-2"><Clock size={16} className="text-gray-400" />{order.event_time}</p>
                       </div>
                     </div>
@@ -346,7 +353,7 @@ export default function MyOrdersPage() {
                   </div>
                   <h3 className="font-semibold text-gray-800">{order.items?.length || 0} items</h3>
                   <div className="flex items-center gap-4 text-sm text-gray-500 mt-1">
-                    <span className="flex items-center gap-1"><Calendar size={14} />{order.delivery_date}</span>
+                    <span className="flex items-center gap-1"><Calendar size={14} />{formatDate(order.delivery_date)}</span>
                     {order.delivery_time && <span className="flex items-center gap-1"><Clock size={14} />{order.delivery_time}</span>}
                   </div>
                 </div>
@@ -362,7 +369,7 @@ export default function MyOrdersPage() {
                       <h4 className="font-semibold text-gray-700 mb-3 flex items-center gap-2"><Truck size={16} /> Delivery Details</h4>
                       <div className="space-y-2 text-sm">
                         <p className="flex items-start gap-2"><MapPin size={16} className="text-gray-400 mt-0.5" />{order.delivery_address}</p>
-                        <p className="flex items-center gap-2"><Calendar size={16} className="text-gray-400" />{order.delivery_date}</p>
+                        <p className="flex items-center gap-2"><Calendar size={16} className="text-gray-400" />{formatDate(order.delivery_date)}</p>
                         {order.delivery_time && <p className="flex items-center gap-2"><Clock size={16} className="text-gray-400" />{order.delivery_time}</p>}
                       </div>
                     </div>
