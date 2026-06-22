@@ -1497,23 +1497,40 @@ export default function BookingPage() {
       <h2 className="text-xl font-semibold text-gray-800">Guests & Add-ons</h2>
       
       {/* Number of Pax */}
-      <div className="bg-red-50 rounded-xl p-4 border border-red-100">
-        <label className="block text-sm font-semibold text-red-700 mb-3">Number of Pax (Min. 30)</label>
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-2xl font-bold text-gray-800">{booking.numberOfPax} guests</p>
-            <p className="text-sm text-gray-500">₱{calculatePricePerHead(booking.selectedPackage, booking.numberOfPax)}/head</p>
+      {(() => {
+        const isDecember = booking.date && new Date(booking.date + 'T00:00:00').getMonth() === 11
+        const minPax = isDecember ? 100 : 30
+        return (
+          <div className="bg-red-50 rounded-xl p-4 border border-red-100">
+            <label className="block text-sm font-semibold text-red-700 mb-3">
+              Number of Pax (Min. {minPax}{isDecember ? ' — December' : ''})
+            </label>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-2xl font-bold text-gray-800">{booking.numberOfPax} guests</p>
+                <p className="text-sm text-gray-500">₱{calculatePricePerHead(booking.selectedPackage, booking.numberOfPax)}/head</p>
+              </div>
+              <div className="flex items-center gap-3">
+                <button onClick={() => updateBooking('numberOfPax', Math.max(minPax, booking.numberOfPax - 5))} className="w-10 h-10 rounded-full bg-white border flex items-center justify-center hover:bg-gray-50"><Minus size={18} /></button>
+                <button onClick={() => updateBooking('numberOfPax', booking.numberOfPax + 5)} className="w-10 h-10 rounded-full bg-red-700 text-white flex items-center justify-center hover:bg-red-800"><Plus size={18} /></button>
+              </div>
+            </div>
+            {isDecember && booking.numberOfPax < 100 && (
+              <div className="mt-3 p-3 bg-amber-50 border border-amber-200 rounded-lg flex items-start gap-2">
+                <AlertCircle size={16} className="text-amber-600 flex-shrink-0 mt-0.5" />
+                <div className="text-sm text-amber-800">
+                  <strong>December bookings require a minimum of 100 guests.</strong>
+                  <p className="mt-0.5">For smaller gatherings, please call our office: <strong>0917-187-6510</strong></p>
+                </div>
+              </div>
+            )}
+            <div className="mt-4 pt-4 border-t border-red-200 flex justify-between">
+              <span className="text-gray-600">Subtotal</span>
+              <span className="font-semibold text-red-700">₱{(calculatePricePerHead(booking.selectedPackage, booking.numberOfPax) * booking.numberOfPax).toLocaleString()}</span>
+            </div>
           </div>
-          <div className="flex items-center gap-3">
-            <button onClick={() => updateBooking('numberOfPax', Math.max(30, booking.numberOfPax - 5))} className="w-10 h-10 rounded-full bg-white border flex items-center justify-center hover:bg-gray-50"><Minus size={18} /></button>
-            <button onClick={() => updateBooking('numberOfPax', booking.numberOfPax + 5)} className="w-10 h-10 rounded-full bg-red-700 text-white flex items-center justify-center hover:bg-red-800"><Plus size={18} /></button>
-          </div>
-        </div>
-        <div className="mt-4 pt-4 border-t border-red-200 flex justify-between">
-          <span className="text-gray-600">Subtotal</span>
-          <span className="font-semibold text-red-700">₱{(calculatePricePerHead(booking.selectedPackage, booking.numberOfPax) * booking.numberOfPax).toLocaleString()}</span>
-        </div>
-      </div>
+        )
+      })()}
 
       {/* Free Drinks Selection */}
       <div className="bg-blue-50 rounded-xl p-4 border border-blue-100">
@@ -2015,6 +2032,10 @@ export default function BookingPage() {
       return booking.venueAddress.city && (venueOnlyCity || (booking.venueAddress.barangay && booking.venueAddress.street))
     }
     if (step === 2) return booking.selectedPackage && booking.selectedMenuOption
+    if (step === 4) {
+      const isDecember = booking.date && new Date(booking.date + 'T00:00:00').getMonth() === 11
+      if (isDecember && booking.numberOfPax < 100) return false
+    }
     if (step === 3) {
       // Preset/fixed menus can always proceed - no dish customization needed
       const isPresetMenu = currentPackages[booking.selectedPackage]?.isFixedMenu ||
