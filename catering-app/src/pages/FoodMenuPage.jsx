@@ -59,6 +59,13 @@ export default function FoodMenuPage() {
     return now.toISOString().split('T')[0]
   }
 
+  // Get maximum date (1 year from today)
+  const getMaxDate = () => {
+    const max = new Date()
+    max.setFullYear(max.getFullYear() + 1)
+    return max.toISOString().split('T')[0]
+  }
+
   // Check if selected date/time is valid for admin same-day booking (8 hours ahead)
   const isValidAdminSameDayBooking = (date, time) => {
     if (!isAdmin) return true
@@ -421,7 +428,7 @@ export default function FoodMenuPage() {
                     <label className="block text-sm font-medium text-gray-700 mb-1">Delivery Date *</label>
                     <div className="relative">
                       <Calendar className="absolute left-3 top-3 text-gray-400" size={18} />
-                      <input type="date" value={orderDetails.deliveryDate} onChange={(e) => setOrderDetails({...orderDetails, deliveryDate: e.target.value, deliveryTime: ''})} min={getMinDate()} className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500" />
+                      <input type="date" value={orderDetails.deliveryDate} onChange={(e) => setOrderDetails({...orderDetails, deliveryDate: e.target.value, deliveryTime: ''})} min={getMinDate()} max={getMaxDate()} className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500" />
                     </div>
                   </div>
                   <div>

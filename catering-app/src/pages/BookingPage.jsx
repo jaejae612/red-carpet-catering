@@ -129,6 +129,13 @@ export default function BookingPage() {
     return now.toISOString().split('T')[0]
   }
 
+  // Get maximum booking date (1 year from today)
+  const getMaxDate = () => {
+    const max = new Date()
+    max.setFullYear(max.getFullYear() + 1)
+    return max.toISOString().split('T')[0]
+  }
+
   // Check if selected date/time is valid
   const isValidDate = (dateString, timeString) => {
     if (!dateString) return false
@@ -927,7 +934,7 @@ export default function BookingPage() {
           <label className="block text-sm font-medium text-gray-700 mb-2">Date *</label>
           <div className="relative">
             <Calendar className="absolute left-3 top-3 text-gray-400" size={20} />
-            <input type="date" value={booking.date} onChange={handleDateChange} min={getMinDate()} required className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500" />
+            <input type="date" value={booking.date} onChange={handleDateChange} min={getMinDate()} max={getMaxDate()} required className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500" />
           </div>
         </div>
         <div>
