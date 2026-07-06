@@ -39,6 +39,7 @@ function formatTimestamp(ts) {
   return new Date(ts).toLocaleString('en-PH', {
     month: 'short', day: 'numeric', year: 'numeric',
     hour: 'numeric', minute: '2-digit', hour12: true,
+    timeZone: 'Asia/Manila',
   })
 }
 
@@ -138,7 +139,7 @@ export default function AdminAuditLog() {
   ].filter(Boolean).length
 
   // Stats
-  const todayStr = new Date().toISOString().split('T')[0]
+  const todayStr = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Manila' })
   const todayEntries = entries.filter(e => e.created_at?.startsWith(todayStr))
   const uniqueAdmins = new Set(entries.map(e => e.admin_name).filter(Boolean))
 

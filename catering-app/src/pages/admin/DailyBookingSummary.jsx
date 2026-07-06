@@ -57,8 +57,8 @@ export default function DailyBookingSummary() {
   }
 
   const formatDate = (dateStr) => {
-    const date = new Date(dateStr)
-    return date.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
+    const date = new Date(dateStr + 'T00:00:00')
+    return date.toLocaleDateString('en-PH', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', timeZone: 'Asia/Manila' })
   }
 
   const formatTime = (timeStr) => {

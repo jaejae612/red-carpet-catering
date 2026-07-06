@@ -17,8 +17,9 @@ const formatCurrency = (amount) => `₱${(amount || 0).toLocaleString()}`
 
 const formatDate = (dateStr) => {
   if (!dateStr) return ''
-  return new Date(dateStr).toLocaleDateString('en-US', {
-    weekday: 'short', month: 'short', day: 'numeric', year: 'numeric'
+  return new Date(dateStr + 'T00:00:00').toLocaleDateString('en-PH', {
+    weekday: 'short', month: 'short', day: 'numeric', year: 'numeric',
+    timeZone: 'Asia/Manila',
   })
 }
 

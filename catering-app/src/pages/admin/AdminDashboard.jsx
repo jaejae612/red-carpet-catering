@@ -7,8 +7,8 @@ import RevenueCharts from '../../components/RevenueCharts'
 
 const formatDate = (dateStr) => {
   if (!dateStr) return ''
-  return new Date(dateStr + 'T00:00:00').toLocaleDateString('en-US', {
-    month: 'long', day: 'numeric', year: 'numeric'
+  return new Date(dateStr + 'T00:00:00').toLocaleDateString('en-PH', {
+    month: 'long', day: 'numeric', year: 'numeric', timeZone: 'Asia/Manila',
   })
 }
 

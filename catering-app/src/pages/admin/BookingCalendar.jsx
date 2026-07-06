@@ -101,8 +101,8 @@ export default function BookingCalendar() {
   }
 
   const formatDate = (dateStr) => {
-    const date = new Date(dateStr)
-    return date.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })
+    const date = new Date(dateStr + 'T00:00:00')
+    return date.toLocaleDateString('en-PH', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric', timeZone: 'Asia/Manila' })
   }
 
   const getStatusColor = (status) => ({

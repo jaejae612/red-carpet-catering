@@ -5,11 +5,12 @@ const formatCurrency = (amount) => `₱${amount?.toLocaleString() || 0}`
 
 const formatDate = (dateStr) => {
   if (!dateStr) return ''
-  return new Date(dateStr).toLocaleDateString('en-US', {
+  return new Date(dateStr + 'T00:00:00').toLocaleDateString('en-PH', {
     weekday: 'long',
     year: 'numeric',
     month: 'long',
-    day: 'numeric'
+    day: 'numeric',
+    timeZone: 'Asia/Manila',
   })
 }
 
@@ -205,7 +206,7 @@ export default function BookingReceipt({ booking, onClose }) {
               <p className="mb-2">Thank you for choosing Red Carpet Catering!</p>
               <p>For inquiries, please contact us at the numbers above.</p>
               <p className="mt-4 text-xs">
-                Printed on: {new Date().toLocaleString()}
+                Printed on: {new Date().toLocaleString('en-PH', { timeZone: 'Asia/Manila', dateStyle: 'long', timeStyle: 'short' })}
               </p>
             </div>
           </div>

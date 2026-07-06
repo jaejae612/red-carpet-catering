@@ -25,7 +25,7 @@ const getMethodInfo = (method) => PAYMENT_METHODS.find(m => m.value === method) 
 const getStatusInfo = (status) => PAYMENT_STATUS[status] || PAYMENT_STATUS.unpaid
 
 const formatCurrency = (n) => `₱${Number(n || 0).toLocaleString()}`
-const formatDate = (d) => d ? new Date(d).toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' }) : ''
+const formatDate = (d) => d ? new Date(d + 'T00:00:00').toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'Asia/Manila' }) : ''
 
 export default function PaymentTracker({ bookingId, foodOrderId, totalAmount = 0, currentStatus, onStatusChange }) {
   const { user, profile } = useAuth()
@@ -41,7 +41,7 @@ export default function PaymentTracker({ bookingId, foodOrderId, totalAmount = 0
     amount: '',
     method: 'gcash',
     reference_number: '',
-    payment_date: new Date().toISOString().split('T')[0],
+    payment_date: new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Manila' }),
     notes: ''
   })
 
@@ -109,7 +109,7 @@ export default function PaymentTracker({ bookingId, foodOrderId, totalAmount = 0
       })
 
       // Reset form
-      setForm({ amount: '', method: 'gcash', reference_number: '', payment_date: new Date().toISOString().split('T')[0], notes: '' })
+      setForm({ amount: '', method: 'gcash', reference_number: '', payment_date: new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Manila' }), notes: '' })
       setShowForm(false)
       
       // Refresh payments and parent data
