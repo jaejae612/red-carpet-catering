@@ -563,7 +563,7 @@ export default function BookingPage() {
     setError('')
     try {
       const customerName = isAdmin ? booking.customerName : (profile?.full_name || user.user_metadata?.full_name || 'Customer')
-      const customerPhone = isAdmin ? booking.customerPhone : (profile?.phone || user.user_metadata?.phone || '')
+      const customerPhone = booking.customerPhone || (isAdmin ? '' : (profile?.phone || user.user_metadata?.phone || ''))
       const customerEmail = isAdmin ? booking.customerEmail : user.email
 
       const customDishesArray = Object.values(booking.customDishes).flat()
@@ -647,6 +647,27 @@ export default function BookingPage() {
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {!isAdmin && (
+        <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-2">
+          <p className="text-blue-700 font-medium mb-2">📞 Your Contact Number</p>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number *</label>
+            <div className="relative">
+              <Phone className="absolute left-3 top-3 text-gray-400" size={18} />
+              <input
+                type="tel"
+                value={booking.customerPhone}
+                onChange={(e) => updateBooking('customerPhone', e.target.value)}
+                placeholder="09XX XXX XXXX"
+                required
+                className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+            <p className="text-xs text-gray-500 mt-1">Required so we can contact you about your booking.</p>
           </div>
         </div>
       )}
@@ -2036,7 +2057,7 @@ export default function BookingPage() {
       const isChateauStep = booking.venueAddress.city === 'chateau'
       const venueOnlyCity = isHeartlandStep || isChateauStep
       if (isAdmin) return booking.customerName && booking.customerPhone && booking.venueAddress.city && (venueOnlyCity || (booking.venueAddress.barangay && booking.venueAddress.street))
-      return booking.venueAddress.city && (venueOnlyCity || (booking.venueAddress.barangay && booking.venueAddress.street))
+      return booking.customerPhone && booking.venueAddress.city && (venueOnlyCity || (booking.venueAddress.barangay && booking.venueAddress.street))
     }
     if (step === 2) return booking.selectedPackage && booking.selectedMenuOption
     if (step === 4) {
