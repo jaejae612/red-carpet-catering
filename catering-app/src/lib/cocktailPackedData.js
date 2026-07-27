@@ -187,10 +187,10 @@ export const cocktailMenus = {
 // PACKED MEAL MENUS (Per Pack Pricing)
 // ============================================
 export const packedMealMenus = {
-  packed180: {
-    id: 'packed180',
-    name: 'Packed Meal ₱180',
-    pricePerPack: 180,
+  packed200: {
+    id: 'packed200',
+    name: 'Packed Meal ₱200',
+    pricePerPack: 200,
     type: 'packed_meal',
     includes: 'Tetra pack juice or bottled water',
     sodaUpgrade: 60, // Add ₱60 for canned soda
@@ -213,10 +213,10 @@ export const packedMealMenus = {
       }
     }
   },
-  packed250: {
-    id: 'packed250',
-    name: 'Packed Meal ₱250',
-    pricePerPack: 250,
+  packed270: {
+    id: 'packed270',
+    name: 'Packed Meal ₱270',
+    pricePerPack: 270,
     type: 'packed_meal',
     includes: 'Tetra pack juice or bottled water',
     sodaUpgrade: 60,
@@ -231,10 +231,10 @@ export const packedMealMenus = {
       }
     }
   },
-  packed320: {
-    id: 'packed320',
-    name: 'Packed Meal ₱320 (Premium)',
-    pricePerPack: 320,
+  packed340: {
+    id: 'packed340',
+    name: 'Packed Meal ₱340 (Premium)',
+    pricePerPack: 340,
     type: 'packed_meal',
     includes: 'Tetra pack juice or bottled water',
     sodaUpgrade: 60,
@@ -255,20 +255,20 @@ export const packedMealMenus = {
 // PACKED SNACK MENUS (Per Pack Pricing)
 // ============================================
 export const packedSnackMenus = {
-  snack150: {
-    id: 'snack150',
-    name: 'Packed Snack ₱150',
-    pricePerPack: 150,
+  snack200: {
+    id: 'snack200',
+    name: 'Packed Snack ₱200',
+    pricePerPack: 200,
     type: 'packed_snack',
     includes: 'Bottled water or tetra packed juice',
     options: {
       A: {
         name: 'Menu A',
-        items: ['Chicken Lollipop', 'Pig in a blanket', 'Sotanghon Guisado']
+        items: ['Chicken Lollipop', 'Pig In a blanket', 'Sotanghon Guisado']
       },
       B: {
         name: 'Menu B',
-        items: ['Hotcake', 'Pork Kebab', 'Siomai']
+        items: ['Hotcake', 'Pork Kebab', 'Bam-e']
       },
       C: {
         name: 'Menu C',
@@ -280,10 +280,10 @@ export const packedSnackMenus = {
       }
     }
   },
-  snack200: {
-    id: 'snack200',
-    name: 'Packed Snack ₱200',
-    pricePerPack: 200,
+  snack280: {
+    id: 'snack280',
+    name: 'Packed Snack ₱280',
+    pricePerPack: 280,
     type: 'packed_snack',
     includes: 'Bottled water or tetra packed juice',
     options: {
@@ -293,15 +293,15 @@ export const packedSnackMenus = {
       },
       B: {
         name: 'Menu B',
-        items: ['Mini Breaded Porkchop', 'Egg Pimiento Sandwich', 'Chicken Pasta Primavera', 'Ube Cake']
+        items: ['Chicken Lollipop', 'Egg Pimiento Sandwich', 'Chicken Pasta Primavera', 'Ube Cake']
       },
       C: {
         name: 'Menu C',
-        items: ['Banana Que', 'Mini Burger', 'Beef Tapa', 'Choco Cupcake']
+        items: ['Banana Que', 'Mini Burger', 'Siomai', 'Choco Cupcake']
       },
       D: {
         name: 'Menu D',
-        items: ['Bam-e', 'Chicken Triangles', 'Cheese Bread', 'Brownies']
+        items: ['Bam-e', 'Fresh Lumpia', 'Cheese Bread', 'Brownies']
       }
     }
   }
