@@ -120,7 +120,7 @@ export const menuPackages = {
     pricingTiers: { 60: 1060, 50: 1080, 40: 1130, 30: 1180 },
     isFixedMenu: true,
     options: [
-      { name: 'Premium Buffet', items: ['Salad Bar', 'Japanese Sushi Rolls', 'Goat Calderita', 'Grilled Chicken Shawarma w/ Garlic avocado sauce', 'Baked Fish w/ mozzarella cheese', 'Ox Tongue w/ mushroom sauce', 'Spicy Spareribs', 'Prawn Tempura', 'Penne carbonara', 'Assorted fresh fruits', 'Japanese Cheesecake', 'Mini Fruit Tart', 'Blueberry Cheesecake'] },
+      { name: 'Premium Buffet', items: ['Salad Bar', 'Japanese Sushi Rolls', 'Grilled Beef Short Plate (Carving Station)', 'Chicken Relleno', 'Baked Fish w/ mozzarella cheese', 'Ox Tongue w/ mushroom sauce', 'Spicy Spareribs', 'Prawn Tempura', 'Penne carbonara', 'Assorted fresh fruits', 'Blitz Torte', 'Mini Fruit Tart', 'Blueberry Cheesecake'] },
     ]
   },
 }
@@ -187,7 +187,7 @@ export const heartlandPackages = {
     weddingMinPax: 100,
     inclusions: HEARTLAND_INCLUSIONS,
     options: [
-      { name: 'Premium Buffet', items: ['Salad Bar', 'Japanese Sushi Rolls', 'Goat Calderita', 'Grilled Chicken Shawarma w/ Garlic avocado sauce', 'Baked Fish w/ mozzarella cheese', 'Ox Tongue w/ mushroom sauce', 'Spicy Spareribs', 'Prawn Tempura', 'Penne carbonara', 'Assorted fresh fruits', 'Japanese Cheesecake', 'Mini Fruit Tart', 'Blueberry Cheesecake'] },
+      { name: 'Premium Buffet', items: ['Salad Bar', 'Japanese Sushi Rolls', 'Grilled Beef Short Plate (Carving Station)', 'Chicken Relleno', 'Baked Fish w/ mozzarella cheese', 'Ox Tongue w/ mushroom sauce', 'Spicy Spareribs', 'Prawn Tempura', 'Penne carbonara', 'Assorted fresh fruits', 'Blitz Torte', 'Mini Fruit Tart', 'Blueberry Cheesecake'] },
     ]
   },
 }
@@ -252,7 +252,7 @@ export const chateauPackages = {
     isFixedMenu: true,
     inclusions: CHATEAU_INCLUSIONS,
     options: [
-      { name: 'Premium Buffet', items: ['Salad Bar', 'Japanese Sushi Rolls', 'Goat Calderita', 'Grilled Chicken Shawarma w/ Garlic avocado sauce', 'Baked Fish w/ mozzarella cheese', 'Ox Tongue w/ mushroom sauce', 'Spicy Spareribs', 'Prawn Tempura', 'Penne carbonara', 'Assorted fresh fruits', 'Japanese Cheesecake', 'Mini Fruit Tart', 'Blueberry Cheesecake'] },
+      { name: 'Premium Buffet', items: ['Salad Bar', 'Japanese Sushi Rolls', 'Grilled Beef Short Plate (Carving Station)', 'Chicken Relleno', 'Baked Fish w/ mozzarella cheese', 'Ox Tongue w/ mushroom sauce', 'Spicy Spareribs', 'Prawn Tempura', 'Penne carbonara', 'Assorted fresh fruits', 'Blitz Torte', 'Mini Fruit Tart', 'Blueberry Cheesecake'] },
     ]
   },
 }
