@@ -15,8 +15,8 @@ export const menuPackages = {
       dessert: 2
     }
   },
-  menu510: {
-    id: 'menu510', name: 'Menu 530', pricePerHead: 530,
+  menu530: {
+    id: 'menu530', name: 'Menu 530', pricePerHead: 530,
     pricingTiers: { 60: 530, 50: 550, 40: 600, 30: 650 },
     isCustomBuild: true,
     options: [
@@ -30,8 +30,8 @@ export const menuPackages = {
       dessert: 2
     }
   },
-  menu560: {
-    id: 'menu560', name: 'Menu 580', pricePerHead: 580,
+  menu580: {
+    id: 'menu580', name: 'Menu 580', pricePerHead: 580,
     pricingTiers: { 60: 580, 50: 600, 40: 650, 30: 700 },
     allowSwap: true, // Enable dish swapping with Asian Fusion
     options: [
@@ -55,8 +55,8 @@ export const menuPackages = {
       ]
     }
   },
-  menu660: {
-    id: 'menu660', name: 'Menu 680', pricePerHead: 680,
+  menu680: {
+    id: 'menu680', name: 'Menu 680', pricePerHead: 680,
     pricingTiers: { 60: 680, 50: 700, 40: 750, 30: 800 },
     isFixedMenu: true,
     options: [
@@ -64,8 +64,8 @@ export const menuPackages = {
       { name: 'International', items: ['Green Vegetable salad w/ thousand island', 'Mediterranean Salad w/ olives', 'Ox tongue w/ mushroom sauce', 'Crunchy Chicken w/ plum sauce', 'Roast beef w/ gravy', 'Baked Fish w/ mozzarella cheese', 'Polynesian Pork', 'Paella/Plain Rice', 'Choco Peach Cream Cake', 'Blueberry Cheesecake'] }
     ]
   },
-  menu810: {
-    id: 'menu810', name: 'Menu 830 (Premium)', pricePerHead: 830,
+  menu830: {
+    id: 'menu830', name: 'Menu 830 (Premium)', pricePerHead: 830,
     pricingTiers: { 60: 830, 50: 850, 40: 900, 30: 950 },
     isFixedMenu: true,
     options: [

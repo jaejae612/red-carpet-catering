@@ -75,7 +75,7 @@ export default function MenuPage() {
                   <p className="text-red-600 font-semibold text-lg">₱{pkg.pricePerHead}/head <span className="text-gray-500 font-normal text-sm">(60+ pax)</span></p>
                   {pkg.id === 'menu490' ? (
                     <p className="text-xs text-gray-500 mt-1">🛠️ Build Your Own • 🍚 Plain Rice & Fried Rice only</p>
-                  ) : pkg.id === 'menu510' ? (
+                  ) : pkg.id === 'menu530' ? (
                     <p className="text-xs text-gray-500 mt-1">🛠️ Build Your Own • 🍚 Plain Rice, Fried Rice & Arroz Valenciana</p>
                   ) : pkg.isFixedMenu ? (
                     <p className="text-xs text-purple-600 mt-1">📋 Fixed Curated Menu — No dish customization</p>
@@ -138,7 +138,7 @@ export default function MenuPage() {
                         {pkg.id === 'menu490' && (
                           <p className="text-xs text-blue-600 mt-3 text-center">Rice options: Plain Rice & Fried Rice only</p>
                         )}
-                        {pkg.id === 'menu510' && (
+                        {pkg.id === 'menu530' && (
                           <p className="text-xs text-blue-600 mt-3 text-center">Rice options: Plain Rice, Fried Rice & Arroz Valenciana</p>
                         )}
                       </div>
@@ -185,7 +185,7 @@ export default function MenuPage() {
                                 <p className="text-sm text-gray-600 flex items-center gap-2"><Check size={12} className="text-amber-500" /> Plain Rice</p>
                                 <p className="text-sm text-gray-600 flex items-center gap-2"><Check size={12} className="text-amber-500" /> Fried Rice</p>
                               </>
-                            ) : pkg.id === 'menu510' ? (
+                            ) : pkg.id === 'menu530' ? (
                               <>
                                 <p className="text-sm text-gray-600 flex items-center gap-2"><Check size={12} className="text-amber-500" /> Plain Rice</p>
                                 <p className="text-sm text-gray-600 flex items-center gap-2"><Check size={12} className="text-amber-500" /> Fried Rice</p>

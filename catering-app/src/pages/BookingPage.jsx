@@ -252,7 +252,7 @@ export default function BookingPage() {
     }
     
     // For Menu 510, restrict rice to Plain Rice, Fried Rice, and Arroz Valenciana
-    if (category.id === 'rice' && booking.selectedPackage === 'menu510') {
+    if (category.id === 'rice' && booking.selectedPackage === 'menu530') {
       categoryDishes = categoryDishes.filter(d => {
         const name = d.name.toLowerCase()
         return MENU_510_RICE_OPTIONS.some(r => name.includes(r)) && !name.includes('chinese')
@@ -292,7 +292,7 @@ export default function BookingPage() {
     if (category.id === 'rice' && booking.selectedPackage === 'menu490') {
       return 'Plain Rice & Fried Rice only'
     }
-    if (category.id === 'rice' && booking.selectedPackage === 'menu510') {
+    if (category.id === 'rice' && booking.selectedPackage === 'menu530') {
       return 'Plain Rice, Fried Rice & Arroz Valenciana'
     }
     return ''
@@ -1044,7 +1044,7 @@ export default function BookingPage() {
                   <p className="text-xs text-purple-600 mt-1">📋 Fixed Menu • Choose a preset theme</p>
                 ) : pkg.id === 'menu490' ? (
                   <p className="text-xs text-blue-600 mt-1">🛠️ Build Your Own • 🍚 Plain Rice & Fried Rice only</p>
-                ) : pkg.id === 'menu510' ? (
+                ) : pkg.id === 'menu530' ? (
                   <p className="text-xs text-blue-600 mt-1">🛠️ Build Your Own • 4 Main, 1 Side • 🍚 Plain, Fried & Arroz Valenciana</p>
                 ) : pkg.isCustomBuild ? (
                   <p className="text-xs text-blue-600 mt-1">🛠️ Build Your Own Menu</p>
@@ -1086,7 +1086,7 @@ export default function BookingPage() {
             ))}
           </div>
           {/* Note for Menu 560 about Asian Fusion swaps */}
-          {booking.selectedPackage === 'menu560' && (
+          {booking.selectedPackage === 'menu580' && (
             <div className="mt-3 bg-orange-50 border border-orange-200 rounded-lg p-3">
               <p className="text-xs text-orange-700">
                 💡 <strong>Tip:</strong> In the next step, you can swap dishes from your selected menu with Asian Fusion alternatives like Pad Thai, Chinese Lumpia, Japanese Cheesecake, and more!
@@ -1129,7 +1129,7 @@ export default function BookingPage() {
           {booking.selectedPackage === 'menu490' && (
             <p className="text-xs text-blue-600 mt-3">✓ Rice: Plain Rice & Fried Rice only</p>
           )}
-          {booking.selectedPackage === 'menu510' && (
+          {booking.selectedPackage === 'menu530' && (
             <p className="text-xs text-blue-600 mt-3">✓ Rice: Plain Rice, Fried Rice & Arroz Valenciana</p>
           )}
         </div>

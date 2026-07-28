@@ -318,10 +318,10 @@ export const countMenuDishes = (menuPackage, booking) => {
   // Fallback: estimate from package name
   const defaults = {
     menu490: 7,
-    menu510: 9,
-    menu560: 10,
-    menu660: 11,
-    menu810: 12,
+    menu530: 9,
+    menu580: 10,
+    menu680: 11,
+    menu830: 12,
     // New outside catering packages (March 2026)
     menu750: 11,
     menu780: 12,
