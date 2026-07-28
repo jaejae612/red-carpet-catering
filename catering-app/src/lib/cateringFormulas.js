@@ -317,7 +317,7 @@ export const countMenuDishes = (menuPackage, booking) => {
 
   // Fallback: estimate from package name
   const defaults = {
-    menu470: 7,
+    menu490: 7,
     menu510: 9,
     menu560: 10,
     menu660: 11,

@@ -1,7 +1,7 @@
 // Red Carpet Catering Menu Packages
 export const menuPackages = {
-  menu470: {
-    id: 'menu470', name: 'Menu 490', pricePerHead: 490,
+  menu490: {
+    id: 'menu490', name: 'Menu 490', pricePerHead: 490,
     pricingTiers: { 60: 490, 50: 510, 40: 560, 30: 610 },
     isCustomBuild: true, // Flag for fully customizable menu
     options: [

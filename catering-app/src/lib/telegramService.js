@@ -13,6 +13,15 @@
 //      npx supabase functions deploy send-telegram --project-ref uitplgqukaxrribgrpvv
 
 import { supabase } from './supabase'
+import { menuPackages, heartlandPackages, chateauPackages } from './menuData'
+import { cocktailMenus, packedMealMenus, packedSnackMenus } from './cocktailPackedData'
+
+const ALL_MENUS = { ...menuPackages, ...heartlandPackages, ...chateauPackages, ...cocktailMenus, ...packedMealMenus, ...packedSnackMenus }
+
+const getMenuName = (packageId) => {
+  if (!packageId) return ''
+  return ALL_MENUS[packageId]?.name || packageId
+}
 
 const formatCurrency = (amount) => `₱${(amount || 0).toLocaleString()}`
 
@@ -32,7 +41,7 @@ const buildBookingMessage = (booking) => {
     `📞 ${booking.customer_phone || 'No phone'}`,
     `📅 ${formatDate(booking.event_date)} at ${booking.event_time || ''}`,
     `📍 ${booking.venue}`,
-    `🍽️ ${booking.menu_package} — ${booking.number_of_pax} pax`,
+    `🍽️ ${getMenuName(booking.menu_package)} — ${booking.number_of_pax} pax`,
     `💰 Total: ${formatCurrency(booking.total_amount)}`,
   ]
   if (booking.special_requests) {

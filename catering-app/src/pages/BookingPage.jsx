@@ -242,7 +242,7 @@ export default function BookingPage() {
     }
     
     // For Menu 470, restrict rice to Plain Rice and Fried Rice only
-    if (category.id === 'rice' && booking.selectedPackage === 'menu470') {
+    if (category.id === 'rice' && booking.selectedPackage === 'menu490') {
       categoryDishes = categoryDishes.filter(d => {
         const name = d.name.toLowerCase()
         const isBasicRice = BASIC_RICE_OPTIONS.some(r => name.includes(r))
@@ -289,7 +289,7 @@ export default function BookingPage() {
       return 'Pork, Fish, Beef, or Chicken'
     }
     if (category.id === 'side') return 'Vegetable or Pasta'
-    if (category.id === 'rice' && booking.selectedPackage === 'menu470') {
+    if (category.id === 'rice' && booking.selectedPackage === 'menu490') {
       return 'Plain Rice & Fried Rice only'
     }
     if (category.id === 'rice' && booking.selectedPackage === 'menu510') {
@@ -1042,7 +1042,7 @@ export default function BookingPage() {
                   <p className="text-xs text-blue-600 mt-1">🌊 Chateau by the Sea • Outside catering rates</p>
                 ) : pkg.isFixedMenu ? (
                   <p className="text-xs text-purple-600 mt-1">📋 Fixed Menu • Choose a preset theme</p>
-                ) : pkg.id === 'menu470' ? (
+                ) : pkg.id === 'menu490' ? (
                   <p className="text-xs text-blue-600 mt-1">🛠️ Build Your Own • 🍚 Plain Rice & Fried Rice only</p>
                 ) : pkg.id === 'menu510' ? (
                   <p className="text-xs text-blue-600 mt-1">🛠️ Build Your Own • 4 Main, 1 Side • 🍚 Plain, Fried & Arroz Valenciana</p>
@@ -1126,7 +1126,7 @@ export default function BookingPage() {
               </div>
             )}
           </div>
-          {booking.selectedPackage === 'menu470' && (
+          {booking.selectedPackage === 'menu490' && (
             <p className="text-xs text-blue-600 mt-3">✓ Rice: Plain Rice & Fried Rice only</p>
           )}
           {booking.selectedPackage === 'menu510' && (

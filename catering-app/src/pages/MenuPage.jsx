@@ -73,7 +73,7 @@ export default function MenuPage() {
                 <div className="text-left">
                   <h2 className="text-2xl font-bold text-gray-800">{pkg.name}</h2>
                   <p className="text-red-600 font-semibold text-lg">₱{pkg.pricePerHead}/head <span className="text-gray-500 font-normal text-sm">(60+ pax)</span></p>
-                  {pkg.id === 'menu470' ? (
+                  {pkg.id === 'menu490' ? (
                     <p className="text-xs text-gray-500 mt-1">🛠️ Build Your Own • 🍚 Plain Rice & Fried Rice only</p>
                   ) : pkg.id === 'menu510' ? (
                     <p className="text-xs text-gray-500 mt-1">🛠️ Build Your Own • 🍚 Plain Rice, Fried Rice & Arroz Valenciana</p>
@@ -135,7 +135,7 @@ export default function MenuPage() {
                             </div>
                           )}
                         </div>
-                        {pkg.id === 'menu470' && (
+                        {pkg.id === 'menu490' && (
                           <p className="text-xs text-blue-600 mt-3 text-center">Rice options: Plain Rice & Fried Rice only</p>
                         )}
                         {pkg.id === 'menu510' && (
@@ -180,7 +180,7 @@ export default function MenuPage() {
                         <div className="bg-gray-50 rounded-xl p-4">
                           <h5 className="font-semibold text-amber-700 mb-2 flex items-center gap-2">🍚 Rice Options</h5>
                           <div className="space-y-1">
-                            {pkg.id === 'menu470' ? (
+                            {pkg.id === 'menu490' ? (
                               <>
                                 <p className="text-sm text-gray-600 flex items-center gap-2"><Check size={12} className="text-amber-500" /> Plain Rice</p>
                                 <p className="text-sm text-gray-600 flex items-center gap-2"><Check size={12} className="text-amber-500" /> Fried Rice</p>
