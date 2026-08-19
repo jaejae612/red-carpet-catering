@@ -261,7 +261,7 @@ export default function BookingPage() {
 
     // For Menu 490 and 530, exclude premium dishes not available at this price point
     if (booking.selectedPackage === 'menu490' || booking.selectedPackage === 'menu530') {
-      const EXCLUDED_DISHES = ['chicken galantina', 'galantina', 'relleno', 'lengua', 'seafood roll']
+      const EXCLUDED_DISHES = ['chicken galantina', 'galantina', 'relleno', 'lengua', 'ox tongue', 'seafood roll']
       categoryDishes = categoryDishes.filter(d => {
         const name = d.name.toLowerCase()
         return !EXCLUDED_DISHES.some(ex => name.includes(ex))
