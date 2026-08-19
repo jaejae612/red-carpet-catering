@@ -258,7 +258,16 @@ export default function BookingPage() {
         return MENU_510_RICE_OPTIONS.some(r => name.includes(r)) && !name.includes('chinese')
       })
     }
-    
+
+    // For Menu 490 and 530, exclude premium dishes not available at this price point
+    if (booking.selectedPackage === 'menu490' || booking.selectedPackage === 'menu530') {
+      const EXCLUDED_DISHES = ['chicken galantina', 'galantina', 'relleno', 'lengua', 'seafood roll']
+      categoryDishes = categoryDishes.filter(d => {
+        const name = d.name.toLowerCase()
+        return !EXCLUDED_DISHES.some(ex => name.includes(ex))
+      })
+    }
+
     return categoryDishes
   }
 
