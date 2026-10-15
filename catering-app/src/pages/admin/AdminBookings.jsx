@@ -185,6 +185,20 @@ export default function AdminBookings() {
   // Check if staff is busy on the selected booking's date
   const isStaffBusyToday = (staffId) => busyStaffIds.includes(staffId)
 
+  // Count how many non-cancelled bookings (±30 days) a staff member is assigned to.
+  // Used for fair rotation: prefer staff with fewer recent/upcoming assignments.
+  const getStaffWorkload = (staffId) => {
+    const now = new Date()
+    const past = new Date(now); past.setDate(now.getDate() - 30)
+    const future = new Date(now); future.setDate(now.getDate() + 30)
+    return bookings.filter(b => {
+      if (b.id === selectedBooking?.id) return false
+      if (b.status === 'cancelled') return false
+      const d = new Date(b.event_date)
+      return d >= past && d <= future && (b.assigned_staff || []).some(s => s.id === staffId)
+    }).length
+  }
+
   // Auto-assign handler
   const handleAutoAssign = () => {
     if (!selectedBooking) return
@@ -203,10 +217,14 @@ export default function AdminBookings() {
           (role === 'student' && s.role === 'extra')
         return roleMatch && s.available !== false && !isStaffBusyToday(s.id)
       })
-      // Sort: regular first, then on_call (cheaper first)
+      // Sort: regular first → fewest workload (fair rotation) → cheapest on-call
       candidates.sort((a, b) => {
-        if ((a.type || 'regular') === 'regular' && (b.type || 'regular') !== 'regular') return -1
-        if ((a.type || 'regular') !== 'regular' && (b.type || 'regular') === 'regular') return 1
+        const aReg = (a.type || 'regular') === 'regular'
+        const bReg = (b.type || 'regular') === 'regular'
+        if (aReg && !bReg) return -1
+        if (!aReg && bReg) return 1
+        const loadDiff = getStaffWorkload(a.id) - getStaffWorkload(b.id)
+        if (loadDiff !== 0) return loadDiff
         return (a.daily_rate || 0) - (b.daily_rate || 0)
       })
       candidates.slice(0, needed).forEach(s => {
@@ -659,11 +677,16 @@ export default function AdminBookings() {
                           </div>
                           <button onClick={() => setShowStaffPicker(role)} className="w-full p-2.5 border-2 border-dashed border-gray-300 rounded-lg text-left hover:border-red-400 hover:bg-red-50">
                             {roleStaff.length > 0 ? (
-                              <div className="flex flex-wrap gap-1.5">{roleStaff.map(s => (
-                                <span key={s.id} className={`px-2 py-0.5 rounded-full text-xs font-medium ${(s.type || 'regular') === 'on_call' ? 'bg-orange-100 text-orange-700' : 'bg-red-100 text-red-700'}`}>
-                                  {s.name} {(s.type || 'regular') === 'on_call' && `📞`}
-                                </span>
-                              ))}</div>
+                              <div className="flex flex-wrap gap-1.5">{roleStaff.map(s => {
+                                const wl = getStaffWorkload(s.id)
+                                const wlColor = wl <= 2 ? 'text-green-600' : wl <= 5 ? 'text-amber-600' : 'text-red-600'
+                                return (
+                                  <span key={s.id} className={`px-2 py-0.5 rounded-full text-xs font-medium ${(s.type || 'regular') === 'on_call' ? 'bg-orange-100 text-orange-700' : 'bg-red-100 text-red-700'}`}>
+                                    {s.name} {(s.type || 'regular') === 'on_call' && `📞`}
+                                    <span className={`ml-1 font-normal ${wlColor}`}>({wl})</span>
+                                  </span>
+                                )
+                              })}</div>
                             ) : <span className="text-gray-400 text-sm">+ Select {roleLabels[role]}</span>}
                           </button>
                         </div>
@@ -746,22 +769,29 @@ export default function AdminBookings() {
             if (staffSearch && !s.name.toLowerCase().includes(staffSearch.toLowerCase())) return false
             return true
           }).sort((a, b) => {
-            // Regular first, then on-call
-            if ((a.type || 'regular') === 'regular' && (b.type || 'regular') !== 'regular') return -1
-            if ((a.type || 'regular') !== 'regular' && (b.type || 'regular') === 'regular') return 1
+            // Regular first → fewest workload (fair rotation) → alphabetical
+            const aReg = (a.type || 'regular') === 'regular'
+            const bReg = (b.type || 'regular') === 'regular'
+            if (aReg && !bReg) return -1
+            if (!aReg && bReg) return 1
+            const loadDiff = getStaffWorkload(a.id) - getStaffWorkload(b.id)
+            if (loadDiff !== 0) return loadDiff
             return a.name.localeCompare(b.name)
           }).map(s => {
             const isSel = (selectedBooking?.assigned_staff || []).some(x => x.id === s.id)
             const isBusy = isStaffBusyToday(s.id) && !isSel
             const isOnCall = (s.type || 'regular') === 'on_call'
             const disabled = !s.available || isBusy
+            const workload = getStaffWorkload(s.id)
+            const workloadColor = workload <= 2 ? 'bg-green-100 text-green-700' : workload <= 5 ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-700'
             return (
               <button key={s.id} onClick={() => toggleStaff(s, showStaffPicker)} disabled={disabled} className={`w-full p-4 flex items-center justify-between border-b border-gray-100 ${disabled ? 'opacity-40 cursor-not-allowed' : 'hover:bg-red-50'} ${isSel ? 'bg-red-50' : ''}`}>
                 <div className="text-left min-w-0 flex-1">
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-wrap">
                     <p className="font-medium text-gray-800 truncate">{s.name}</p>
                     {isOnCall && <span className="px-1.5 py-0.5 bg-orange-100 text-orange-600 rounded text-[10px] font-medium">📞 On-Call</span>}
                     {!isOnCall && <span className="px-1.5 py-0.5 bg-green-100 text-green-600 rounded text-[10px] font-medium">Regular</span>}
+                    <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium ${workloadColor}`}>{workload} this month</span>
                   </div>
                   <div className="flex items-center gap-2 mt-0.5">
                     {s.note && <p className="text-xs text-gray-500">{s.note}</p>}

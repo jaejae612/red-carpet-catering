@@ -97,7 +97,7 @@ export default function BookingPage() {
     // Drinks
     freeDrink: duplicateData?.free_drink || 'softdrinks',
     drinkAddOns: duplicateData?.drink_add_ons || [],
-    // Swapped dishes (for Menu 560 Asian Fusion swaps)
+    // Swapped dishes (for Menu 580 Asian Fusion swaps)
     swappedDishes: duplicateData?.swapped_dishes || [],
     specialRequests: duplicateData?.special_requests || '',
     customerName: duplicateData?.customer_name || (isAdmin ? '' : (profile?.full_name || '')),
@@ -229,7 +229,7 @@ export default function BookingPage() {
 
   // Rice options for basic menus
   const BASIC_RICE_OPTIONS = ['plain rice', 'fried rice', 'steamed rice']
-  const MENU_510_RICE_OPTIONS = ['plain rice', 'fried rice', 'steamed rice', 'arroz valenciana']
+  const MENU_530_RICE_OPTIONS = ['plain rice', 'fried rice', 'steamed rice', 'arroz valenciana']
   const EXCLUDED_RICE = ['paella', 'garlic', 'chinese']
 
   // Dish selection functions
@@ -241,7 +241,7 @@ export default function BookingPage() {
       categoryDishes = dishes.filter(d => d.category === category.id)
     }
     
-    // For Menu 470, restrict rice to Plain Rice and Fried Rice only
+    // For Menu 490, restrict rice to Plain Rice and Fried Rice only
     if (category.id === 'rice' && booking.selectedPackage === 'menu490') {
       categoryDishes = categoryDishes.filter(d => {
         const name = d.name.toLowerCase()
@@ -251,11 +251,11 @@ export default function BookingPage() {
       })
     }
     
-    // For Menu 510, restrict rice to Plain Rice, Fried Rice, and Arroz Valenciana
+    // For Menu 530, restrict rice to Plain Rice, Fried Rice, and Arroz Valenciana
     if (category.id === 'rice' && booking.selectedPackage === 'menu530') {
       categoryDishes = categoryDishes.filter(d => {
         const name = d.name.toLowerCase()
-        return MENU_510_RICE_OPTIONS.some(r => name.includes(r)) && !name.includes('chinese')
+        return MENU_530_RICE_OPTIONS.some(r => name.includes(r)) && !name.includes('chinese')
       })
     }
 
@@ -1094,7 +1094,7 @@ export default function BookingPage() {
               </div>
             ))}
           </div>
-          {/* Note for Menu 560 about Asian Fusion swaps */}
+          {/* Note for Menu 580 about Asian Fusion swaps */}
           {booking.selectedPackage === 'menu580' && (
             <div className="mt-3 bg-orange-50 border border-orange-200 rounded-lg p-3">
               <p className="text-xs text-orange-700">
@@ -1152,7 +1152,7 @@ export default function BookingPage() {
       : null
     const isCustomBuild = currentPackages[booking.selectedPackage]?.isCustomBuild
     const currentPkg = currentPackages[booking.selectedPackage]
-    const allowSwap = currentPkg?.allowSwap // Menu 560 allows swapping
+    const allowSwap = currentPkg?.allowSwap // Menu 580 allows swapping
     const isPresetMenu = currentPackages[booking.selectedPackage]?.isFixedMenu ||
                          isHeartland || isChateau
 
@@ -1189,7 +1189,7 @@ export default function BookingPage() {
       )
     }
 
-    // For Menu 560 - allow swapping with Asian Fusion alternatives
+    // For Menu 580 - allow swapping with Asian Fusion alternatives
     if (allowSwap && currentPkg?.swapAlternatives) {
       const swapItems = currentPkg.swapAlternatives.items
       const swapName = currentPkg.swapAlternatives.name
@@ -1877,7 +1877,7 @@ export default function BookingPage() {
             </p>
           )}
 
-          {/* Show swapped dishes for Menu 560 */}
+          {/* Show swapped dishes for Menu 580 */}
           {booking.swappedDishes?.length > 0 && (
             <div className="mb-3">
               <p className="text-xs text-orange-600 font-medium bg-orange-50 px-2 py-1 rounded inline-block mb-2">
@@ -2078,7 +2078,7 @@ export default function BookingPage() {
       const isPresetMenu = currentPackages[booking.selectedPackage]?.isFixedMenu ||
                            isHeartland || isChateau
       if (isPresetMenu) return true
-      // Menu 560 with swap capability can always proceed (swapping is optional)
+      // Menu 580 with swap capability can always proceed (swapping is optional)
       const allowSwap = currentPackages[booking.selectedPackage]?.allowSwap
       if (allowSwap) return true
       return missingCategories.length === 0 // Block if menu is incomplete for custom build menus
