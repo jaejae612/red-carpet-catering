@@ -308,7 +308,7 @@ export const addOnStations = [
   { id: 'prawns', name: 'Prawn Tempura (Small)', price: 4725, unit: 'order' },
   { id: 'prawnm', name: 'Prawn Tempura (Medium)', price: 6720, unit: 'order' },
   { id: 'prawnl', name: 'Prawn Tempura (Large)', price: 9240, unit: 'order' },
-  { id: 'taco', name: 'Taco Station', price: 3000, unit: 'good for 50' },
+  { id: 'taco', name: 'Taco Station', price: 4000, unit: 'good for 50' },
   { id: 'burrito', name: 'Burrito Station', price: 4000, unit: 'good for 50' },
   { id: 'salad', name: 'Salad Bar', price: 4000, unit: 'good for 50' },
 ]
