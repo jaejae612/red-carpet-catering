@@ -2,7 +2,7 @@
 export const menuPackages = {
   menu490: {
     id: 'menu490', name: 'Menu 490', pricePerHead: 490,
-    pricingTiers: { 60: 490, 50: 510, 40: 560, 30: 610 },
+    pricingTiers: { 60: 490, 50: 520, 40: 570, 30: 630 },
     isCustomBuild: true, // Flag for fully customizable menu
     options: [
       { name: 'Standard Menu', items: ['1 Salad', '2 Main Dishes', '2 Sides', 'Plain Rice & Fried Rice', '2 Desserts'] }
@@ -30,13 +30,23 @@ export const menuPackages = {
       dessert: 2
     }
   },
+  menu550: {
+    id: 'menu550', name: 'Menu 550', pricePerHead: 550,
+    pricingTiers: { 60: 550, 50: 580, 40: 630, 30: 680 },
+    options: [
+      { name: 'Menu A', items: ['Roast Beef w/ sweet sauce', 'Three Kinds of mushroom w/ broccoli', 'Pandan Chicken', 'Fish Fillet w/ tar tar sauce', 'Penne Carbonara', 'Fried Rice/Plain Rice', 'Mango Pandan', 'Custard Cake'] },
+      { name: 'Menu B', items: ['Papo Chicken', 'Barbecued Roast Pork Belly', 'Seafood Mixed Vegetable w/ tofu', 'Fish Fillet w/ soy sauce', 'Sotanghon Guisado', 'Fried Rice/Plain Rice', 'Blueberry Cheesecake', 'Blitz Torte'] },
+      { name: 'Menu C', items: ['Sauteed Chicken w/ Vegetable', 'Beef Tapa', 'Chicken Kebab w/ peanut sauce', 'Baked Ziti', 'Garlic Peppered Fish', 'Fried Rice/Plain Rice', 'Choco Toffee Cake', 'Ube Cake'] },
+      { name: 'Menu D', items: ['Stuffed Shrimp w/ sweet & sour dip', 'Spinach Lasagna', 'Sweet & Sour Pork', 'Chicken Cordon Bleu', 'Fish Fillet w/ oyster sauce', 'Arroz Valenciana/Plain Rice', 'Choco Cream Cheesecake', 'Maja Blanca'] },
+    ]
+  },
   menu580: {
-    id: 'menu580', name: 'Menu 580', pricePerHead: 580,
-    pricingTiers: { 60: 580, 50: 600, 40: 650, 30: 700 },
+    id: 'menu580', name: 'Menu 600', pricePerHead: 600,
+    pricingTiers: { 60: 600, 50: 630, 40: 680, 30: 730 },
     allowSwap: true, // Enable dish swapping with Asian Fusion
     options: [
-      { name: 'Filipino Buffet', items: ['Eggplant & Nangka salad', 'Pickled Green Mango w/ dilis', 'Roast Pork Liempo w/ special herbs', 'Kare-Kara w/ bagoong', 'Baked Crabmeat', 'Sinugbang Isda w/ vinegar sauce', 'Chicken w/ barbecue sauce', 'Garlic Rice/Plain Rice', 'Beko Bayot', 'Mango Sago'] },
-      { name: 'International Buffet', items: ['Asian Mandarin Chicken Salad', 'Waldorf Salad', 'Chicken Galantina', 'Ox Tongue w/ cooked ham', 'Chicken Bacon Alfredo', 'Beef Morcon', 'Grilled Fish w/ lemon butter sauce', 'Paella/Plain Rice', 'Strawberry Cheesecake', 'Avocado Pie'] }
+      { name: 'Filipino Buffet', items: ['Eggplant & Nangka salad', 'Pickled Green Mango w/ dilis', 'Roast Pork Liempo w/ special herbs', 'Kare-Kare w/ bagoong', 'Baked Crabmeat', 'Sinugbang Isda w/ vinegar sauce', 'Chicken w/ barbecue sauce', 'Garlic Rice/Plain Rice', 'Beko Bayot', 'Mango Sago'] },
+      { name: 'International Buffet', items: ['Asian Mandarin Chicken Salad', 'Waldorf Salad', 'Chicken Galantina', 'Ox Tongue w/ cooked ham', 'Chicken Bacon Alfredo', 'Barbecued Roast Pork Belly', 'Grilled Fish w/ lemon butter sauce', 'Paella/Plain Rice', 'Strawberry Cheesecake', 'Avocado Pie'] }
     ],
     // Asian Fusion items available as swap alternatives
     swapAlternatives: {
@@ -50,23 +60,23 @@ export const menuPackages = {
         { name: 'Lasagna', category: 'side' },
         { name: 'Callos', category: 'main' },
         { name: 'Chinese Valenciana', category: 'rice' },
-        { name: 'Japanese Cheesecake', category: 'dessert' },
+        { name: 'Bingcava', category: 'dessert' },
         { name: 'Coffee Jelly', category: 'dessert' }
       ]
     }
   },
   menu680: {
-    id: 'menu680', name: 'Menu 680', pricePerHead: 680,
-    pricingTiers: { 60: 680, 50: 700, 40: 750, 30: 800 },
+    id: 'menu680', name: 'Menu 700', pricePerHead: 700,
+    pricingTiers: { 60: 700, 50: 730, 40: 780, 30: 830 },
     isFixedMenu: true,
     options: [
-      { name: 'Filipino & Asian Fusion', items: ['Mango & Crabstick Salad', 'Potato Bacon & Egg Salad', 'Korean Galbi Ribs', 'Chicken w/ barbecue sauce', 'Spicy Squid', 'Fettuccine w/ grilled chicken', 'Seafood Roll Salad', 'Plain Rice/Fried Rice', 'Fruit Salad', 'Cookies & Cream Cheesecake'] },
-      { name: 'International', items: ['Green Vegetable salad w/ thousand island', 'Mediterranean Salad w/ olives', 'Ox tongue w/ mushroom sauce', 'Crunchy Chicken w/ plum sauce', 'Roast beef w/ gravy', 'Baked Fish w/ mozzarella cheese', 'Polynesian Pork', 'Paella/Plain Rice', 'Choco Peach Cream Cake', 'Blueberry Cheesecake'] }
+      { name: 'Filipino & Asian Fusion', items: ['Mango & Crabstick Salad on lettuce', 'Potato Bacon & Egg Salad', 'Pickled Green Mango w/ dilis', 'Korean Galbi Ribs', 'Chicken w/ barbecue sauce', 'Spicy Squid', 'Fettuccine w/ grilled chicken & balsamic sauce', 'Seafood Roll Salad', 'Plain Rice/Fried Rice', 'Fruit Salad', 'Cookies & Cream Cheesecake', 'Banana Surprise', 'Choco Balls'] },
+      { name: 'International', items: ['Ox tongue w/ straw mushroom sauce', 'Crunchy Chicken w/ plum sauce', 'Lasagna', 'Baked Fish w/ mozzarella cheese', 'Polynesian Pork', 'Paella/Plain Rice', 'Choco Peach Cream Cake', 'Blueberry Cheesecake', 'Macaroons', 'Bingcava'] }
     ]
   },
   menu830: {
-    id: 'menu830', name: 'Menu 830 (Premium)', pricePerHead: 830,
-    pricingTiers: { 60: 830, 50: 850, 40: 900, 30: 950 },
+    id: 'menu830', name: 'Menu 850 (Premium)', pricePerHead: 850,
+    pricingTiers: { 60: 850, 50: 880, 40: 930, 30: 980 },
     isFixedMenu: true,
     options: [
       { name: 'Premium Buffet', items: ['Salad Bar', 'Japanese Sushi Rolls', 'Grilled Beef Short Rib (Carving Station)', 'Chicken Relleno', 'Baked Fish w/ mozzarella cheese', 'Ox Tongue w/ mushroom sauce', 'Spicy Spareribs', 'Prawn Tempura', 'Penne Carbonara', 'Assorted fresh fruits', 'Blitz Torte', 'Mini Fruit Tart', 'Blueberry Cheesecake'] }
@@ -298,7 +308,7 @@ export const addOnStations = [
   { id: 'prawns', name: 'Prawn Tempura (Small)', price: 4725, unit: 'order' },
   { id: 'prawnm', name: 'Prawn Tempura (Medium)', price: 6720, unit: 'order' },
   { id: 'prawnl', name: 'Prawn Tempura (Large)', price: 9240, unit: 'order' },
-  { id: 'taco', name: 'Taco Station', price: 4000, unit: 'good for 50' },
+  { id: 'taco', name: 'Taco Station', price: 3000, unit: 'good for 50' },
   { id: 'burrito', name: 'Burrito Station', price: 4000, unit: 'good for 50' },
   { id: 'salad', name: 'Salad Bar', price: 4000, unit: 'good for 50' },
 ]
