@@ -34,9 +34,10 @@ const cateringOptions = [
     packages: [
       { name: 'Menu 490', price: '₱490/head', highlight: 'Budget-friendly' },
       { name: 'Menu 530', price: '₱530/head', highlight: 'Popular choice' },
-      { name: 'Menu 580', price: '₱580/head', highlight: 'Filipino & International' },
-      { name: 'Menu 680', price: '₱680/head', highlight: 'Premium selection' },
-      { name: 'Menu 830', price: '₱830/head', highlight: 'Luxury experience' },
+      { name: 'Menu 550', price: '₱550/head', highlight: '4 menu options' },
+      { name: 'Menu 600', price: '₱600/head', highlight: 'Filipino & International' },
+      { name: 'Menu 700', price: '₱700/head', highlight: 'Premium selection' },
+      { name: 'Menu 850', price: '₱850/head', highlight: 'Luxury experience' },
       { name: 'Menu 750', price: '₱750/head', highlight: 'Elevated buffet' },
       { name: 'Menu 780', price: '₱780/head', highlight: 'Grand selection' },
       { name: 'Menu 810', price: '₱810/head', highlight: 'Fixed premium menu' },
